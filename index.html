@@ -21,6 +21,8 @@
     --pending:#F5A623;
     --danger:#E85C5C;
     --violet:#B18CFF;
+    --light-green:#7CE38B;
+    --light-red:#FF8080;
   }
   *{box-sizing:border-box;}
   body{
@@ -125,7 +127,7 @@
 
   .group-tabs{margin-bottom:0;}
   .group-btn{
-    font-size:clamp(20px,5vw,26px);
+    font-size:clamp(20px,5.5vw,28px);
     padding:16px 22px;
   }
   .group-btn .idx{
@@ -136,11 +138,12 @@
     color:var(--sub);
     font-size:15px;
   }
-  .group-btn.active .idx{background:var(--amber);color:var(--bg);border-color:var(--amber);}
+  /* Survey Progress = light green, Deficiency = light red */
+  .group-btn[data-group="progress"].active{color:var(--light-green);border-bottom-color:var(--light-green);}
+  .group-btn[data-group="progress"].active .idx{background:var(--light-green);color:var(--bg);border-color:var(--light-green);}
   .group-btn.active{border-bottom-width:3px;}
-  /* Deficiency group gets its own accent color to stand apart from Survey Progress */
-  .group-btn[data-group="deficiency"].active{color:var(--violet);border-bottom-color:var(--violet);}
-  .group-btn[data-group="deficiency"].active .idx{background:var(--violet);border-color:var(--violet);color:var(--bg);}
+  .group-btn[data-group="deficiency"].active{color:var(--light-red);border-bottom-color:var(--light-red);}
+  .group-btn[data-group="deficiency"].active .idx{background:var(--light-red);border-color:var(--light-red);color:var(--bg);}
 
   .subtabs{
     margin-top:14px;
@@ -148,7 +151,7 @@
     border-bottom:1px solid var(--line);
   }
   .subtabs .tab-btn{
-    font-size:clamp(17px,4vw,21px);
+    font-size:clamp(16px,3.8vw,20px);
     padding:12px 18px;
     color:var(--sub);
   }
