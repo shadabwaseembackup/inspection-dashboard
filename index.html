@@ -1449,18 +1449,31 @@ async function refreshDashboard(){
     // ---------------- Rebuild Date>Team tables ----------------
     function dateSortKey(dateStr){
       const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      const m = String(dateStr||'').match(/^(\d{1,2})-([A-Za-z]{3})$/);
-      if(!m) return 9999; // unparseable dates sort last
-      const day = parseInt(m[1],10);
-      const monthIdx = months.indexOf(m[2]);
-      // Assume a rolling year starting Jan; if month is early in calendar (Jan-May)
-      // relative to a dataset that's mostly Jun-Dec, that logic isn't needed here since
-      // all inspection data falls within a single continuous window (no year wrap).
-      return monthIdx * 100 + day;
+      const str = String(dateStr||'').trim();
+      // Format 1: "DD-Mon" or "DD-Mon-YYYY" e.g. "17-Jun" or "17-Jun-2026"
+      let m = str.match(/^(\d{1,2})-([A-Za-z]{3})[A-Za-z]*(?:-(\d{2,4}))?$/);
+      if(m){
+        const day = parseInt(m[1],10);
+        const monthIdx = months.indexOf(m[2].slice(0,3));
+        if(monthIdx >= 0) return monthIdx * 100 + day;
+      }
+      // Format 2: "Mon DD" e.g. "Jun 17"
+      m = str.match(/^([A-Za-z]{3})[A-Za-z]*\s+(\d{1,2})/);
+      if(m){
+        const monthIdx = months.indexOf(m[1].slice(0,3));
+        const day = parseInt(m[2],10);
+        if(monthIdx >= 0) return monthIdx * 100 + day;
+      }
+      // Format 3: fall back to native Date parsing (handles "6/17/2026", "2026-06-17", full timestamps, etc.)
+      const d = new Date(str);
+      if(!isNaN(d.getTime())) return d.getTime() / 86400000; // days since epoch, comparable across formats
+      return Number.MAX_SAFE_INTEGER; // unparseable -> sort last
     }
     function sortByDate(arr){
       return arr.slice().sort((a,b)=> dateSortKey(a[0]) - dateSortKey(b[0]));
     }
+
+    console.log('Sample date formats — FP:', Object.keys(fpDateTeam).slice(0,3), 'STL:', Object.keys(stlDateTeam).slice(0,3), 'DT:', Object.keys(dtDateTeam).slice(0,3));
 
     const fpDateTeamArr = sortByDate(Object.entries(fpDateTeam).map(([k,v])=>{ const [d,t]=k.split('|'); return [d,t,v]; }));
     const stlDateTeamArr = sortByDate(Object.entries(stlDateTeam).map(([k,v])=>{ const [d,t]=k.split('|'); return [d,t,v]; }));
