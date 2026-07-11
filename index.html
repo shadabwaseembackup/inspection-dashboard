@@ -125,16 +125,16 @@
 
   .group-tabs{margin-bottom:0;}
   .group-btn{
-    font-size:18px;
-    padding:14px 22px;
+    font-size:clamp(20px,5vw,26px);
+    padding:16px 22px;
   }
   .group-btn .idx{
     background:var(--panel-2);
     border:1px solid var(--line);
-    border-radius:5px;
-    padding:2px 8px;
+    border-radius:6px;
+    padding:3px 9px;
     color:var(--sub);
-    font-size:13px;
+    font-size:15px;
   }
   .group-btn.active .idx{background:var(--amber);color:var(--bg);border-color:var(--amber);}
   .group-btn.active{border-bottom-width:3px;}
@@ -148,8 +148,8 @@
     border-bottom:1px solid var(--line);
   }
   .subtabs .tab-btn{
-    font-size:16px;
-    padding:10px 18px;
+    font-size:clamp(17px,4vw,21px);
+    padding:12px 18px;
     color:var(--sub);
   }
   .subtabs .tab-btn .idx{ color:var(--sub); opacity:.7; }
@@ -409,7 +409,7 @@
     .refresh-status{text-align:left;max-width:100%;}
     .meta{text-align:left;}
     .tabs{gap:2px;}
-    .tab-btn{padding:11px 12px;font-size:14px;}
+    .tab-btn{padding:11px 12px;}
     .tab-btn .idx{margin-right:4px;}
     .panel-head{padding:14px 14px;}
     .panel-head span.sub{width:100%;margin-left:0;order:3;}
