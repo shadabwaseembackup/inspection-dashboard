@@ -69,13 +69,30 @@
     background:var(--bg);
     border:1px solid var(--line);
     border-radius:8px;
-    padding:12px 14px;
+    padding:12px 44px 12px 14px;
     color:var(--text);
     font-size:15px;
     font-family:'JetBrains Mono',monospace;
-    margin-bottom:12px;
     outline:none;
   }
+  .lock-input-wrap{
+    position:relative;
+    margin-bottom:12px;
+  }
+  .lock-toggle{
+    position:absolute;
+    right:6px;
+    top:50%;
+    transform:translateY(-50%);
+    background:transparent;
+    border:none;
+    color:var(--sub);
+    font-size:17px;
+    cursor:pointer;
+    padding:6px 8px;
+    line-height:1;
+  }
+  .lock-toggle:hover{color:var(--text);}
   .lock-input:focus{border-color:var(--amber);}
   .lock-submit{
     width:100%;
@@ -681,7 +698,10 @@
     <div class="lock-icon">🔒</div>
     <h2>Inspection Dashboard</h2>
     <p class="lock-sub">Enter password to continue</p>
-    <input id="lock-input" class="lock-input" type="password" placeholder="Password" autocomplete="off" />
+    <div class="lock-input-wrap">
+      <input id="lock-input" class="lock-input" type="password" placeholder="Password" autocomplete="off" />
+      <button type="button" id="lock-toggle" class="lock-toggle" aria-label="Show password">👁</button>
+    </div>
     <button id="lock-submit" class="lock-submit">Unlock</button>
     <div id="lock-error" class="lock-error"></div>
   </div>
@@ -1667,6 +1687,15 @@ document.getElementById('refresh-btn').addEventListener('click', refreshDashboar
   const input = document.getElementById('lock-input');
   const submitBtn = document.getElementById('lock-submit');
   const errorEl = document.getElementById('lock-error');
+  const toggleBtn = document.getElementById('lock-toggle');
+
+  toggleBtn.addEventListener('click', ()=>{
+    const showing = input.type === 'text';
+    input.type = showing ? 'password' : 'text';
+    toggleBtn.textContent = showing ? '👁' : '🙈';
+    toggleBtn.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+    input.focus();
+  });
 
   function unlock(){
     lockScreen.style.display = 'none';
