@@ -20,6 +20,7 @@
     --done:#3FD48E;
     --pending:#F5A623;
     --danger:#E85C5C;
+    --violet:#B18CFF;
   }
   *{box-sizing:border-box;}
   body{
@@ -101,20 +102,20 @@
   }
   .tab-btn{
     font-family:'Space Grotesk',sans-serif;
-    font-size:14px;
-    font-weight:600;
+    font-size:16px;
+    font-weight:700;
     color:var(--sub);
     background:transparent;
     border:none;
-    padding:12px 20px;
+    padding:13px 20px;
     cursor:pointer;
-    border-bottom:2px solid transparent;
+    border-bottom:3px solid transparent;
     white-space:nowrap;
     transition:color .15s ease, border-color .15s ease;
   }
   .tab-btn .idx{
     font-family:'JetBrains Mono',monospace;
-    font-size:11px;
+    font-size:12px;
     color:var(--amber-dim);
     margin-right:8px;
   }
@@ -124,18 +125,22 @@
 
   .group-tabs{margin-bottom:0;}
   .group-btn{
-    font-size:15.5px;
+    font-size:18px;
     padding:14px 22px;
   }
   .group-btn .idx{
     background:var(--panel-2);
     border:1px solid var(--line);
     border-radius:5px;
-    padding:1px 6px;
+    padding:2px 8px;
     color:var(--sub);
+    font-size:13px;
   }
   .group-btn.active .idx{background:var(--amber);color:var(--bg);border-color:var(--amber);}
   .group-btn.active{border-bottom-width:3px;}
+  /* Deficiency group gets its own accent color to stand apart from Survey Progress */
+  .group-btn[data-group="deficiency"].active{color:var(--violet);border-bottom-color:var(--violet);}
+  .group-btn[data-group="deficiency"].active .idx{background:var(--violet);border-color:var(--violet);color:var(--bg);}
 
   .subtabs{
     margin-top:14px;
@@ -143,12 +148,26 @@
     border-bottom:1px solid var(--line);
   }
   .subtabs .tab-btn{
-    font-size:13px;
-    padding:9px 16px;
+    font-size:16px;
+    padding:10px 18px;
     color:var(--sub);
   }
-  .subtabs .tab-btn.active{color:var(--cyan);border-bottom-color:var(--cyan);}
-  .subtabs .tab-btn.active .idx{color:var(--cyan);}
+  .subtabs .tab-btn .idx{ color:var(--sub); opacity:.7; }
+  /* Distinct color per sub-tab for quick visual identification */
+  .subtabs .tab-btn[data-tab="fpsp"].active,
+  .subtabs .tab-btn[data-tab="fpsp-pivot"].active{color:var(--cyan);border-bottom-color:var(--cyan);}
+  .subtabs .tab-btn[data-tab="fpsp"].active .idx,
+  .subtabs .tab-btn[data-tab="fpsp-pivot"].active .idx{color:var(--cyan);opacity:1;}
+
+  .subtabs .tab-btn[data-tab="stl"].active,
+  .subtabs .tab-btn[data-tab="stl-pivot"].active{color:var(--amber);border-bottom-color:var(--amber);}
+  .subtabs .tab-btn[data-tab="stl"].active .idx,
+  .subtabs .tab-btn[data-tab="stl-pivot"].active .idx{color:var(--amber);opacity:1;}
+
+  .subtabs .tab-btn[data-tab="dt"].active,
+  .subtabs .tab-btn[data-tab="dt-pivot"].active{color:var(--violet);border-bottom-color:var(--violet);}
+  .subtabs .tab-btn[data-tab="dt"].active .idx,
+  .subtabs .tab-btn[data-tab="dt-pivot"].active .idx{color:var(--violet);opacity:1;}
 
   .tab-panel{display:none;}
   .tab-panel.active{display:block;animation:fadeIn .25s ease;}
@@ -390,7 +409,7 @@
     .refresh-status{text-align:left;max-width:100%;}
     .meta{text-align:left;}
     .tabs{gap:2px;}
-    .tab-btn{padding:10px 10px;font-size:12px;}
+    .tab-btn{padding:11px 12px;font-size:14px;}
     .tab-btn .idx{margin-right:4px;}
     .panel-head{padding:14px 14px;}
     .panel-head span.sub{width:100%;margin-left:0;order:3;}
