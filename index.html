@@ -23,6 +23,7 @@
     --violet:#B18CFF;
     --light-green:#7CE38B;
     --light-red:#FF8080;
+    --light-pink:#FFB3D1;
   }
   *{box-sizing:border-box;}
   body{
@@ -125,10 +126,20 @@
   .tab-btn.active{color:var(--text);border-bottom-color:var(--amber);}
   .tab-btn.active .idx{color:var(--amber);}
 
-  .group-tabs{margin-bottom:0;}
+  .group-tabs{
+    margin-bottom:0;
+    border-bottom:none;
+    gap:10px;
+    padding-bottom:4px;
+  }
   .group-btn{
-    font-size:clamp(20px,5.5vw,28px);
-    padding:16px 22px;
+    font-size:clamp(18px,5vw,25px);
+    padding:14px 20px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    border-bottom:1px solid var(--line);
+    background:var(--panel);
+    transition:background-color .15s ease, border-color .15s ease, color .15s ease;
   }
   .group-btn .idx{
     background:var(--panel-2);
@@ -138,12 +149,20 @@
     color:var(--sub);
     font-size:15px;
   }
-  /* Survey Progress = light green, Deficiency = light red */
-  .group-btn[data-group="progress"].active{color:var(--light-green);border-bottom-color:var(--light-green);}
-  .group-btn[data-group="progress"].active .idx{background:var(--light-green);color:var(--bg);border-color:var(--light-green);}
-  .group-btn.active{border-bottom-width:3px;}
-  .group-btn[data-group="deficiency"].active{color:var(--light-red);border-bottom-color:var(--light-red);}
-  .group-btn[data-group="deficiency"].active .idx{background:var(--light-red);border-color:var(--light-red);color:var(--bg);}
+  .group-btn.active{border-bottom-width:1px;}
+  /* Survey Progress = filled light green cell, Deficiency = filled light pink cell */
+  .group-btn[data-group="progress"].active{
+    background:var(--light-green);
+    border-color:var(--light-green);
+    color:#0B1220;
+  }
+  .group-btn[data-group="progress"].active .idx{background:#0B1220;color:var(--light-green);border-color:#0B1220;}
+  .group-btn[data-group="deficiency"].active{
+    background:var(--light-pink);
+    border-color:var(--light-pink);
+    color:#0B1220;
+  }
+  .group-btn[data-group="deficiency"].active .idx{background:#0B1220;color:var(--light-pink);border-color:#0B1220;}
 
   .subtabs{
     margin-top:14px;
