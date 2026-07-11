@@ -1447,9 +1447,24 @@ async function refreshDashboard(){
     document.getElementById('dt-pct').textContent = pct(dtDone,dtTotal) + '%';
 
     // ---------------- Rebuild Date>Team tables ----------------
-    const fpDateTeamArr = Object.entries(fpDateTeam).map(([k,v])=>{ const [d,t]=k.split('|'); return [d,t,v]; });
-    const stlDateTeamArr = Object.entries(stlDateTeam).map(([k,v])=>{ const [d,t]=k.split('|'); return [d,t,v]; });
-    const dtDateTeamArr = Object.entries(dtDateTeam).map(([k,v])=>{ const [d,t]=k.split('|'); return [d,t,v]; });
+    function dateSortKey(dateStr){
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const m = String(dateStr||'').match(/^(\d{1,2})-([A-Za-z]{3})$/);
+      if(!m) return 9999; // unparseable dates sort last
+      const day = parseInt(m[1],10);
+      const monthIdx = months.indexOf(m[2]);
+      // Assume a rolling year starting Jan; if month is early in calendar (Jan-May)
+      // relative to a dataset that's mostly Jun-Dec, that logic isn't needed here since
+      // all inspection data falls within a single continuous window (no year wrap).
+      return monthIdx * 100 + day;
+    }
+    function sortByDate(arr){
+      return arr.slice().sort((a,b)=> dateSortKey(a[0]) - dateSortKey(b[0]));
+    }
+
+    const fpDateTeamArr = sortByDate(Object.entries(fpDateTeam).map(([k,v])=>{ const [d,t]=k.split('|'); return [d,t,v]; }));
+    const stlDateTeamArr = sortByDate(Object.entries(stlDateTeam).map(([k,v])=>{ const [d,t]=k.split('|'); return [d,t,v]; }));
+    const dtDateTeamArr = sortByDate(Object.entries(dtDateTeam).map(([k,v])=>{ const [d,t]=k.split('|'); return [d,t,v]; }));
 
     clearBody('t1-body'); fillDateTeamTable(fpDateTeamArr, 't1-body', 't1-total');
     clearBody('t3-body'); fillDateTeamTable(stlDateTeamArr, 't3-body', 't3-total');
