@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inspection Dashboard — Katwaria Sarai</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B1220;
+    --panel:#121B2E;
+    --panel-2:#0E1626;
+    --line:#223049;
+    --amber:#F5A623;
+    --amber-dim:#8a6420;
+    --cyan:#3FD4E0;
+    --text:#E7ECF4;
+    --sub:#8592A8;
+    --done:#3FD48E;
+    --pending:#F5A623;
+    --danger:#E85C5C;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #142238 0%, transparent 60%),
+      radial-gradient(1000px 500px at 100% 0%, #1a1530 0%, transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    width:100%;
+    overflow-x:hidden;
+    padding:clamp(14px,4vw,32px) clamp(12px,4vw,20px) 60px;
+  }
+  .wrap{width:100%;max-width:1180px;margin:0 auto;}
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:16px;
+    border-bottom:1px solid var(--line);
+    padding-bottom:24px;
+    margin-bottom:22px;
+  }
+
+  .refresh-block{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:6px;
+  }
+  .refresh-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    padding:9px 16px;
+    border-radius:8px;
+    cursor:pointer;
+    transition:border-color .15s ease;
+  }
+  .refresh-btn:hover{border-color:var(--amber);}
+  .refresh-btn:disabled{opacity:.6;cursor:default;}
+  .refresh-icon{
+    font-size:15px;
+    display:inline-block;
+    transition:transform .5s ease;
+  }
+  .refresh-btn.loading .refresh-icon{
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+  .refresh-status{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--sub);
+    white-space:normal;
+    text-align:right;
+    max-width:220px;
+    line-height:1.4;
+  }
+  .refresh-status.error{color:var(--danger);}
+  .refresh-status.ok{color:var(--done);}
+
+  .tabs{
+    display:flex;
+    gap:6px;
+    margin-bottom:28px;
+    border-bottom:1px solid var(--line);
+    overflow-x:auto;
+  }
+  .tab-btn{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:14px;
+    font-weight:600;
+    color:var(--sub);
+    background:transparent;
+    border:none;
+    padding:12px 20px;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    white-space:nowrap;
+    transition:color .15s ease, border-color .15s ease;
+  }
+  .tab-btn .idx{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--amber-dim);
+    margin-right:8px;
+  }
+  .tab-btn:hover{color:var(--text);}
+  .tab-btn.active{color:var(--text);border-bottom-color:var(--amber);}
+  .tab-btn.active .idx{color:var(--amber);}
+
+  .group-tabs{margin-bottom:0;}
+  .group-btn{
+    font-size:15.5px;
+    padding:14px 22px;
+  }
+  .group-btn .idx{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:5px;
+    padding:1px 6px;
+    color:var(--sub);
+  }
+  .group-btn.active .idx{background:var(--amber);color:var(--bg);border-color:var(--amber);}
+  .group-btn.active{border-bottom-width:3px;}
+
+  .subtabs{
+    margin-top:14px;
+    margin-bottom:24px;
+    border-bottom:1px solid var(--line);
+  }
+  .subtabs .tab-btn{
+    font-size:13px;
+    padding:9px 16px;
+    color:var(--sub);
+  }
+  .subtabs .tab-btn.active{color:var(--cyan);border-bottom-color:var(--cyan);}
+  .subtabs .tab-btn.active .idx{color:var(--cyan);}
+
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;animation:fadeIn .25s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+  .brand-eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    letter-spacing:0.14em;
+    color:var(--amber);
+    text-transform:uppercase;
+    margin-bottom:8px;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:clamp(22px,5vw,32px);
+    font-weight:700;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .meta{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--sub);
+    text-align:right;
+    line-height:1.6;
+  }
+  .meta b{color:var(--text);}
+
+  .stat-row{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:0;
+    margin-bottom:32px;
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--line);
+    border-radius:10px;
+    position:relative;
+    overflow:hidden;
+  }
+  .stat-row::before{
+    content:'';
+    position:absolute;top:0;left:0;right:0;height:2px;
+    background:var(--amber);opacity:.6;
+  }
+  .stat{
+    padding:10px 12px 14px;
+    position:relative;
+    min-width:0;
+    border-left:1px solid var(--line);
+  }
+  .stat:first-child{border-left:none;}
+  .stat .lbl{
+    font-size:10px;
+    color:var(--sub);
+    margin-bottom:8px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--line);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .stat .num{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:clamp(18px,4vw,30px);
+    font-weight:700;
+  }
+
+  section.panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    margin-bottom:24px;
+    overflow:hidden;
+  }
+  .panel-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:16px 18px;
+    border-bottom:1px solid var(--line);
+    background:var(--panel-2);
+    flex-wrap:wrap;
+  }
+  .tag{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--bg);
+    background:var(--amber);
+    padding:3px 8px;
+    border-radius:5px;
+    font-weight:700;
+    letter-spacing:.04em;
+    flex-shrink:0;
+  }
+  .panel-head h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:clamp(14.5px,3vw,17px);
+    margin:0;
+    font-weight:600;
+  }
+  .panel-head span.sub{
+    color:var(--sub);
+    font-size:12px;
+    margin-left:auto;
+    font-family:'JetBrains Mono',monospace;
+    white-space:nowrap;
+  }
+
+  .table-scroll{
+    width:100%;
+  }
+
+  table{
+    width:100%;
+    table-layout:fixed;
+    border-collapse:collapse;
+    font-size:13.5px;
+  }
+  thead th{
+    text-align:left;
+    padding:11px 22px;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--sub);
+    border-bottom:1px solid var(--line);
+    font-weight:600;
+  }
+  tbody td{
+    padding:11px 22px;
+    border-bottom:1px solid rgba(34,48,73,0.5);
+    color:var(--text);
+    overflow-wrap:break-word;
+    word-break:break-word;
+  }
+  .cell-label{display:none;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:rgba(245,166,35,0.05);}
+
+  tr.group-header td{
+    background:var(--panel-2) !important;
+    padding:9px 22px;
+    border-bottom:1px solid var(--line);
+  }
+  .group-name{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    color:var(--text);
+  }
+  .group-count{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--amber);
+    margin-left:10px;
+    font-weight:700;
+  }
+  td.num, th.num{text-align:right;font-family:'JetBrains Mono',monospace;}
+  td.mono{font-family:'JetBrains Mono',monospace;color:var(--cyan);}
+
+  .badge-done{
+    color:var(--done);
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+  }
+  .badge-pending{
+    color:var(--pending);
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+  }
+
+  .map-link{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    color:var(--cyan);
+    text-decoration:none;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    font-weight:600;
+    padding:5px 10px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    white-space:nowrap;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .map-link:hover{border-color:var(--cyan);color:var(--text);}
+  .map-link.disabled{
+    color:var(--sub);
+    border-color:var(--line);
+    cursor:default;
+    pointer-events:none;
+  }
+
+  .bar-cell{display:flex;align-items:center;gap:8px;min-width:0;}
+  .bar-track{
+    flex:1;
+    min-width:0;
+    height:7px;
+    background:rgba(255,255,255,0.06);
+    border-radius:4px;
+    overflow:hidden;
+    display:flex;
+  }
+  .bar-done{height:100%;background:var(--done);}
+  .bar-pending{height:100%;background:var(--pending);}
+  .pct{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    color:var(--sub);
+    width:34px;
+    text-align:right;
+    flex-shrink:0;
+  }
+
+  tfoot td{
+    padding:12px 22px;
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    background:var(--panel-2);
+    border-top:1px solid var(--line);
+    color:var(--text);
+  }
+
+  footer{
+    text-align:center;
+    color:var(--sub);
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    margin-top:20px;
+    letter-spacing:.03em;
+  }
+
+  @media(max-width:720px){
+    header{flex-direction:column;align-items:flex-start;gap:10px;}
+    .refresh-block{align-items:flex-start;width:100%;}
+    .refresh-status{text-align:left;max-width:100%;}
+    .meta{text-align:left;}
+    .tabs{gap:2px;}
+    .tab-btn{padding:10px 10px;font-size:12px;}
+    .tab-btn .idx{margin-right:4px;}
+    .panel-head{padding:14px 14px;}
+    .panel-head span.sub{width:100%;margin-left:0;order:3;}
+
+    /* Card layout: table becomes stacked label:value rows, no horizontal scroll */
+    table{table-layout:auto;}
+    thead{display:none;}
+    tbody, tr, td{display:block;width:100%;}
+    tbody tr{
+      padding:10px 14px;
+      border-bottom:1px solid var(--line);
+    }
+    tbody td{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:5px 0;
+      border-bottom:none;
+      text-align:right;
+    }
+    .cell-label{
+      display:inline-block;
+      font-size:10.5px;
+      text-transform:uppercase;
+      letter-spacing:.05em;
+      color:var(--sub);
+      font-family:'JetBrains Mono',monospace;
+      text-align:left;
+      flex-shrink:0;
+    }
+    .cell-value{
+      flex:1 1 auto;
+      min-width:0;
+      text-align:right;
+    }
+    tbody td.mono{ text-align:right; }
+    tfoot tr{display:block;}
+    tfoot td{display:flex;justify-content:space-between;padding:10px 14px;}
+    tfoot td::before{content:attr(data-label);color:var(--sub);font-weight:400;}
+    tfoot td:first-child::before{content:'';}
+    tfoot td:empty{display:none;}
+
+    /* Date > Team > Done tables: keep a real table with header row, fitted to screen width */
+    table.table-dtd{
+      display:table;
+      table-layout:fixed;
+      width:100%;
+    }
+    table.table-dtd thead{display:table-header-group;}
+    table.table-dtd tbody{display:table-row-group;}
+    table.table-dtd tr{display:table-row;padding:0;border-bottom:none;}
+    table.table-dtd th, table.table-dtd td{
+      display:table-cell;
+      padding:8px 6px;
+      font-size:11.5px;
+      white-space:normal;
+      overflow-wrap:break-word;
+      word-break:break-word;
+      vertical-align:middle;
+      text-align:left;
+    }
+    table.table-dtd thead th{
+      padding:8px 6px;
+      font-size:9.5px;
+    }
+    table.table-dtd th:first-child, table.table-dtd td:first-child{width:19%;}
+    table.table-dtd th:nth-child(2), table.table-dtd td:nth-child(2){width:56%;}
+    table.table-dtd th:last-child, table.table-dtd td:last-child{width:25%;text-align:right;}
+    table.table-dtd .cell-label{display:none;}
+    table.table-dtd .cell-value{display:inline;text-align:inherit;}
+    table.table-dtd tbody tr:last-child td{border-bottom:none;}
+    table.table-dtd tfoot{display:table-footer-group;}
+    table.table-dtd tfoot tr{display:table-row;}
+    table.table-dtd tfoot td{
+      display:table-cell;
+      padding:10px 6px;
+      font-size:11.5px;
+    }
+    table.table-dtd tfoot td::before{content:none;}
+
+    /* Substation-wise Pending vs Done: real table with header row, fitted to screen width */
+    table.table-sub{
+      display:table;
+      table-layout:fixed;
+      width:100%;
+    }
+    table.table-sub thead{display:table-header-group;}
+    table.table-sub tbody{display:table-row-group;}
+    table.table-sub tr{display:table-row;padding:0;border-bottom:none;}
+    table.table-sub th, table.table-sub td{
+      display:table-cell;
+      padding:7px 4px;
+      font-size:10.5px;
+      white-space:normal;
+      overflow-wrap:break-word;
+      word-break:break-word;
+      vertical-align:middle;
+      text-align:left;
+    }
+    table.table-sub thead th{
+      padding:7px 4px;
+      font-size:8.5px;
+    }
+    table.table-sub th:nth-child(1), table.table-sub td:nth-child(1){width:30%;}
+    table.table-sub th:nth-child(2), table.table-sub td:nth-child(2){width:12%;text-align:right;}
+    table.table-sub th:nth-child(3), table.table-sub td:nth-child(3){width:14%;text-align:right;}
+    table.table-sub th:nth-child(4), table.table-sub td:nth-child(4){width:12%;text-align:right;}
+    table.table-sub th:nth-child(5), table.table-sub td:nth-child(5){width:32%;}
+    table.table-sub .cell-label{display:none;}
+    table.table-sub .cell-value{display:inline;text-align:inherit;}
+    table.table-sub tbody tr:last-child td{border-bottom:none;}
+    table.table-sub tfoot{display:table-footer-group;}
+    table.table-sub tfoot tr{display:table-row;}
+    table.table-sub tfoot td{
+      display:table-cell;
+      padding:9px 4px;
+      font-size:10.5px;
+    }
+    table.table-sub tfoot td::before{content:none;}
+    table.table-sub .bar-cell{gap:5px;}
+    table.table-sub .pct{width:26px;font-size:10px;}
+
+    /* Deficiency pivot tables: real table with header row, fitted to screen width */
+    table.table-def{
+      display:table;
+      table-layout:fixed;
+      width:100%;
+    }
+    table.table-def thead{display:table-header-group;}
+    table.table-def tbody{display:table-row-group;}
+    table.table-def tr{display:table-row;padding:0;border-bottom:none;}
+    table.table-def th, table.table-def td{
+      display:table-cell;
+      padding:8px 5px;
+      font-size:11px;
+      white-space:normal;
+      overflow-wrap:break-word;
+      word-break:break-word;
+      vertical-align:middle;
+      text-align:left;
+    }
+    table.table-def thead th{padding:8px 5px;font-size:9px;}
+    table.table-def4 th:nth-child(1), table.table-def4 td:nth-child(1){width:34%;}
+    table.table-def4 th:nth-child(2), table.table-def4 td:nth-child(2){width:24%;}
+    table.table-def4 th:nth-child(3), table.table-def4 td:nth-child(3){width:20%;}
+    table.table-def4 th:nth-child(4), table.table-def4 td:nth-child(4){width:22%;}
+    table.table-def3 th:nth-child(1), table.table-def3 td:nth-child(1){width:38%;}
+    table.table-def3 th:nth-child(2), table.table-def3 td:nth-child(2){width:32%;}
+    table.table-def3 th:nth-child(3), table.table-def3 td:nth-child(3){width:30%;}
+    table.table-def2 th:nth-child(1), table.table-def2 td:nth-child(1){width:62%;}
+    table.table-def2 th:nth-child(2), table.table-def2 td:nth-child(2){width:38%;}
+    table.table-def1 th, table.table-def1 td{width:100%;}
+    table.table-def .cell-label{display:none;}
+    table.table-def .cell-value{display:inline;text-align:inherit;}
+    table.table-def tbody tr:last-child td{border-bottom:none;}
+    table.table-def .map-link{font-size:10.5px;padding:4px 6px;}
+    table.table-def tr.group-header td{
+      display:table-cell;
+      background:var(--panel-2);
+      padding:8px 8px;
+    }
+  }
+  @media(max-width:420px){
+    .stat{padding:8px 6px 10px;}
+    .stat .lbl{font-size:8.5px;margin-bottom:6px;padding-bottom:6px;}
+    .stat .num{font-size:clamp(15px,4.5vw,22px);}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>Inspection Dashboard</h1>
+    </div>
+    <div class="refresh-block">
+      <button id="refresh-btn" class="refresh-btn">
+        <span class="refresh-icon">⟳</span><span class="refresh-label">Refresh Data</span>
+      </button>
+      <div id="refresh-status" class="refresh-status">Not refreshed this session</div>
+    </div>
+  </header>
+
+  <nav class="tabs group-tabs">
+    <button class="tab-btn group-btn active" data-group="progress"><span class="idx">A</span>Survey Progress</button>
+    <button class="tab-btn group-btn" data-group="deficiency"><span class="idx">B</span>Deficiency</button>
+  </nav>
+
+  <nav class="tabs subtabs" id="subtabs-progress">
+    <button class="tab-btn active" data-tab="fpsp"><span class="idx">01</span>FP SP</button>
+    <button class="tab-btn" data-tab="stl"><span class="idx">02</span>STL</button>
+    <button class="tab-btn" data-tab="dt"><span class="idx">03</span>DT</button>
+  </nav>
+
+  <nav class="tabs subtabs" id="subtabs-deficiency" style="display:none;">
+    <button class="tab-btn" data-tab="fpsp-pivot"><span class="idx">01</span>FP SP Pivot</button>
+    <button class="tab-btn" data-tab="stl-pivot"><span class="idx">02</span>STL Pivot</button>
+    <button class="tab-btn" data-tab="dt-pivot"><span class="idx">03</span>DT Pivot</button>
+  </nav>
+
+  <!-- ==================== TAB 1: FP SP ==================== -->
+  <div class="tab-panel active" id="panel-fpsp">
+    <div class="stat-row">
+      <div class="stat"><div class="lbl">Total Assets</div><div class="num" id="fp-total">554</div></div>
+      <div class="stat"><div class="lbl">Done</div><div class="num" id="fp-done">34</div></div>
+      <div class="stat"><div class="lbl">Pending</div><div class="num" id="fp-pending">520</div></div>
+      <div class="stat"><div class="lbl">Completion</div><div class="num" id="fp-pct">6%</div></div>
+    </div>
+
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">A</span>
+        <h2>Date-wise → Team-wise Done Count</h2>
+        <span class="sub" id="fp-t1-sub">22 inspections completed</span>
+      </div>
+      <div class="table-scroll"><table class="table-dtd">
+        <thead><tr><th>Date</th><th>Team</th><th class="num">Done</th></tr></thead>
+        <tbody id="t1-body"></tbody>
+        <tfoot><tr><td colspan="2">Total</td><td class="num" id="t1-total" data-label="Done"></td></tr></tfoot>
+      </table></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">B</span>
+        <h2>Substation-wise Pending vs Done</h2>
+        <span class="sub" id="fp-t2-sub">19 substations</span>
+      </div>
+      <div class="table-scroll"><table class="table-sub">
+        <thead><tr><th>Substation</th><th class="num">Done</th><th class="num">Pending</th><th class="num">Total</th><th>Progress</th></tr></thead>
+        <tbody id="t2-body"></tbody>
+        <tfoot><tr><td>Total</td><td class="num" id="t2-done" data-label="Done"></td><td class="num" id="t2-pending" data-label="Pending"></td><td class="num" id="t2-total" data-label="Total"></td><td data-label=""></td></tr></tfoot>
+      </table></div>
+    </section>
+  </div>
+
+  <!-- ==================== TAB 2: STL ==================== -->
+  <div class="tab-panel" id="panel-stl">
+    <div class="stat-row">
+      <div class="stat"><div class="lbl">Total Assets</div><div class="num" id="stl-total">832</div></div>
+      <div class="stat"><div class="lbl">Done</div><div class="num" id="stl-done">116</div></div>
+      <div class="stat"><div class="lbl">Pending</div><div class="num" id="stl-pending">716</div></div>
+      <div class="stat"><div class="lbl">Completion</div><div class="num" id="stl-pct">14%</div></div>
+    </div>
+
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">A</span>
+        <h2>Date-wise → Team-wise Done Count</h2>
+        <span class="sub" id="stl-t3-sub">115 inspections completed</span>
+      </div>
+      <div class="table-scroll"><table class="table-dtd">
+        <thead><tr><th>Date</th><th>Team</th><th class="num">Done</th></tr></thead>
+        <tbody id="t3-body"></tbody>
+        <tfoot><tr><td colspan="2">Total</td><td class="num" id="t3-total" data-label="Done"></td></tr></tfoot>
+      </table></div>
+    </section>
+  </div>
+
+  <!-- ==================== TAB 3: DT ==================== -->
+  <div class="tab-panel" id="panel-dt">
+    <div class="stat-row">
+      <div class="stat"><div class="lbl">Total Assets</div><div class="num" id="dt-total">81</div></div>
+      <div class="stat"><div class="lbl">Done</div><div class="num" id="dt-done">16</div></div>
+      <div class="stat"><div class="lbl">Pending</div><div class="num" id="dt-pending">65</div></div>
+      <div class="stat"><div class="lbl">Completion</div><div class="num" id="dt-pct">20%</div></div>
+    </div>
+
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">A</span>
+        <h2>Date-wise → Team-wise Done Count</h2>
+        <span class="sub" id="dt-t4-sub">16 inspections completed</span>
+      </div>
+      <div class="table-scroll"><table class="table-dtd">
+        <thead><tr><th>Date</th><th>Team</th><th class="num">Done</th></tr></thead>
+        <tbody id="t4-body"></tbody>
+        <tfoot><tr><td colspan="2">Total</td><td class="num" id="t4-total" data-label="Done"></td></tr></tfoot>
+      </table></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">B</span>
+        <h2>Substation-wise Pending vs Done</h2>
+        <span class="sub" id="dt-t5-sub">67 substations</span>
+      </div>
+      <div class="table-scroll"><table class="table-sub">
+        <thead><tr><th>Substation</th><th class="num">Done</th><th class="num">Pending</th><th class="num">Total</th><th>Progress</th></tr></thead>
+        <tbody id="t5-body"></tbody>
+        <tfoot><tr><td>Total</td><td class="num" id="t5-done" data-label="Done"></td><td class="num" id="t5-pending" data-label="Pending"></td><td class="num" id="t5-total" data-label="Total"></td><td data-label=""></td></tr></tfoot>
+      </table></div>
+    </section>
+  </div>
+
+  <!-- ==================== TAB 4: FP SP PIVOT ==================== -->
+  <div class="tab-panel" id="panel-fpsp-pivot">
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">A</span>
+        <h2>Deficiency Summary — FP SP Inspection</h2>
+        <span class="sub" id="pv1-sub">34 records inspected · 93 cases</span>
+      </div>
+      <div class="table-scroll"><table class="table-def table-def2">
+        <thead><tr><th>Deficiency Type</th><th class="num">Deficiency Count</th></tr></thead>
+        <tbody id="pv1-summary"></tbody>
+      </table></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">B</span>
+        <h2>Deficiency Detail — FP SP Inspection</h2>
+        <span class="sub">cases marked Not OK / Not Found</span>
+      </div>
+      <div class="table-scroll"><table class="table-def table-def4">
+        <thead><tr><th>Substation</th><th>Pole/Pillar No</th><th>Asset Type</th><th>Map</th></tr></thead>
+        <tbody id="pv1-body"></tbody>
+      </table></div>
+    </section>
+  </div>
+
+  <!-- ==================== TAB 5: STL PIVOT ==================== -->
+  <div class="tab-panel" id="panel-stl-pivot">
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">A</span>
+        <h2>Deficiency Summary — STL Inspection</h2>
+        <span class="sub" id="pv2-sub">116 records inspected · 85 cases</span>
+      </div>
+      <div class="table-scroll"><table class="table-def table-def2">
+        <thead><tr><th>Deficiency Type</th><th class="num">Deficiency Count</th></tr></thead>
+        <tbody id="pv2-summary"></tbody>
+      </table></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">B</span>
+        <h2>Deficiency Detail — STL Inspection</h2>
+        <span class="sub">cases marked Not OK / Not Found</span>
+      </div>
+      <div class="table-scroll"><table class="table-def table-def3">
+        <thead><tr><th>Substation</th><th>CCMS Pole No</th><th>Map</th></tr></thead>
+        <tbody id="pv2-body"></tbody>
+      </table></div>
+    </section>
+  </div>
+
+  <!-- ==================== TAB 6: DT PIVOT ==================== -->
+  <div class="tab-panel" id="panel-dt-pivot">
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">A</span>
+        <h2>Deficiency Summary — DT Inspection</h2>
+        <span class="sub" id="pv3-sub">16 records inspected · 16 cases</span>
+      </div>
+      <div class="table-scroll"><table class="table-def table-def2">
+        <thead><tr><th>Deficiency Type</th><th class="num">Deficiency Count</th></tr></thead>
+        <tbody id="pv3-summary"></tbody>
+      </table></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">B</span>
+        <h2>Deficiency Detail — DT Inspection</h2>
+        <span class="sub">Sub Station Locked, RMU Gas, Breather, Silica Gel, OTI etc. — Not OK</span>
+      </div>
+      <div class="table-scroll"><table class="table-def table-def2">
+        <thead><tr><th>Substation</th><th>Map</th></tr></thead>
+        <tbody id="pv3-body"></tbody>
+      </table></div>
+    </section>
+  </div>
+
+  <footer>Built from FP SP Inspection · STL Inspection · DT Inspection tabs · counts reflect data at time of export</footer>
+</div>
+
+<script>
+const t1 = [
+  ["02-Jul","Ashok Kumar & Deshraj",6],
+  ["02-Jul","Sanjay Kumar & Shiv Pujan",7],
+  ["04-Jul","Ashok Kumar & Ravinder Kumar",1],
+  ["05-Jul","Sanjay Kumar & Ameer",6],
+  ["05-Jul","Sanjay Kumar & Shiv Pujan",1],
+  ["07-Jul","Harikishan Mukhiya & Mohd Habib",1],
+  ["08-Jul","Ramraj & Ameer",1],
+  ["09-Jul","Rahmat Tulla Shah & Deshraj",11],
+];
+
+const t2 = [
+  ["C-3, SIIA (DR CHANDA):PM",0,13],
+  ["DDA FLAT BER SARAI : ID",6,34],
+  ["DDA FLAT KATWARIA SARAI : ID",0,21],
+  ["HARIJAN BASTI KATWARIA SARAI VILL : PKG",0,42],
+  ["HARYANA GOVT. NURSERY:PM",0,16],
+  ["IIT MINI CAMPUS:ID",0,6],
+  ["IIT NO 1:ID",1,88],
+  ["IIT NO 2:ID",3,55],
+  ["JIA SARAI:PL",0,42],
+  ["NCERT NO 2:ID",1,12],
+  ["PROFESSORS APPARTMENT,IIT DELHI",0,13],
+  ["S/STN. IIT SOLAR HOUSE : ID",5,4],
+  ["SIIA -1 (GURUNANAK FOUNDATION) :ID",3,5],
+  ["SIIA NO 2 : ID",4,8],
+  ["SIIA NO 3 : ID",0,5],
+  ["SIIA NO 4 : ID",2,8],
+  ["SIIA NO 5 KATWARIA:ID",8,37],
+  ["VILLAGE BER SARAI :ID",0,28],
+  ["VILLAGE KATWARIA SARAI : PM",0,54],
+];
+
+const t3 = [
+  ["17-Jun","Ashok Kumar &",14],
+  ["17-Jun","Umesh Jha &",11],
+  ["19-Jun","Ramraj &",11],
+  ["22-Jun","Umesh Jha &",18],
+  ["26-Jun","Ashok Kumar &",12],
+  ["26-Jun","Ramraj &",2],
+  ["27-Jun","Harikishan Mukhiya &",7],
+  ["28-Jun","Harikishan Mukhiya &",4],
+  ["29-Jun","Harikishan Mukhiya &",4],
+  ["03-Jul","Ashok Kumar &",5],
+  ["04-Jul","Rajesh Yadav & Anil",14],
+  ["05-Jul","Umesh Jha & Anil",9],
+  ["06-Jul","Harikishan Mukhiya & Mohd Habib",4],
+  ["08-Jul","Ramraj & Ameer",1],
+];
+
+const dt1 = [
+  ["24-Jun","Umesh Jha & Deshraj",1],
+  ["01-Jul","Pradeep Kumar & Deshraj",1],
+  ["01-Jul","Rahmat Tulla Shah & Shiv Pujan",1],
+  ["03-Jul","Ashok Kumar & Avneesh Dubey",2],
+  ["03-Jul","Ashok Kumar & Shiv Pujan",1],
+  ["03-Jul","Sanjay Kumar & Shiv Pujan",4],
+  ["04-Jul","Ramraj & Ameer",4],
+  ["06-Jul","Umesh Jha & Anil",2],
+];
+
+const dt2 = [
+["C-3, SIIA  (DR CHANDA):PM",0,1],
+["DDA FLAT BER SARAI : ID",2,0],
+["DDA FLAT KATWARIA SARAI : ID",0,2],
+["DP AT ARUNA ASAF ALI MARG NEAR NIPGR",0,1],
+["HARIJAN BASTI KATWARIA SARAI VILL : PKG",0,2],
+["HARYANA GOVT. NURSERY:PM",1,0],
+["HTC NT FOR HANDI CAPPED 9-S.J.S. MA",0,1],
+["HTC:18/2, NIEPF QUTUB IND AREA",0,1],
+["HTC:AMERICAN EMBASSEY",0,1],
+["HTC:APCCT QUTUB IND AREA",0,1],
+["HTC:ASSOCIATE OF OLYMPIC",0,1],
+["HTC:B-12 SOCIAL WELFARE,KATWARIA SARAI",0,1],
+["HTC:B-14, SIIA",0,1],
+["HTC:B-8, S.I.I.A.",0,1],
+["HTC:BHARTI SCHOOLL, IIT",0,1],
+["HTC:BIO-TECHNOLOGY",0,1],
+["HTC:CHACHA NEHRU NCERT",0,1],
+["HTC:CHATRAPATI SHIVAJI",0,1],
+["HTC:CSMRS QUTUB RING ROAD",0,1],
+["HTC:DELHI ARCHIEVES",0,1],
+["HTC:DEPTT. OF IMMUNOLOGY",0,1],
+["HTC:DEPTT. OF SCIENCE & TECHNOLOGY",0,1],
+["HTC:FORE SCHOOL OF MANAGEMENT",0,1],
+["HTC:ICSSR",0,1],
+["HTC:IIFT",0,1],
+["HTC:IIT NO.3",0,1],
+["HTC:IMI, KATWARIA SARAI",0,1],
+["HTC:IMM, QUTUB IND. AREA",0,1],
+["HTC:INST. OF RUSSIAN STUDIES NO-2 OLD",0,1],
+["HTC:ISI, KATWARIA SARAI",0,1],
+["HTC:JNU NEW CAMPUS",0,1],
+["HTC:KALINDI BHAWAN QUTUB IND. AREA",0,1],
+["HTC:KARAMPA INTERNATIONAL, B19 & 20, QIA",0,1],
+["HTC:KENDRIYA VIDYALAYA SANGTHAN",0,1],
+["HTC:KENDRIYA(RASTRIYA) HINDI SANSTHAN",0,1],
+["HTC:LBS VIDHYAPEETH",0,1],
+["HTC:M/S DIR OF WORKS MINE OF D,C-7 QLA",0,1],
+["HTC:MASS COMMUNICATION",0,1],
+["HTC:NCERT NO.1",0,1],
+["HTC:NIPGR QUTUB IND AREA",0,1],
+["HTC:NIPPA NCERT",0,1],
+["HTC:NISDOC",0,1],
+["HTC:NREB, KATWARIA SARAI",0,1],
+["HTC:NUCLEAR SCIENCE CENTRE",0,1],
+["HTC:POWER GRID CORPORATION",0,1],
+["HTC:QUTAB HOTEL",0,1],
+["HTC:ROCKLAND HOSPITAL",0,1],
+["HTC:SEETA RAM",0,1],
+["HTC:SOCIETY DEV ALTERNATIVES,B-32,QIA",0,1],
+["HTC:TIFAC BLDG, QUTUB IND. AREA",0,1],
+["IIT Block No 99A",0,1],
+["IIT MINI CAMPUS:ID",2,0],
+["IIT NO 1:ID",1,0],
+["IIT NO 2:ID",1,0],
+["INSTITUTE OF RUSSIAN STUDY :ID",0,1],
+["JIA SARAI:PL",0,2],
+["NCERT NO 2:ID",1,1],
+["PROFESSORS APPARTMENT,IIT DELHI",2,2],
+["RMU:ARUNA ASIF ALI MARG NEAR NEELA HAUZ",0,1],
+["S/STN. IIT SOLAR HOUSE : ID",1,0],
+["SIIA -1 (GURUNANAK FOUNDATION) :ID",2,0],
+["SIIA NO 2 : ID",2,0],
+["SIIA NO 3 : ID",1,0],
+["SIIA NO 4 : ID",0,1],
+["SIIA NO 5 KATWARIA:ID",0,2],
+["VILLAGE BER SARAI :ID",0,2],
+["VILLAGE KATWARIA SARAI : PM",0,2],
+];
+
+function fillDateTeamTable(data, bodyId, totalId){
+  const body = document.getElementById(bodyId);
+  let total = 0;
+  data.forEach(([date, team, count])=>{
+    total += count;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="mono" data-label="Date"><span class="cell-label">Date</span><span class="cell-value">${date}</span></td>
+      <td data-label="Team"><span class="cell-label">Team</span><span class="cell-value">${team}</span></td>
+      <td class="num badge-done" data-label="Done"><span class="cell-label">Done</span><span class="cell-value">${count}</span></td>`;
+    body.appendChild(tr);
+  });
+  document.getElementById(totalId).textContent = total;
+}
+
+function fillSubstationTable(data, bodyId, doneId, pendingId, totalId){
+  const body = document.getElementById(bodyId);
+  let sumDone=0, sumPending=0;
+  data.forEach(([name, done, pending])=>{
+    const total = done + pending;
+    const pct = total ? Math.round((done/total)*100) : 0;
+    sumDone += done; sumPending += pending;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td data-label="Substation"><span class="cell-label">Substation</span><span class="cell-value">${name}</span></td>
+      <td class="num badge-done" data-label="Done"><span class="cell-label">Done</span><span class="cell-value">${done}</span></td>
+      <td class="num badge-pending" data-label="Pending"><span class="cell-label">Pending</span><span class="cell-value">${pending}</span></td>
+      <td class="num" data-label="Total"><span class="cell-label">Total</span><span class="cell-value">${total}</span></td>
+      <td data-label="Progress"><span class="cell-label">Progress</span><span class="cell-value">
+        <div class="bar-cell">
+          <div class="bar-track">
+            <div class="bar-done" style="width:${pct}%"></div>
+            <div class="bar-pending" style="width:${100-pct}%"></div>
+          </div>
+          <div class="pct">${pct}%</div>
+        </div>
+      </span></td>`;
+    body.appendChild(tr);
+  });
+  document.getElementById(doneId).textContent = sumDone;
+  document.getElementById(pendingId).textContent = sumPending;
+  document.getElementById(totalId).textContent = sumDone+sumPending;
+}
+
+// Populate all tables
+fillDateTeamTable(t1, 't1-body', 't1-total');
+fillSubstationTable(t2, 't2-body', 't2-done', 't2-pending', 't2-total');
+fillDateTeamTable(t3, 't3-body', 't3-total');
+fillDateTeamTable(dt1, 't4-body', 't4-total');
+fillSubstationTable(dt2, 't5-body', 't5-done', 't5-pending', 't5-total');
+
+
+// ==================== Deficiency Pivot Data ====================
+const pv1 = [
+  ["Danger Board Missing on Pole/Pillar", "DDA FLAT BER SARAI : ID", "HKSFPG010", "Service Pillar", "28.549253,77.18107"],
+  ["Danger Board Missing on Pole/Pillar", "DDA FLAT BER SARAI : ID", "HKSFPG008", "Feeder Pillar", "28.548597,77.180635"],
+  ["Danger Board Missing on Pole/Pillar", "DDA FLAT BER SARAI : ID", "HKSFPG007", "Service Pillar", "28.54865,77.180655"],
+  ["Danger Board Missing on Pole/Pillar", "DDA FLAT BER SARAI : ID", "HKSFPG009", "Service Pillar", "28.548664,77.18019"],
+  ["Danger Board Missing on Pole/Pillar", "DDA FLAT BER SARAI : ID", "HKSFPG083", "Feeder Pillar", "28.548746,77.180754"],
+  ["Danger Board Missing on Pole/Pillar", "DDA FLAT BER SARAI : ID", "HKSFPG082", "Feeder Pillar", "28.548998,77.180783"],
+  ["Danger Board Missing on Pole/Pillar", "IIT NO 1:ID", "HKSFPL316", "Feeder Pillar", "28.544304,77.196185"],
+  ["Danger Board Missing on Pole/Pillar", "IIT NO 2:ID", "HKSFPG037", "Feeder Pillar", "28.541175,77.198111"],
+  ["Danger Board Missing on Pole/Pillar", "IIT NO 2:ID", "HKSFPG053", "Service Pillar", "28.541386, 77.194012"],
+  ["Danger Board Missing on Pole/Pillar", "NCERT NO 2:ID", "HKSFPG051", "Feeder Pillar", "28.540982,77.190731"],
+  ["Danger Board Missing on Pole/Pillar", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT012", "Feeder Pillar", "28.544095,77.185752"],
+  ["Danger Board Missing on Pole/Pillar", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT011", "Feeder Pillar", "28.544191,77.185333"],
+  ["Danger Board Missing on Pole/Pillar", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT013", "Feeder Pillar", "28.54427,77.185894"],
+  ["Danger Board Missing on Pole/Pillar", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT010", "Feeder Pillar", "28.544499,77.184353"],
+  ["Danger Board Missing on Pole/Pillar", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG094", "Service Pillar", "28.542065,77.178261"],
+  ["Danger Board Missing on Pole/Pillar", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG099", "Feeder Pillar", "28.542303,77.176971"],
+  ["Danger Board Missing on Pole/Pillar", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG011", "Service Pillar", "28.542801,77.180431"],
+  ["Danger Board Missing on Pole/Pillar", "SIIA NO 2 : ID", "HKSFPG023", "Service Pillar", "28.53681,77.187774"],
+  ["Danger Board Missing on Pole/Pillar", "SIIA NO 2 : ID", "HKSFPG021", "Feeder Pillar", "28.537441,77.188066"],
+  ["Danger Board Missing on Pole/Pillar", "SIIA NO 2 : ID", "HKSFPG024", "Service Pillar", "28.536844,77.18768"],
+  ["Danger Board Missing on Pole/Pillar", "SIIA NO 2 : ID", "HKSFPG022", "Feeder Pillar", "28.537481,77.187941"],
+  ["Danger Board Missing on Pole/Pillar", "SIIA NO 4 : ID", "HKSFPG016", "Feeder Pillar", "28.53827,77.182288"],
+  ["Danger Board Missing on Pole/Pillar", "SIIA NO 4 : ID", "HKSFPG013", "Service Pillar", "28.54014,77.183086"],
+  ["Danger Board Missing on Pole/Pillar", "SIIA NO 5 KATWARIA:ID", "HKSK372", "Pole", "28.54093,77.184506"],
+  ["Danger Board Missing on Pole/Pillar", "SIIA NO 5 KATWARIA:ID", "HKSG147", "Pole", "28.541121,77.184344"],
+  ["Danger Board Missing on Pole/Pillar", "SIIA NO 5 KATWARIA:ID", "HKSFPG090", "Feeder Pillar", "28.541151,77.184311"],
+  ["Danger Board Missing on Pole/Pillar", "SIIA NO 5 KATWARIA:ID", "HKSFPG062", "Feeder Pillar", "28.54122,77.184533"],
+  ["Danger Board Missing on Pole/Pillar", "SIIA NO 5 KATWARIA:ID", "HKSG178", "Pole", "28.541226,77.18418"],
+  ["Danger Board Missing on Pole/Pillar", "SIIA NO 5 KATWARIA:ID", "HKSG256", "Pole", "28.541247,77.184922"],
+  ["Danger Board Missing on Pole/Pillar", "SIIA NO 5 KATWARIA:ID", "HKSK839", "Pole", "28.540651,77.185039"],
+  ["Danger Board Missing on Pole/Pillar", "SIIA NO 5 KATWARIA:ID", "HKSG172", "Pole", "28.541143, 77.184471"],
+  ["Pillar Not Fenced", "-", "HKSL391", "Service Pillar", "28.544401, 77.196056"],
+  ["Pillar Not Fenced", "DDA FLAT BER SARAI : ID", "HKSFPG010", "Service Pillar", "28.549253,77.18107"],
+  ["Pillar Not Fenced", "DDA FLAT BER SARAI : ID", "HKSFPG008", "Feeder Pillar", "28.548597,77.180635"],
+  ["Pillar Not Fenced", "DDA FLAT BER SARAI : ID", "HKSFPG007", "Service Pillar", "28.54865,77.180655"],
+  ["Pillar Not Fenced", "DDA FLAT BER SARAI : ID", "HKSFPG009", "Service Pillar", "28.548664,77.18019"],
+  ["Pillar Not Fenced", "DDA FLAT BER SARAI : ID", "HKSFPG083", "Feeder Pillar", "28.548746,77.180754"],
+  ["Pillar Not Fenced", "DDA FLAT BER SARAI : ID", "HKSFPG082", "Feeder Pillar", "28.548998,77.180783"],
+  ["Pillar Not Fenced", "IIT NO 1:ID", "HKSFPL316", "Feeder Pillar", "28.544304,77.196185"],
+  ["Pillar Not Fenced", "IIT NO 2:ID", "HKSFPG037", "Feeder Pillar", "28.541175,77.198111"],
+  ["Pillar Not Fenced", "IIT NO 2:ID", "HKSFPL184", "Feeder Pillar", "28.541569,77.196845"],
+  ["Pillar Not Fenced", "IIT NO 2:ID", "HKSFPG053", "Service Pillar", "28.541386, 77.194012"],
+  ["Pillar Not Fenced", "NCERT NO 2:ID", "HKSFPG051", "Feeder Pillar", "28.540982,77.190731"],
+  ["Pillar Not Fenced", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT012", "Feeder Pillar", "28.544095,77.185752"],
+  ["Pillar Not Fenced", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT011", "Feeder Pillar", "28.544191,77.185333"],
+  ["Pillar Not Fenced", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT013", "Feeder Pillar", "28.54427,77.185894"],
+  ["Pillar Not Fenced", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT007", "Feeder Pillar", "28.544271,77.182906"],
+  ["Pillar Not Fenced", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT010", "Feeder Pillar", "28.544499,77.184353"],
+  ["Pillar Not Fenced", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG094", "Service Pillar", "28.542065,77.178261"],
+  ["Pillar Not Fenced", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG099", "Feeder Pillar", "28.542303,77.176971"],
+  ["Pillar Not Fenced", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG011", "Service Pillar", "28.542801,77.180431"],
+  ["Pillar Not Fenced", "SIIA NO 2 : ID", "HKSFPG023", "Service Pillar", "28.53681,77.187774"],
+  ["Pillar Not Fenced", "SIIA NO 2 : ID", "HKSFPG021", "Feeder Pillar", "28.537441,77.188066"],
+  ["Pillar Not Fenced", "SIIA NO 2 : ID", "HKSFPG024", "Service Pillar", "28.536844,77.18768"],
+  ["Pillar Not Fenced", "SIIA NO 2 : ID", "HKSFPG022", "Feeder Pillar", "28.537481,77.187941"],
+  ["Pillar Not Fenced", "SIIA NO 4 : ID", "HKSFPG016", "Feeder Pillar", "28.53827,77.182288"],
+  ["Pillar Not Fenced", "SIIA NO 4 : ID", "HKSFPG013", "Service Pillar", "28.54014,77.183086"],
+  ["Pillar Not Fenced", "SIIA NO 5 KATWARIA:ID", "HKSFPG090", "Feeder Pillar", "28.541151,77.184311"],
+  ["Pillar Not Fenced", "SIIA NO 5 KATWARIA:ID", "HKSFPG062", "Feeder Pillar", "28.54122,77.184533"],
+  ["Pillar Plinth Condition Not OK", "DDA FLAT BER SARAI : ID", "HKSFPG010", "Service Pillar", "28.549253,77.18107"],
+  ["Pillar Plinth Condition Not OK", "DDA FLAT BER SARAI : ID", "HKSFPG009", "Service Pillar", "28.548664,77.18019"],
+  ["Pillar Plinth Condition Not OK", "DDA FLAT BER SARAI : ID", "HKSFPG082", "Feeder Pillar", "28.548998,77.180783"],
+  ["Pillar Plinth Condition Not OK", "IIT NO 1:ID", "HKSFPL316", "Feeder Pillar", "28.544304,77.196185"],
+  ["Pillar Plinth Condition Not OK", "IIT NO 2:ID", "HKSFPG037", "Feeder Pillar", "28.541175,77.198111"],
+  ["Pillar Plinth Condition Not OK", "IIT NO 2:ID", "HKSFPG053", "Service Pillar", "28.541386, 77.194012"],
+  ["Pillar Plinth Condition Not OK", "NCERT NO 2:ID", "HKSFPG051", "Feeder Pillar", "28.540982,77.190731"],
+  ["Pillar Plinth Condition Not OK", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG094", "Service Pillar", "28.542065,77.178261"],
+  ["Pillar Plinth Condition Not OK", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG099", "Feeder Pillar", "28.542303,77.176971"],
+  ["Pillar Plinth Condition Not OK", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG011", "Service Pillar", "28.542801,77.180431"],
+  ["Pillar Plinth Condition Not OK", "SIIA NO 2 : ID", "HKSFPG023", "Service Pillar", "28.53681,77.187774"],
+  ["Pillar Plinth Condition Not OK", "SIIA NO 2 : ID", "HKSFPG021", "Feeder Pillar", "28.537441,77.188066"],
+  ["Pillar Plinth Condition Not OK", "SIIA NO 2 : ID", "HKSFPG024", "Service Pillar", "28.536844,77.18768"],
+  ["Pillar Plinth Condition Not OK", "SIIA NO 4 : ID", "HKSFPG016", "Feeder Pillar", "28.53827,77.182288"],
+  ["Pillar Plinth Condition Not OK", "SIIA NO 4 : ID", "HKSFPG013", "Service Pillar", "28.54014,77.183086"],
+  ["Pillar Plinth Condition Not OK", "SIIA NO 5 KATWARIA:ID", "HKSFPG062", "Feeder Pillar", "28.54122,77.184533"],
+  ["HRC Fuse Condition Not OK", "DDA FLAT BER SARAI : ID", "HKSFPG083", "Feeder Pillar", "28.548746,77.180754"],
+  ["HRC Fuse Condition Not OK", "IIT NO 1:ID", "HKSFPL316", "Feeder Pillar", "28.544304,77.196185"],
+  ["HRC Fuse Condition Not OK", "SIIA NO 2 : ID", "HKSFPG021", "Feeder Pillar", "28.537441,77.188066"],
+  ["HRC Fuse Condition Not OK", "SIIA NO 2 : ID", "HKSFPG024", "Service Pillar", "28.536844,77.18768"],
+  ["HRC Fuse Condition Not OK", "SIIA NO 4 : ID", "HKSFPG016", "Feeder Pillar", "28.53827,77.182288"],
+  ["HRC Fuse Condition Not OK", "SIIA NO 4 : ID", "HKSFPG013", "Service Pillar", "28.54014,77.183086"],
+  ["HRC Fuse Condition Not OK", "SIIA NO 5 KATWARIA:ID", "HKSFPG090", "Feeder Pillar", "28.541151,77.184311"],
+  ["HRC Fuse Condition Not OK", "SIIA NO 5 KATWARIA:ID", "HKSFPG062", "Feeder Pillar", "28.54122,77.184533"],
+  ["Pillar Door Not Properly Locked", "IIT NO 1:ID", "HKSFPL316", "Feeder Pillar", "28.544304,77.196185"],
+  ["Pillar Door Not Properly Locked", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT010", "Feeder Pillar", "28.544499,77.184353"],
+  ["Pillar Door Not Properly Locked", "SIIA NO 2 : ID", "HKSFPG023", "Service Pillar", "28.53681,77.187774"],
+  ["Pillar Door Not Properly Locked", "SIIA NO 2 : ID", "HKSFPG024", "Service Pillar", "28.536844,77.18768"],
+  ["Pillar Door Not Properly Locked", "SIIA NO 5 KATWARIA:ID", "HKSFPG090", "Feeder Pillar", "28.541151,77.184311"],
+  ["Pole Earthing Not Found", "SIIA NO 5 KATWARIA:ID", "HKSG147", "Pole", "28.541121,77.184344"],
+  ["Pole Earthing Not Found", "SIIA NO 5 KATWARIA:ID", "HKSG178", "Pole", "28.541226,77.18418"],
+  ["Pole Earthing Not Found", "SIIA NO 5 KATWARIA:ID", "HKSG256", "Pole", "28.541247,77.184922"],
+  ["Pole Earthing Not Found", "SIIA NO 5 KATWARIA:ID", "HKSK839", "Pole", "28.540651,77.185039"],
+  ["Pillar Back Door Not OK", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG094", "Service Pillar", "28.542065,77.178261"],
+];
+
+const pv2 = [
+  ["Street Light Junction Box Not Covered", "DDA FLAT BER SARAI : ID", "2823", "28.547483, 77.180540"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT BER SARAI : ID", "2820", "28.547425, 77.180587"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT BER SARAI : ID", "2816", "28.547659, 77.180587"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT BER SARAI : ID", "2824", "28.547614, 77.181347"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2622", "28.540650, 77.186458"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2622", "28.540848, 77.186503"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2623", "28.540808, 77.186559"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2623", "28.541001, 77.186751"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2625", "28.540808, 77.186692"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2626", "28.540728, 77.186496"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2627", "28.540663, 77.186473"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2628", "28.540738, 77.186504"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2630", "28.540576, 77.186496"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2632", "28.540762, 77.186529"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2617", "28.540568, 77.186440"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2617", "28.540732, 77.186362"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2628", "28.540600, 77.186501"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2630", "28.540592, 77.186475"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2621", "28.540751, 77.186611"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2622", "28.540813, 77.186535"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2623", "28.540780, 77.186538"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2525", "28.540762, 77.186632"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2626", "28.540798, 77.186567"],
+  ["Street Light Junction Box Not Covered", "SIIA NO 2 : ID", "2591", "28.537925, 77.187797"],
+  ["Street Light Junction Box Not Covered", "SIIA NO 2 : ID", "2594", "28.538228, 77.187943"],
+  ["Street Light Junction Box Not Covered", "SIIA NO 2 : ID", "2596", "28.538267, 77.188194"],
+  ["Street Light Junction Box Not Covered", "SIIA NO 2 : ID", "3598", "28.538357, 77.188205"],
+  ["Street Light Junction Box Not Covered", "SIIA NO 2 : ID", "2603", "28.539074, 77.188896"],
+  ["Street Light Junction Box Not Covered", "SIIA NO 2 : ID", "2605", "28.539068, 77.188892"],
+  ["Street Light Junction Box Not Covered", "SIIA NO 2 : ID", "2606", "28.539064, 77.188860"],
+  ["Street Light Junction Box Not Covered", "SIIA NO 2 : ID", "2607", "28.539073, 77.188858"],
+  ["Street Light Junction Box Not Covered", "VILLAGE BER SARAI :I D", "2820", "28.547212, 77.180533"],
+  ["Street Light Junction Box Not Covered", "VILLAGE BER SARAI :I D", "2823", "28.547612, 77.180545"],
+  ["Street Light Junction Box Not Covered", "VILLAGE BER SARAI :I D", "2819", "28.547680, 77.180586"],
+  ["CCMS Pole ELCB Not Installed", "DDA FLAT KATWARIA SARAI : ID", "2619", "28.540708, 77.186448"],
+  ["CCMS Pole ELCB Not Installed", "DDA FLAT KATWARIA SARAI : ID", "2490", "28.541085, 77.186920"],
+  ["CCMS Pole ELCB Not Installed", "DDA FLAT KATWARIA SARAI : ID", "2493", "28.541237, 77.187019"],
+  ["CCMS Pole ELCB Not Installed", "DDA FLAT KATWARIA SARAI : ID", "2497", "28.541183, 77.186950"],
+  ["CCMS Pole ELCB Not Installed", "DDA FLAT KATWARIA SARAI : ID", "2499", "28.541179, 77.186951"],
+  ["CCMS Pole ELCB Not Installed", "DDA FLAT KATWARIA SARAI : ID", "2498", "28.541129, 77.186926"],
+  ["CCMS Pole ELCB Not Installed", "DDA FLAT KATWARIA SARAI : ID", "2635", "28.541196, 77.186951"],
+  ["CCMS Pole ELCB Not Installed", "DDA FLAT KATWARIA SARAI : ID", "2636", "28.541196, 77.186951"],
+  ["CCMS Pole ELCB Not Installed", "DDA FLAT KATWARIA SARAI : ID", "2737", "28.541196, 77.186951"],
+  ["CCMS Pole ELCB Not Installed", "DDA FLAT KATWARIA SARAI : ID", "2621", "28.540751, 77.186611"],
+  ["CCMS Pole ELCB Not Installed", "DDA FLAT KATWARIA SARAI : ID", "2623", "28.540780, 77.186538"],
+  ["CCMS Pole ELCB Not Installed", "DDA FLAT KATWARIA SARAI : ID", "2525", "28.540762, 77.186632"],
+  ["CCMS Pole ELCB Not Installed", "DDA FLAT KATWARIA SARAI : ID", "2626", "28.540798, 77.186567"],
+  ["CCMS Pole ELCB Not Installed", "DDA FLAT KATWARIA SARAI : ID", "2619", "28.540342, 77.186544"],
+  ["CCMS Pole ELCB Not Installed", "DDA FLAT KATWARIA SARAI : ID", "2502", "28.540680, 77.186763"],
+  ["CCMS Pole ELCB Not Installed", "DDA FLAT KATWARIA SARAI : ID", "154", "28.540452, 77.187843"],
+  ["CCMS Pole ELCB Not Installed", "SIIA NO 4 : ID", "2793", "28.539547, 77.180876"],
+  ["CCMS Pole ELCB Not Installed", "VILLAGE KATWARIA SARAI : PM", "2660", "28.541218, 77.186977"],
+  ["CCMS Pole ELCB Not Installed", "VILLAGE KATWARIA SARAI : PM", "2661", "28.541218, 77.186977"],
+  ["CCMS Pole ELCB Not Installed", "VILLAGE KATWARIA SARAI : PM", "2662", "28.541218, 77.186977"],
+  ["CCMS Pole ELCB Not Installed", "VILLAGE KATWARIA SARAI : PM", "2664", "28.541218, 77.186977"],
+  ["CCMS Pole ELCB Not Installed", "VILLAGE KATWARIA SARAI : PM", "2664", "28.541218, 77.186977"],
+  ["CCMS Pole ELCB Not Installed", "VILLAGE KATWARIA SARAI : PM", "2765", "28.541150, 77.186939"],
+  ["CCMS Pole ELCB Not Installed", "VILLAGE KATWARIA SARAI : PM", "2685", "28.541221, 77.186928"],
+  ["CCMS Pole ELCB Not Installed", "VILLAGE KATWARIA SARAI : PM", "2673", "28.541210, 77.186951"],
+  ["CCMS Pole ELCB Not Installed", "VILLAGE KATWARIA SARAI : PM", "2666", "28.541233, 77.186977"],
+  ["CCMS Pole ELCB Not Installed", "VILLAGE KATWARIA SARAI : PM", "HKSK169", "28.541181, 77.186937"],
+  ["CCMS Pole ELCB Not Installed", "VILLAGE KATWARIA SARAI : PM", "2668", "28.541194, 77.186981"],
+  ["CCMS Pole ELCB Not Installed", "VILLAGE KATWARIA SARAI : PM", "2667", "28.541194, 77.186981"],
+  ["CCMS Pole ELCB Not Installed", "VILLAGE KATWARIA SARAI : PM", "2674", "28.541189, 77.186951"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "2882", "28.548822, 77.181143"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "2827", "28.547763, 77.180662"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "2826", "28.547619, 77.180625"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "2822", "28.547391, 77.180515"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "2821", "28.547417, 77.180584"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT KATWARIA SARAI : ID", "2736", "28.541723, 77.183628"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT KATWARIA SARAI : ID", "2628", "28.540600, 77.186501"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT KATWARIA SARAI : ID", "2636", "28.540540, 77.186439"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT KATWARIA SARAI : ID", "2501", "28.540721, 77.186797"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT KATWARIA SARAI : ID", "2490", "28.540277, 77.186634"],
+  ["CCMS Pole Earthing Not Found", "SIIA NO 4 : ID", "2793", "28.539547, 77.180876"],
+  ["CCMS Pole Earthing Not Found", "VILLAGE BER SARAI :I D", "54", "28.547751, 77.180650"],
+  ["CCMS Pole Earthing Not Found", "VILLAGE BER SARAI :I D", "2822", "28.547811, 77.180165"],
+  ["CCMS Pole Earthing Not Found", "VILLAGE BER SARAI :I D", "2821", "28.547811, 77.180165"],
+  ["CCMS Pole Earthing Not Found", "VILLAGE BER SARAI :I D", "2823", "28.547612, 77.180545"],
+  ["CCMS Pole Earthing Not Found", "VILLAGE KATWARIA SARAI : PM", "2666", "28.541905, 77.186201"],
+  ["CCMS Pole Earthing Not Found", "VILLAGE KATWARIA SARAI : PM", "2667", "28.542092, 77.186463"],
+  ["CCMS Pole Earthing Not Found", "VILLAGE KATWARIA SARAI : PM", "2668", "28.542136, 77.186487"],
+  ["CCMS Pole Earthing Not Found", "VILLAGE KATWARIA SARAI : PM", "HKSK1699", "28.542147, 77.186528"],
+  ["Current Leakage Found on Feeder/Pole", "SIIA NO 4 : ID", "2793", "28.539547, 77.180876"],
+  ["Current Leakage Found on Feeder/Pole", "VILLAGE BER SARAI :I D", "2820", "28.547212, 77.180533"],
+];
+
+const pv3 = [
+  ["Condition of Silica Gel Not OK", "DDA FLAT BER SARAI : ID", "28.549012541,77.181091423"],
+  ["Condition of Silica Gel Not OK", "DDA FLAT BER SARAI : ID", "28.549012541,77.181091423"],
+  ["Condition of Silica Gel Not OK", "NCERT NO 2:ID", "28.5402012621,77.1897789213"],
+  ["Condition of Silica Gel Not OK", "PROFESSORS APPARTMENT,IIT DELHI", "28.5451139795,77.1808766452"],
+  ["Condition of Silica Gel Not OK", "S/STN. IIT SOLAR HOUSE : ID", "28.5441289919,77.1839460952"],
+  ["Condition of Silica Gel Not OK", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "28.5421853663,77.1803778573"],
+  ["Condition of Silica Gel Not OK", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "28.5421853663,77.1803778573"],
+  ["Condition of Silica Gel Not OK", "SIIA NO 2 : ID", "28.5368118683,77.1867886965"],
+  ["Condition of Silica Gel Not OK", "SIIA NO 2 : ID", "28.5368118683,77.1867886965"],
+  ["Condition of Breather Not OK", "DDA FLAT BER SARAI : ID", "28.549012541,77.181091423"],
+  ["Condition of Breather Not OK", "SIIA NO 2 : ID", "28.5368118683,77.1867886965"],
+  ["Condition of OTI Not OK", "HARYANA GOVT. NURSERY:PM", "28.5356671437,77.1948861522"],
+  ["Condition of OTI Not OK", "IIT NO 2:ID", "28.5417853114,77.1969002816"],
+  ["Sub Station Not Locked", "IIT NO 1:ID", "28.5431409817,77.1997093365"],
+  ["Sub Station Not Locked", "IIT NO 2:ID", "28.5417853114,77.1969002816"],
+  ["Explosion Vent Diaphragm Not OK", "HARYANA GOVT. NURSERY:PM", "28.5356671437,77.1948861522"],
+];
+
+function fillGroupedDeficiencyTable(data, bodyId, labels){
+  const body = document.getElementById(bodyId);
+  const cols = labels.length + 1; // +1 for Map column
+  // group by first element (deficiency parameter), preserving order of first appearance
+  const groups = [];
+  const groupMap = {};
+  data.forEach(row=>{
+    const key = row[0];
+    if(!(key in groupMap)){
+      groupMap[key] = [];
+      groups.push(key);
+    }
+    groupMap[key].push(row.slice(1));
+  });
+  groups.forEach(key=>{
+    const rows = groupMap[key];
+    const trh = document.createElement('tr');
+    trh.className = 'group-header';
+    trh.innerHTML = `<td colspan="${cols}"><span class="group-name">${key}</span><span class="group-count">${rows.length} case${rows.length>1?'s':''}</span></td>`;
+    body.appendChild(trh);
+    rows.forEach(vals=>{
+      const tr = document.createElement('tr');
+      let html = '';
+      vals.forEach((v,i)=>{
+        if(i === vals.length-1){
+          // last value is the GPS coordinate -> render as a Map link
+          const coord = (v && v !== '-') ? String(v).trim() : '';
+          const mapCell = coord
+            ? `<a class="map-link" href="https://www.google.com/maps?q=${encodeURIComponent(coord)}" target="_blank" rel="noopener noreferrer">📍 Map</a>`
+            : `<span class="map-link disabled">—</span>`;
+          html += `<td data-label="Map"><span class="cell-label">Map</span><span class="cell-value">${mapCell}</span></td>`;
+        } else {
+          const lbl = labels[i];
+          html += `<td data-label="${lbl}"><span class="cell-label">${lbl}</span><span class="cell-value">${v}</span></td>`;
+        }
+      });
+      tr.innerHTML = html;
+      body.appendChild(tr);
+    });
+  });
+}
+
+fillGroupedDeficiencyTable(pv1, 'pv1-body', ['Substation','Pole/Pillar No','Asset Type']);
+fillGroupedDeficiencyTable(pv2, 'pv2-body', ['Substation','CCMS Pole No']);
+fillGroupedDeficiencyTable(pv3, 'pv3-body', ['Substation']);
+
+function fillSummaryTable(data, bodyId){
+  const body = document.getElementById(bodyId);
+  const order = [];
+  const counts = {};
+  data.forEach(row=>{
+    const key = row[0];
+    if(!(key in counts)){ counts[key]=0; order.push(key); }
+    counts[key]++;
+  });
+  order.forEach(key=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td data-label="Deficiency Type"><span class="cell-label">Deficiency Type</span><span class="cell-value">${key}</span></td>
+      <td class="num badge-pending" data-label="Deficiency Count"><span class="cell-label">Deficiency Count</span><span class="cell-value">${counts[key]}</span></td>`;
+    body.appendChild(tr);
+  });
+}
+
+fillSummaryTable(pv1, 'pv1-summary');
+fillSummaryTable(pv2, 'pv2-summary');
+fillSummaryTable(pv3, 'pv3-summary');
+
+
+// Tab switching (two-level: group -> sub-tab)
+const tabPanels = {
+  fpsp: document.getElementById('panel-fpsp'),
+  stl: document.getElementById('panel-stl'),
+  dt: document.getElementById('panel-dt'),
+  'fpsp-pivot': document.getElementById('panel-fpsp-pivot'),
+  'stl-pivot': document.getElementById('panel-stl-pivot'),
+  'dt-pivot': document.getElementById('panel-dt-pivot'),
+};
+
+const groupBtns = document.querySelectorAll('.group-btn');
+const subnavs = {
+  progress: document.getElementById('subtabs-progress'),
+  deficiency: document.getElementById('subtabs-deficiency'),
+};
+
+function activateSubTab(btn){
+  const nav = btn.closest('.subtabs');
+  nav.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  Object.values(tabPanels).forEach(p=>p.classList.remove('active'));
+  tabPanels[btn.dataset.tab].classList.add('active');
+}
+
+document.querySelectorAll('.subtabs .tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=> activateSubTab(btn));
+});
+
+groupBtns.forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    groupBtns.forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const group = btn.dataset.group;
+    Object.entries(subnavs).forEach(([key, nav])=>{
+      nav.style.display = (key === group) ? 'flex' : 'none';
+    });
+    // activate the currently-active (or first) sub-tab within the shown group
+    const activeSub = subnavs[group].querySelector('.tab-btn.active') || subnavs[group].querySelector('.tab-btn');
+    activateSubTab(activeSub);
+  });
+});
+
+// ==================== LIVE REFRESH MODULE ====================
+const SHEET_ID = '1hywAwVz38r3Kc-CSAzvWwt6WpWtJ-zuv5OVrYJwLmnw';
+const SHEET_TABS = {
+  fp: 'FP SP Inspection',
+  stl: 'STL Inspection',
+  dt: 'DT Inspection',
+};
+
+function csvUrl(sheetName){
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+}
+
+// Minimal robust CSV parser (handles quoted fields, embedded commas/newlines)
+function parseCSV(text){
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for(let i=0;i<text.length;i++){
+    const c = text[i];
+    if(inQuotes){
+      if(c === '"'){
+        if(text[i+1] === '"'){ field += '"'; i++; }
+        else inQuotes = false;
+      } else field += c;
+    } else {
+      if(c === '"') inQuotes = true;
+      else if(c === ','){ row.push(field); field = ''; }
+      else if(c === '\r'){ /* skip, handled by \n */ }
+      else if(c === '\n'){ row.push(field); field=''; rows.push(row); row=[]; }
+      else field += c;
+    }
+  }
+  if(field.length || row.length){ row.push(field); rows.push(row); }
+  return rows.filter(r => r.length > 1 || (r.length===1 && r[0] !== ''));
+}
+
+async function fetchSheetRows(sheetName){
+  const res = await fetch(csvUrl(sheetName), {cache:'no-store'});
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  const text = await res.text();
+  if(text.trim().startsWith('<')) throw new Error('Not accessible (sheet may not be public)');
+  const rows = parseCSV(text);
+  return rows.slice(1); // drop header row
+}
+
+function fmtDate(raw){
+  if(!raw) return '';
+  raw = String(raw).trim();
+  // Already short form like "05-Jul"?
+  if(/^\d{1,2}-[A-Za-z]{3}$/.test(raw)) return raw;
+  const d = new Date(raw);
+  if(!isNaN(d.getTime())){
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return String(d.getDate()).padStart(2,'0') + '-' + months[d.getMonth()];
+  }
+  return raw;
+}
+
+function pct(a,b){ return b>0 ? Math.round((a/b)*100) : 0; }
+
+function clearBody(id){ const el = document.getElementById(id); if(el) el.innerHTML=''; }
+
+async function refreshDashboard(){
+  const btn = document.getElementById('refresh-btn');
+  const status = document.getElementById('refresh-status');
+  btn.classList.add('loading');
+  btn.disabled = true;
+  status.textContent = 'Refreshing…';
+  status.className = 'refresh-status';
+
+  try {
+    const [fpRows, stlRows, dtRows] = await Promise.all([
+      fetchSheetRows(SHEET_TABS.fp),
+      fetchSheetRows(SHEET_TABS.stl),
+      fetchSheetRows(SHEET_TABS.dt),
+    ]);
+
+    // ---------------- FP SP ----------------
+    const FP = {SUBSTATION:10, POLE:24, ASSET:20, COORD:16, STATUS:62, DATEONLY:2, TEAM:67,
+      DEFS: [[27,'NO','Pillar Back Door Not OK'],[28,'NO','Pillar Door Not Properly Locked'],
+             [30,'Not Ok','Pillar Plinth Condition Not OK'],[31,'Not Ok','HRC Fuse Condition Not OK'],
+             [34,'Not Fenced','Pillar Not Fenced'],[39,'Earthing Not Found','Pole Earthing Not Found'],
+             [65,'NO','Danger Board Missing on Pole/Pillar']]};
+
+    let fpDone=0, fpPending=0;
+    const fpDateTeam = {}; // key date|team -> count
+    const fpSub = {}; // substation -> {done,pending}
+    const fpDef = [];
+    fpRows.forEach(r=>{
+      const status = (r[FP.STATUS]||'').trim();
+      if(status==='Done') fpDone++; else if(status==='Pending') fpPending++;
+      const sub = r[FP.SUBSTATION] || 'Unknown';
+      if(!fpSub[sub]) fpSub[sub] = {done:0,pending:0};
+      if(status==='Done') fpSub[sub].done++; else if(status==='Pending') fpSub[sub].pending++;
+      if(status==='Done'){
+        const key = r[FP.DATEONLY] + '|' + r[FP.TEAM];
+        fpDateTeam[key] = (fpDateTeam[key]||0) + 1;
+      }
+      FP.DEFS.forEach(([idx,bad,label])=>{
+        if((r[idx]||'').trim() === bad){
+          fpDef.push([label, sub, r[FP.POLE]||'-', r[FP.ASSET]||'-', r[FP.COORD]||'']);
+        }
+      });
+    });
+    const fpTotal = fpDone+fpPending;
+
+    // ---------------- STL ----------------
+    const STL = {SUBSTATION:5, CCMS:7, COORD:6, STATUS:24, DATE:1, TEAM:26,
+      DEFS: [[13,'अर्थिंग मौजूद नहीं है।','CCMS Pole Earthing Not Found'],
+             [14,'ELCB मौजूद नहीं है','CCMS Pole ELCB Not Installed'],
+             [15,'करंट लीकेज पाया गया।','Current Leakage Found on Feeder/Pole'],
+             [17,'स्ट्रीट लाइट जंक्शन बॉक्स ढका हुआ नहीं है','Street Light Junction Box Not Covered']]};
+
+    let stlDone=0, stlPending=0;
+    const stlDateTeam = {};
+    const stlDef = [];
+    stlRows.forEach(r=>{
+      const status = (r[STL.STATUS]||'').trim();
+      if(status==='Done'){
+        stlDone++;
+        const key = r[STL.DATE] + '|' + r[STL.TEAM];
+        stlDateTeam[key] = (stlDateTeam[key]||0) + 1;
+      } else {
+        stlPending++;
+      }
+      STL.DEFS.forEach(([idx,bad,label])=>{
+        if((r[idx]||'').trim() === bad){
+          stlDef.push([label, r[STL.SUBSTATION]||'-', r[STL.CCMS]||'-', r[STL.COORD]||'']);
+        }
+      });
+    });
+    const stlTotal = stlDone+stlPending;
+
+    // ---------------- DT ----------------
+    const DT = {SUBSTATION:0, COORD:3, DATE:6, LM:8, ALM:9,
+      DEFS: [[11,'NO','Sub Station Not Locked'],[16,'NOT OK','Condition of Breather Not OK'],
+             [17,'NOT OK','Condition of Silica Gel Not OK'],[18,'NOT OK','Condition of OTI Not OK'],
+             [22,'Not OK','Explosion Vent Diaphragm Not OK']]};
+
+    let dtDone=0, dtPending=0;
+    const dtDateTeam = {};
+    const dtSub = {};
+    const dtDef = [];
+    dtRows.forEach(r=>{
+      const hasDate = r[DT.DATE] && String(r[DT.DATE]).trim() !== '';
+      const sub = r[DT.SUBSTATION] || 'Unknown';
+      if(!dtSub[sub]) dtSub[sub] = {done:0,pending:0};
+      if(hasDate){
+        dtDone++; dtSub[sub].done++;
+        const team = ((r[DT.LM]||'') + ' & ' + (r[DT.ALM]||'')).replace(/^\s*&\s*|\s*&\s*$/g,'').trim() || '-';
+        const key = fmtDate(r[DT.DATE]) + '|' + team;
+        dtDateTeam[key] = (dtDateTeam[key]||0) + 1;
+      } else {
+        dtPending++; dtSub[sub].pending++;
+      }
+      DT.DEFS.forEach(([idx,bad,label])=>{
+        if((r[idx]||'').trim() === bad){
+          dtDef.push([label, sub, r[DT.COORD]||'']);
+        }
+      });
+    });
+    const dtTotal = dtDone+dtPending;
+
+    // ---------------- Update stat cards ----------------
+    document.getElementById('fp-total').textContent = fpTotal;
+    document.getElementById('fp-done').textContent = fpDone;
+    document.getElementById('fp-pending').textContent = fpPending;
+    document.getElementById('fp-pct').textContent = pct(fpDone,fpTotal) + '%';
+
+    document.getElementById('stl-total').textContent = stlTotal;
+    document.getElementById('stl-done').textContent = stlDone;
+    document.getElementById('stl-pending').textContent = stlPending;
+    document.getElementById('stl-pct').textContent = pct(stlDone,stlTotal) + '%';
+
+    document.getElementById('dt-total').textContent = dtTotal;
+    document.getElementById('dt-done').textContent = dtDone;
+    document.getElementById('dt-pending').textContent = dtPending;
+    document.getElementById('dt-pct').textContent = pct(dtDone,dtTotal) + '%';
+
+    // ---------------- Rebuild Date>Team tables ----------------
+    const fpDateTeamArr = Object.entries(fpDateTeam).map(([k,v])=>{ const [d,t]=k.split('|'); return [d,t,v]; });
+    const stlDateTeamArr = Object.entries(stlDateTeam).map(([k,v])=>{ const [d,t]=k.split('|'); return [d,t,v]; });
+    const dtDateTeamArr = Object.entries(dtDateTeam).map(([k,v])=>{ const [d,t]=k.split('|'); return [d,t,v]; });
+
+    clearBody('t1-body'); fillDateTeamTable(fpDateTeamArr, 't1-body', 't1-total');
+    clearBody('t3-body'); fillDateTeamTable(stlDateTeamArr, 't3-body', 't3-total');
+    clearBody('t4-body'); fillDateTeamTable(dtDateTeamArr, 't4-body', 't4-total');
+    document.getElementById('fp-t1-sub').textContent = fpDone + ' inspections completed';
+    document.getElementById('stl-t3-sub').textContent = stlDone + ' inspections completed';
+    document.getElementById('dt-t4-sub').textContent = dtDone + ' inspections completed';
+
+    // ---------------- Rebuild Substation tables ----------------
+    const fpSubArr = Object.entries(fpSub).map(([name,v])=>[name, v.done, v.pending]);
+    const dtSubArr = Object.entries(dtSub).map(([name,v])=>[name, v.done, v.pending]);
+    clearBody('t2-body'); fillSubstationTable(fpSubArr, 't2-body', 't2-done', 't2-pending', 't2-total');
+    clearBody('t5-body'); fillSubstationTable(dtSubArr, 't5-body', 't5-done', 't5-pending', 't5-total');
+    document.getElementById('fp-t2-sub').textContent = fpSubArr.length + ' substations';
+    document.getElementById('dt-t5-sub').textContent = dtSubArr.length + ' substations';
+
+    // ---------------- Rebuild Deficiency tables ----------------
+    function sortByFrequency(rows){
+      const counts = {};
+      rows.forEach(r=>{ counts[r[0]] = (counts[r[0]]||0)+1; });
+      const order = Object.keys(counts).sort((a,b)=>counts[b]-counts[a]);
+      return rows.slice().sort((a,b)=> order.indexOf(a[0]) - order.indexOf(b[0]));
+    }
+    const fpDefSorted = sortByFrequency(fpDef);
+    const stlDefSorted = sortByFrequency(stlDef);
+    const dtDefSorted = sortByFrequency(dtDef);
+
+    clearBody('pv1-body'); fillGroupedDeficiencyTable(fpDefSorted, 'pv1-body', ['Substation','Pole/Pillar No','Asset Type']);
+    clearBody('pv2-body'); fillGroupedDeficiencyTable(stlDefSorted, 'pv2-body', ['Substation','CCMS Pole No']);
+    clearBody('pv3-body'); fillGroupedDeficiencyTable(dtDefSorted, 'pv3-body', ['Substation']);
+
+    clearBody('pv1-summary'); fillSummaryTable(fpDefSorted, 'pv1-summary');
+    clearBody('pv2-summary'); fillSummaryTable(stlDefSorted, 'pv2-summary');
+    clearBody('pv3-summary'); fillSummaryTable(dtDefSorted, 'pv3-summary');
+
+    document.getElementById('pv1-sub').textContent = fpDone + ' records inspected · ' + fpDefSorted.length + ' cases';
+    document.getElementById('pv2-sub').textContent = stlDone + ' records inspected · ' + stlDefSorted.length + ' cases';
+    document.getElementById('pv3-sub').textContent = dtDone + ' records inspected · ' + dtDefSorted.length + ' cases';
+
+    const now = new Date();
+    status.textContent = 'Last refreshed ' + now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) + ' · live data';
+    status.className = 'refresh-status ok';
+  } catch(err) {
+    console.error('Refresh failed:', err);
+    status.textContent = 'Refresh failed — sheet must be shared as "Anyone with link"';
+    status.className = 'refresh-status error';
+  } finally {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('refresh-btn').addEventListener('click', refreshDashboard);
+
+</script>
+</body>
+</html>
