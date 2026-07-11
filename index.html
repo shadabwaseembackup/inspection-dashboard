@@ -26,6 +26,78 @@
     --light-pink:#FFB3D1;
   }
   *{box-sizing:border-box;}
+
+  .main-content-hidden{display:none;}
+
+  .lock-screen{
+    position:fixed;
+    inset:0;
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #142238 0%, transparent 60%),
+      radial-gradient(1000px 500px at 100% 0%, #1a1530 0%, transparent 55%),
+      var(--bg);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:1000;
+    font-family:'Inter',sans-serif;
+  }
+  .lock-card{
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:36px 30px;
+    max-width:340px;
+    width:100%;
+    text-align:center;
+  }
+  .lock-icon{font-size:34px;margin-bottom:6px;}
+  .lock-card h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:22px;
+    margin:6px 0 4px;
+    color:var(--text);
+  }
+  .lock-sub{
+    color:var(--sub);
+    font-size:13px;
+    margin:0 0 20px;
+  }
+  .lock-input{
+    width:100%;
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:12px 14px;
+    color:var(--text);
+    font-size:15px;
+    font-family:'JetBrains Mono',monospace;
+    margin-bottom:12px;
+    outline:none;
+  }
+  .lock-input:focus{border-color:var(--amber);}
+  .lock-submit{
+    width:100%;
+    background:var(--amber);
+    color:var(--bg);
+    border:none;
+    border-radius:8px;
+    padding:12px;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    cursor:pointer;
+  }
+  .lock-submit:hover{opacity:.9;}
+  .lock-error{
+    color:var(--danger);
+    font-size:12.5px;
+    margin-top:12px;
+    min-height:16px;
+    font-family:'JetBrains Mono',monospace;
+  }
+
   body{
     margin:0;
     background:
@@ -603,6 +675,19 @@
 </style>
 </head>
 <body>
+
+<div id="lock-screen" class="lock-screen">
+  <div class="lock-card">
+    <div class="lock-icon">🔒</div>
+    <h2>Inspection Dashboard</h2>
+    <p class="lock-sub">Enter password to continue</p>
+    <input id="lock-input" class="lock-input" type="password" placeholder="Password" autocomplete="off" />
+    <button id="lock-submit" class="lock-submit">Unlock</button>
+    <div id="lock-error" class="lock-error"></div>
+  </div>
+</div>
+
+<div id="main-content" class="main-content-hidden">
 <div class="wrap">
 
   <header>
@@ -808,6 +893,7 @@
   </div>
 
   <footer>Built from FP SP Inspection · STL Inspection · DT Inspection tabs · counts reflect data at time of export</footer>
+</div>
 </div>
 
 <script>
@@ -1572,6 +1658,41 @@ async function refreshDashboard(){
 }
 
 document.getElementById('refresh-btn').addEventListener('click', refreshDashboard);
+
+// ==================== LOCK SCREEN ====================
+(function(){
+  const PASSWORD = 'password';
+  const lockScreen = document.getElementById('lock-screen');
+  const mainContent = document.getElementById('main-content');
+  const input = document.getElementById('lock-input');
+  const submitBtn = document.getElementById('lock-submit');
+  const errorEl = document.getElementById('lock-error');
+
+  function unlock(){
+    lockScreen.style.display = 'none';
+    mainContent.classList.remove('main-content-hidden');
+    sessionStorage.setItem('dashboard-unlocked', 'true');
+  }
+
+  function tryUnlock(){
+    if(input.value === PASSWORD){
+      unlock();
+    } else {
+      errorEl.textContent = 'Incorrect password. Try again.';
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  if(sessionStorage.getItem('dashboard-unlocked') === 'true'){
+    unlock();
+  }
+
+  submitBtn.addEventListener('click', tryUnlock);
+  input.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter') tryUnlock();
+  });
+})();
 
 </script>
 </body>
