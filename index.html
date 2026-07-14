@@ -438,6 +438,22 @@
     margin-left:10px;
     font-weight:700;
   }
+
+  tr.summary-row-clickable{cursor:pointer;}
+  tr.summary-row-clickable:hover{background:rgba(245,166,35,0.08);}
+  tr.summary-row-clickable .jump-arrow{
+    color:var(--sub);
+    font-size:12px;
+    margin-left:6px;
+    opacity:.7;
+  }
+  tr.summary-row-clickable:hover .jump-arrow{color:var(--amber);opacity:1;}
+
+  tr.group-header{scroll-margin-top:16px;}
+  tr.group-header.jump-highlight td{
+    background:rgba(245,166,35,0.28) !important;
+    transition:background-color .3s ease;
+  }
   td.num, th.num{text-align:right;font-family:'JetBrains Mono',monospace;}
   td.mono{font-family:'JetBrains Mono',monospace;color:var(--cyan);}
 
@@ -1304,6 +1320,10 @@ const pv3 = [
   ["Explosion Vent Diaphragm Not OK", "HARYANA GOVT. NURSERY:PM", "28.5356671437,77.1948861522"],
 ];
 
+function slugify(str){
+  return String(str).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+}
+
 function fillGroupedDeficiencyTable(data, bodyId, labels){
   const body = document.getElementById(bodyId);
   const cols = labels.length + 1; // +1 for Map column
@@ -1322,6 +1342,7 @@ function fillGroupedDeficiencyTable(data, bodyId, labels){
     const rows = groupMap[key];
     const trh = document.createElement('tr');
     trh.className = 'group-header';
+    trh.id = bodyId + '-grp-' + slugify(key);
     trh.innerHTML = `<td colspan="${cols}"><span class="group-name">${key}</span><span class="group-count">${rows.length} case${rows.length>1?'s':''}</span></td>`;
     body.appendChild(trh);
     rows.forEach(vals=>{
@@ -1350,7 +1371,15 @@ fillGroupedDeficiencyTable(pv1, 'pv1-body', ['Substation','Pole/Pillar No','Asse
 fillGroupedDeficiencyTable(pv2, 'pv2-body', ['Substation','CCMS Pole No']);
 fillGroupedDeficiencyTable(pv3, 'pv3-body', ['Substation']);
 
-function fillSummaryTable(data, bodyId){
+function jumpToDeficiencyGroup(targetId){
+  const el = document.getElementById(targetId);
+  if(!el) return;
+  el.scrollIntoView({behavior:'smooth', block:'start'});
+  el.classList.add('jump-highlight');
+  setTimeout(()=> el.classList.remove('jump-highlight'), 1600);
+}
+
+function fillSummaryTable(data, bodyId, detailBodyId){
   const body = document.getElementById(bodyId);
   const order = [];
   const counts = {};
@@ -1361,16 +1390,19 @@ function fillSummaryTable(data, bodyId){
   });
   order.forEach(key=>{
     const tr = document.createElement('tr');
+    tr.className = 'summary-row-clickable';
+    const targetId = detailBodyId + '-grp-' + slugify(key);
     tr.innerHTML = `
-      <td data-label="Deficiency Type"><span class="cell-label">Deficiency Type</span><span class="cell-value">${key}</span></td>
+      <td data-label="Deficiency Type"><span class="cell-label">Deficiency Type</span><span class="cell-value">${key} <span class="jump-arrow">↓</span></span></td>
       <td class="num badge-pending" data-label="Deficiency Count"><span class="cell-label">Deficiency Count</span><span class="cell-value">${counts[key]}</span></td>`;
+    tr.addEventListener('click', ()=> jumpToDeficiencyGroup(targetId));
     body.appendChild(tr);
   });
 }
 
-fillSummaryTable(pv1, 'pv1-summary');
-fillSummaryTable(pv2, 'pv2-summary');
-fillSummaryTable(pv3, 'pv3-summary');
+fillSummaryTable(pv1, 'pv1-summary', 'pv1-body');
+fillSummaryTable(pv2, 'pv2-summary', 'pv2-body');
+fillSummaryTable(pv3, 'pv3-summary', 'pv3-body');
 
 
 // Tab switching (two-level: group -> sub-tab)
@@ -1656,9 +1688,9 @@ async function refreshDashboard(){
     clearBody('pv2-body'); fillGroupedDeficiencyTable(stlDefSorted, 'pv2-body', ['Substation','CCMS Pole No']);
     clearBody('pv3-body'); fillGroupedDeficiencyTable(dtDefSorted, 'pv3-body', ['Substation']);
 
-    clearBody('pv1-summary'); fillSummaryTable(fpDefSorted, 'pv1-summary');
-    clearBody('pv2-summary'); fillSummaryTable(stlDefSorted, 'pv2-summary');
-    clearBody('pv3-summary'); fillSummaryTable(dtDefSorted, 'pv3-summary');
+    clearBody('pv1-summary'); fillSummaryTable(fpDefSorted, 'pv1-summary', 'pv1-body');
+    clearBody('pv2-summary'); fillSummaryTable(stlDefSorted, 'pv2-summary', 'pv2-body');
+    clearBody('pv3-summary'); fillSummaryTable(dtDefSorted, 'pv3-summary', 'pv3-body');
 
     document.getElementById('pv1-sub').textContent = fpDone + ' records inspected · ' + fpDefSorted.length + ' cases';
     document.getElementById('pv2-sub').textContent = stlDone + ' records inspected · ' + stlDefSorted.length + ' cases';
