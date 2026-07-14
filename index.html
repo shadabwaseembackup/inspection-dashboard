@@ -856,7 +856,7 @@
       <div class="panel-head">
         <span class="tag">A</span>
         <h2>Deficiency Summary — FP SP Inspection</h2>
-        <span class="sub" id="pv1-sub">34 records inspected · 93 cases</span>
+        <span class="sub" id="pv1-sub">34 records inspected · 103 cases</span>
       </div>
       <div class="table-scroll"><table class="table-def table-def2">
         <thead><tr><th>Deficiency Type</th><th class="num">Deficiency Count</th></tr></thead>
@@ -1211,6 +1211,16 @@ const pv1 = [
   ["Pole Earthing Not Found", "SIIA NO 5 KATWARIA:ID", "HKSG256", "Pole", "28.541247,77.184922"],
   ["Pole Earthing Not Found", "SIIA NO 5 KATWARIA:ID", "HKSK839", "Pole", "28.540651,77.185039"],
   ["Pillar Back Door Not OK", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG094", "Service Pillar", "28.542065,77.178261"],
+  ["Pillar Earthing Needed", "DDA FLAT BER SARAI : ID", "HKSFPG010", "Service Pillar", "28.549253,77.18107"],
+  ["Pillar Earthing Needed", "DDA FLAT BER SARAI : ID", "HKSFPG008", "Feeder Pillar", "28.548597,77.180635"],
+  ["Pillar Earthing Needed", "DDA FLAT BER SARAI : ID", "HKSFPG009", "Service Pillar", "28.548664,77.18019"],
+  ["Pillar Earthing Needed", "DDA FLAT BER SARAI : ID", "HKSFPG083", "Feeder Pillar", "28.548746,77.180754"],
+  ["Pillar Earthing Needed", "DDA FLAT BER SARAI : ID", "HKSFPG082", "Feeder Pillar", "28.548998,77.180783"],
+  ["Pillar Earthing Needed", "IIT NO 1:ID", "HKSFPL316", "Feeder Pillar", "28.544304,77.196185"],
+  ["Pillar Earthing Needed", "IIT NO 2:ID", "HKSFPG037", "Feeder Pillar", "28.541175,77.198111"],
+  ["Pillar Earthing Needed", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT010", "Feeder Pillar", "28.544499,77.184353"],
+  ["Pillar Earthing Needed", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG011", "Service Pillar", "28.542801,77.180431"],
+  ["Pillar Earthing Needed", "SIIA NO 2 : ID", "HKSFPG021", "Feeder Pillar", "28.537441,77.188066"],
 ];
 
 const pv2 = [
@@ -1524,7 +1534,7 @@ async function refreshDashboard(){
     ]);
 
     // ---------------- FP SP ----------------
-    const FP = {SUBSTATION:10, POLE:24, ASSET:20, COORD:16, STATUS:62, DATEONLY:2, TEAM:67,
+    const FP = {SUBSTATION:10, POLE:24, ASSET:20, COORD:16, STATUS:62, DATEONLY:2, TEAM:67, PILLAR_EARTH:29,
       DEFS: [[27,'NO','Pillar Back Door Not OK'],[28,'NO','Pillar Door Not Properly Locked'],
              [30,'Not Ok','Pillar Plinth Condition Not OK'],[31,'Not Ok','HRC Fuse Condition Not OK'],
              [34,'Not Fenced','Pillar Not Fenced'],[39,'Earthing Not Found','Pole Earthing Not Found'],
@@ -1549,6 +1559,11 @@ async function refreshDashboard(){
           fpDef.push([label, sub, r[FP.POLE]||'-', r[FP.ASSET]||'-', r[FP.COORD]||'']);
         }
       });
+      // Pillar Earthing Needed: earthing count of 0 or 1 is a deficiency
+      const earthVal = parseFloat(String(r[FP.PILLAR_EARTH]||'').trim());
+      if(!isNaN(earthVal) && (earthVal === 0 || earthVal === 1)){
+        fpDef.push(['Pillar Earthing Needed', sub, r[FP.POLE]||'-', r[FP.ASSET]||'-', r[FP.COORD]||'']);
+      }
     });
     const fpTotal = fpDone+fpPending;
 
