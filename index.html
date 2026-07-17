@@ -1216,11 +1216,11 @@ const pv1 = [
   ["Pillar Earthing Needed", "DDA FLAT BER SARAI : ID", "HKSFPG009", "Service Pillar", "28.548664,77.18019"],
   ["Pillar Earthing Needed", "DDA FLAT BER SARAI : ID", "HKSFPG083", "Feeder Pillar", "28.548746,77.180754"],
   ["Pillar Earthing Needed", "DDA FLAT BER SARAI : ID", "HKSFPG082", "Feeder Pillar", "28.548998,77.180783"],
-  ["Pillar Earthing Needed", "IIT NO 1:ID", "HKSFPL316", "Feeder Pillar", "28.544304,77.196185"],
-  ["Pillar Earthing Needed", "IIT NO 2:ID", "HKSFPG037", "Feeder Pillar", "28.541175,77.198111"],
   ["Pillar Earthing Needed", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT010", "Feeder Pillar", "28.544499,77.184353"],
   ["Pillar Earthing Needed", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG011", "Service Pillar", "28.542801,77.180431"],
   ["Pillar Earthing Needed", "SIIA NO 2 : ID", "HKSFPG021", "Feeder Pillar", "28.537441,77.188066"],
+  ["No Earthing Connection Found", "IIT NO 1:ID", "HKSFPL316", "Feeder Pillar", "28.544304,77.196185"],
+  ["No Earthing Connection Found", "IIT NO 2:ID", "HKSFPG037", "Feeder Pillar", "28.541175,77.198111"],
 ];
 
 const pv2 = [
@@ -1566,9 +1566,12 @@ async function refreshDashboard(){
           fpDef.push([label, sub, r[FP.POLE]||'-', r[FP.ASSET]||'-', r[FP.COORD]||'']);
         }
       });
-      // Pillar Earthing Needed: earthing count of 0 or 1 is a deficiency
+      // Earthing count = 0 -> "No Earthing Connection Found" (most severe)
+      // Earthing count = 1 -> "Pillar Earthing Needed" (insufficient, needs one more)
       const earthVal = parseFloat(String(r[FP.PILLAR_EARTH]||'').trim());
-      if(!isNaN(earthVal) && (earthVal === 0 || earthVal === 1)){
+      if(!isNaN(earthVal) && earthVal === 0){
+        fpDef.push(['No Earthing Connection Found', sub, r[FP.POLE]||'-', r[FP.ASSET]||'-', r[FP.COORD]||'']);
+      } else if(!isNaN(earthVal) && earthVal === 1){
         fpDef.push(['Pillar Earthing Needed', sub, r[FP.POLE]||'-', r[FP.ASSET]||'-', r[FP.COORD]||'']);
       }
     });
