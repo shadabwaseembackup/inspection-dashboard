@@ -908,7 +908,7 @@
       <div class="panel-head">
         <span class="tag">A</span>
         <h2>Deficiency Summary — DT Inspection</h2>
-        <span class="sub" id="pv3-sub">16 records inspected · 16 cases</span>
+        <span class="sub" id="pv3-sub">16 records inspected · 23 cases</span>
       </div>
       <div class="table-scroll"><table class="table-def table-def2">
         <thead><tr><th>Deficiency Type</th><th class="num">Deficiency Count</th></tr></thead>
@@ -1328,6 +1328,13 @@ const pv3 = [
   ["Sub Station Not Locked", "IIT NO 1:ID", "28.5431409817,77.1997093365"],
   ["Sub Station Not Locked", "IIT NO 2:ID", "28.5417853114,77.1969002816"],
   ["Explosion Vent Diaphragm Not OK", "HARYANA GOVT. NURSERY:PM", "28.5356671437,77.1948861522"],
+  ["No Earthing Connection Found", "DDA FLAT BER SARAI : ID", "28.549012541,77.181091423"],
+  ["No Earthing Connection Found", "DDA FLAT BER SARAI : ID", "28.549012541,77.181091423"],
+  ["No Earthing Connection Found", "HARYANA GOVT. NURSERY:PM", "28.5356671437,77.1948861522"],
+  ["No Earthing Connection Found", "NCERT NO 2:ID", "28.5402012621,77.1897789213"],
+  ["No Earthing Connection Found", "SIIA NO 2 : ID", "28.5368118683,77.1867886965"],
+  ["No Earthing Connection Found", "SIIA NO 2 : ID", "28.5368118683,77.1867886965"],
+  ["No Earthing Connection Found", "SIIA NO 3 : ID", "28.5378181702,77.1857414739"],
 ];
 
 function slugify(str){
@@ -1595,7 +1602,7 @@ async function refreshDashboard(){
     const stlTotal = stlDone+stlPending;
 
     // ---------------- DT ----------------
-    const DT = {SUBSTATION:0, COORD:3, DATE:6, LM:8, ALM:9,
+    const DT = {SUBSTATION:0, COORD:3, DATE:6, LM:8, ALM:9, EARTH_VAL:20,
       DEFS: [[11,'NO','Sub Station Not Locked'],[16,'NOT OK','Condition of Breather Not OK'],
              [17,'NOT OK','Condition of Silica Gel Not OK'],[18,'NOT OK','Condition of OTI Not OK'],
              [22,'Not OK','Explosion Vent Diaphragm Not OK']]};
@@ -1613,6 +1620,10 @@ async function refreshDashboard(){
         const team = ((r[DT.LM]||'') + ' & ' + (r[DT.ALM]||'')).replace(/^\s*&\s*|\s*&\s*$/g,'').trim() || '-';
         const key = fmtDate(r[DT.DATE]) + '|' + team;
         dtDateTeam[key] = (dtDateTeam[key]||0) + 1;
+        // No Earthing Connection Found: inspected (Done) but DT Body Earth Value is blank
+        if(String(r[DT.EARTH_VAL]||'').trim() === ''){
+          dtDef.push(['No Earthing Connection Found', sub, r[DT.COORD]||'']);
+        }
       } else {
         dtPending++; dtSub[sub].pending++;
       }
