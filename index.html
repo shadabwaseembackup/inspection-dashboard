@@ -916,7 +916,7 @@
       <div class="panel-head">
         <span class="tag">A</span>
         <h2>Deficiency Summary — FP SP Inspection</h2>
-        <span class="sub" id="pv1-sub">47 records inspected · 159 cases</span>
+        <span class="sub" id="pv1-sub">47 records inspected · 123 cases</span>
       </div>
       <div class="table-scroll"><table class="table-def table-def2">
         <thead><tr><th>Deficiency Type</th><th class="num">Deficiency Count</th></tr></thead>
@@ -1579,7 +1579,8 @@ function fillGroupedDeficiencyTable(data, bodyId, labels){
   });
 }
 
-fillGroupedDeficiencyTable(pv1, 'pv1-body', ['Substation','Pole/Pillar No','Asset Type']);
+const pv1Filtered = pv1.filter(row => row[0] !== 'Pillar Not Fenced');
+fillGroupedDeficiencyTable(pv1Filtered, 'pv1-body', ['Substation','Pole/Pillar No','Asset Type']);
 fillGroupedDeficiencyTable(pv2, 'pv2-body', ['Substation','CCMS Pole No']);
 fillGroupedDeficiencyTable(pv3, 'pv3-body', ['Substation']);
 
@@ -1646,7 +1647,7 @@ function fillSummaryTable(data, bodyId, detailBodyId){
   }
 }
 
-fillSummaryTable(pv1, 'pv1-summary', 'pv1-body');
+fillSummaryTable(pv1Filtered, 'pv1-summary', 'pv1-body');
 fillSummaryTable(pv2, 'pv2-summary', 'pv2-body');
 fillSummaryTable(pv3, 'pv3-summary', 'pv3-body');
 
@@ -1951,7 +1952,7 @@ async function refreshDashboard(){
       const order = Object.keys(counts).sort((a,b)=>counts[b]-counts[a]);
       return rows.slice().sort((a,b)=> order.indexOf(a[0]) - order.indexOf(b[0]));
     }
-    const fpDefSorted = sortByFrequency(fpDef);
+    const fpDefSorted = sortByFrequency(fpDef).filter(row => row[0] !== 'Pillar Not Fenced');
     const stlDefSorted = sortByFrequency(stlDef);
     const dtDefSorted = sortByFrequency(dtDef);
 
