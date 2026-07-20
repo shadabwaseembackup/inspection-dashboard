@@ -464,6 +464,9 @@
 
   tr.summary-row-clickable{cursor:pointer;}
   tr.summary-row-clickable:hover{background:rgba(245,166,35,0.08);}
+  tr.earthing-sub-row td:first-child{padding-left:38px;}
+  tr.earthing-sub-row .cell-value{font-size:13px;color:var(--sub);}
+  tr.earthing-sub-row:hover .cell-value{color:var(--text);}
   tr.summary-row-clickable .jump-arrow{
     color:var(--sub);
     font-size:12px;
@@ -712,6 +715,7 @@
     table.table-def3 th:nth-child(3), table.table-def3 td:nth-child(3){width:30%;}
     table.table-def2 th:nth-child(1), table.table-def2 td:nth-child(1){width:62%;}
     table.table-def2 th:nth-child(2), table.table-def2 td:nth-child(2){width:38%;}
+    table.table-def tr.earthing-sub-row td:first-child{padding-left:26px;}
     table.table-def1 th, table.table-def1 td{width:100%;}
     table.table-def .cell-label{display:none;}
     table.table-def .cell-value{display:inline;text-align:inherit;}
@@ -1275,27 +1279,27 @@ const pv1 = [
   ["Pillar Not Fenced", "SIIA NO 4 : ID", "HKSFPG013", "Service Pillar", "28.54014,77.183086"],
   ["Pillar Not Fenced", "SIIA NO 5 KATWARIA:ID", "HKSFPG090", "Feeder Pillar", "28.541151,77.184311"],
   ["Pillar Not Fenced", "SIIA NO 5 KATWARIA:ID", "HKSFPG062", "Feeder Pillar", "28.54122,77.184533"],
-  ["Stay wire used Instead of Strip Earthing", "-", "HKSL391", "Service Pillar", "28.544401, 77.196056"],
-  ["Stay wire used Instead of Strip Earthing", "DDA FLAT BER SARAI : ID", "HKSFPG010", "Service Pillar", "28.549253,77.18107"],
-  ["Stay wire used Instead of Strip Earthing", "DDA FLAT BER SARAI : ID", "HKSFPG008", "Feeder Pillar", "28.548597,77.180635"],
-  ["Stay wire used Instead of Strip Earthing", "DDA FLAT BER SARAI : ID", "HKSFPG007", "Service Pillar", "28.54865,77.180655"],
-  ["Stay wire used Instead of Strip Earthing", "DDA FLAT BER SARAI : ID", "HKSFPG009", "Service Pillar", "28.548664,77.18019"],
-  ["Stay wire used Instead of Strip Earthing", "DDA FLAT BER SARAI : ID", "HKSFPG083", "Feeder Pillar", "28.548746,77.180754"],
-  ["Stay wire used Instead of Strip Earthing", "DDA FLAT BER SARAI : ID", "HKSFPG082", "Feeder Pillar", "28.548998,77.180783"],
-  ["Stay wire used Instead of Strip Earthing", "IIT MINI CAMPUS:ID", "HKSFPG004", "Feeder Pillar", "28.545724,77.181228"],
-  ["Stay wire used Instead of Strip Earthing", "IIT NO 1:ID", "HKSFPL316", "Feeder Pillar", "28.544304,77.196185"],
-  ["Stay wire used Instead of Strip Earthing", "IIT NO 2:ID", "HKSFPG037", "Feeder Pillar", "28.541175,77.198111"],
-  ["Stay wire used Instead of Strip Earthing", "IIT NO 2:ID", "HKSFPG053", "Service Pillar", "28.541386, 77.194012"],
-  ["Stay wire used Instead of Strip Earthing", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT007", "Feeder Pillar", "28.544271,77.182906"],
-  ["Stay wire used Instead of Strip Earthing", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG094", "Service Pillar", "28.542065,77.178261"],
-  ["Stay wire used Instead of Strip Earthing", "SIIA NO 2 : ID", "HKSFPG023", "Service Pillar", "28.53681,77.187774"],
-  ["Stay wire used Instead of Strip Earthing", "SIIA NO 2 : ID", "HKSFPG026", "Service Pillar", "28.537099,77.188964"],
-  ["Stay wire used Instead of Strip Earthing", "SIIA NO 2 : ID", "HKSFPG021", "Feeder Pillar", "28.537441,77.188066"],
-  ["Stay wire used Instead of Strip Earthing", "SIIA NO 2 : ID", "HKSFPG087", "Feeder Pillar", "28.536529,77.188574"],
-  ["Stay wire used Instead of Strip Earthing", "SIIA NO 2 : ID", "HKSFPG025", "Feeder Pillar", "28.536576,77.188729"],
-  ["Stay wire used Instead of Strip Earthing", "SIIA NO 2 : ID", "HKSFPG024", "Service Pillar", "28.536844,77.18768"],
-  ["Stay wire used Instead of Strip Earthing", "SIIA NO 2 : ID", "HKSFPG022", "Feeder Pillar", "28.537481,77.187941"],
-  ["Stay wire used Instead of Strip Earthing", "SIIA NO 4 : ID", "HKSFPG016", "Feeder Pillar", "28.53827,77.182288"],
+  ["Stay Wire instead of Strip", "-", "HKSL391", "Service Pillar", "28.544401, 77.196056"],
+  ["Stay Wire instead of Strip", "DDA FLAT BER SARAI : ID", "HKSFPG010", "Service Pillar", "28.549253,77.18107"],
+  ["Stay Wire instead of Strip", "DDA FLAT BER SARAI : ID", "HKSFPG008", "Feeder Pillar", "28.548597,77.180635"],
+  ["Stay Wire instead of Strip", "DDA FLAT BER SARAI : ID", "HKSFPG007", "Service Pillar", "28.54865,77.180655"],
+  ["Stay Wire instead of Strip", "DDA FLAT BER SARAI : ID", "HKSFPG009", "Service Pillar", "28.548664,77.18019"],
+  ["Stay Wire instead of Strip", "DDA FLAT BER SARAI : ID", "HKSFPG083", "Feeder Pillar", "28.548746,77.180754"],
+  ["Stay Wire instead of Strip", "DDA FLAT BER SARAI : ID", "HKSFPG082", "Feeder Pillar", "28.548998,77.180783"],
+  ["Stay Wire instead of Strip", "IIT MINI CAMPUS:ID", "HKSFPG004", "Feeder Pillar", "28.545724,77.181228"],
+  ["Stay Wire instead of Strip", "IIT NO 1:ID", "HKSFPL316", "Feeder Pillar", "28.544304,77.196185"],
+  ["Stay Wire instead of Strip", "IIT NO 2:ID", "HKSFPG037", "Feeder Pillar", "28.541175,77.198111"],
+  ["Stay Wire instead of Strip", "IIT NO 2:ID", "HKSFPG053", "Service Pillar", "28.541386, 77.194012"],
+  ["Stay Wire instead of Strip", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT007", "Feeder Pillar", "28.544271,77.182906"],
+  ["Stay Wire instead of Strip", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG094", "Service Pillar", "28.542065,77.178261"],
+  ["Stay Wire instead of Strip", "SIIA NO 2 : ID", "HKSFPG023", "Service Pillar", "28.53681,77.187774"],
+  ["Stay Wire instead of Strip", "SIIA NO 2 : ID", "HKSFPG026", "Service Pillar", "28.537099,77.188964"],
+  ["Stay Wire instead of Strip", "SIIA NO 2 : ID", "HKSFPG021", "Feeder Pillar", "28.537441,77.188066"],
+  ["Stay Wire instead of Strip", "SIIA NO 2 : ID", "HKSFPG087", "Feeder Pillar", "28.536529,77.188574"],
+  ["Stay Wire instead of Strip", "SIIA NO 2 : ID", "HKSFPG025", "Feeder Pillar", "28.536576,77.188729"],
+  ["Stay Wire instead of Strip", "SIIA NO 2 : ID", "HKSFPG024", "Service Pillar", "28.536844,77.18768"],
+  ["Stay Wire instead of Strip", "SIIA NO 2 : ID", "HKSFPG022", "Feeder Pillar", "28.537481,77.187941"],
+  ["Stay Wire instead of Strip", "SIIA NO 4 : ID", "HKSFPG016", "Feeder Pillar", "28.53827,77.182288"],
   ["Pillar Plinth Condition Not OK", "DDA FLAT BER SARAI : ID", "HKSFPG010", "Service Pillar", "28.549253,77.18107"],
   ["Pillar Plinth Condition Not OK", "DDA FLAT BER SARAI : ID", "HKSFPG009", "Service Pillar", "28.548664,77.18019"],
   ["Pillar Plinth Condition Not OK", "DDA FLAT BER SARAI : ID", "HKSFPG082", "Feeder Pillar", "28.548998,77.180783"],
@@ -1324,31 +1328,31 @@ const pv1 = [
   ["HRC Fuse Condition Not OK", "SIIA NO 4 : ID", "HKSFPG013", "Service Pillar", "28.54014,77.183086"],
   ["HRC Fuse Condition Not OK", "SIIA NO 5 KATWARIA:ID", "HKSFPG090", "Feeder Pillar", "28.541151,77.184311"],
   ["HRC Fuse Condition Not OK", "SIIA NO 5 KATWARIA:ID", "HKSFPG062", "Feeder Pillar", "28.54122,77.184533"],
-  ["No Connection Found", "NCERT NO 2:ID", "HKSFPG051", "Feeder Pillar", "28.540982,77.190731"],
-  ["No Connection Found", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT012", "Feeder Pillar", "28.544095,77.185752"],
-  ["No Connection Found", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT011", "Feeder Pillar", "28.544191,77.185333"],
-  ["No Connection Found", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT013", "Feeder Pillar", "28.54427,77.185894"],
-  ["No Connection Found", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT010", "Feeder Pillar", "28.544499,77.184353"],
-  ["No Connection Found", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG099", "Feeder Pillar", "28.542303,77.176971"],
-  ["No Connection Found", "SIIA NO 4 : ID", "HKSFPG013", "Service Pillar", "28.54014,77.183086"],
-  ["No Connection Found", "SIIA NO 5 KATWARIA:ID", "HKSFPG090", "Feeder Pillar", "28.541151,77.184311"],
-  ["No Connection Found", "SIIA NO 5 KATWARIA:ID", "HKSFPG062", "Feeder Pillar", "28.54122,77.184533"],
-  ["Pillar Earthing Needed", "DDA FLAT BER SARAI : ID", "HKSFPG010", "Service Pillar", "28.549253,77.18107"],
-  ["Pillar Earthing Needed", "DDA FLAT BER SARAI : ID", "HKSFPG009", "Service Pillar", "28.548664,77.18019"],
-  ["Pillar Earthing Needed", "DDA FLAT BER SARAI : ID", "HKSFPG082", "Feeder Pillar", "28.548998,77.180783"],
-  ["Pillar Earthing Needed", "IIT NO 1:ID", "HKSFPL316", "Feeder Pillar", "28.544304,77.196185"],
-  ["Pillar Earthing Needed", "NCERT NO 2:ID", "HKSFPG048", "Feeder Pillar", "28.540264,77.190237"],
-  ["Pillar Earthing Needed", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT010", "Feeder Pillar", "28.544499,77.184353"],
-  ["Pillar Earthing Needed", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG011", "Service Pillar", "28.542801,77.180431"],
-  ["Pillar Earthing Needed", "SIIA NO 2 : ID", "HKSFPG021", "Feeder Pillar", "28.537441,77.188066"],
-  ["Pole Earthing Not Found", "SIIA NO 2 : ID", "2581", "Pole", "28.537340, 77.188017"],
-  ["Pole Earthing Not Found", "SIIA NO 5 KATWARIA:ID", "HKSK145", "Pole", "28.540853,77.18604"],
-  ["Pole Earthing Not Found", "SIIA NO 5 KATWARIA:ID", "HKSG147", "Pole", "28.541121,77.184344"],
-  ["Pole Earthing Not Found", "SIIA NO 5 KATWARIA:ID", "HKSG178", "Pole", "28.541226,77.18418"],
-  ["Pole Earthing Not Found", "SIIA NO 5 KATWARIA:ID", "HKSG256", "Pole", "28.541247,77.184922"],
-  ["Pole Earthing Not Found", "SIIA NO 5 KATWARIA:ID", "HKSK839", "Pole", "28.540651,77.185039"],
-  ["Pole Earthing Not Found", "VILLAGE KATWARIA SARAI : PM", "HKSG224", "Pole", "28.541451,77.186684"],
-  ["Pole Earthing Not Found", "VILLAGE KATWARIA SARAI : PM", "HKSK819", "Pole", "28.541712,77.186283"],
+  ["No Earthing Found", "NCERT NO 2:ID", "HKSFPG051", "Feeder Pillar", "28.540982,77.190731"],
+  ["No Earthing Found", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT012", "Feeder Pillar", "28.544095,77.185752"],
+  ["No Earthing Found", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT011", "Feeder Pillar", "28.544191,77.185333"],
+  ["No Earthing Found", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT013", "Feeder Pillar", "28.54427,77.185894"],
+  ["No Earthing Found", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT010", "Feeder Pillar", "28.544499,77.184353"],
+  ["No Earthing Found", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG099", "Feeder Pillar", "28.542303,77.176971"],
+  ["No Earthing Found", "SIIA NO 4 : ID", "HKSFPG013", "Service Pillar", "28.54014,77.183086"],
+  ["No Earthing Found", "SIIA NO 5 KATWARIA:ID", "HKSFPG090", "Feeder Pillar", "28.541151,77.184311"],
+  ["No Earthing Found", "SIIA NO 5 KATWARIA:ID", "HKSFPG062", "Feeder Pillar", "28.54122,77.184533"],
+  ["Pillar Earthing (Single)", "DDA FLAT BER SARAI : ID", "HKSFPG010", "Service Pillar", "28.549253,77.18107"],
+  ["Pillar Earthing (Single)", "DDA FLAT BER SARAI : ID", "HKSFPG009", "Service Pillar", "28.548664,77.18019"],
+  ["Pillar Earthing (Single)", "DDA FLAT BER SARAI : ID", "HKSFPG082", "Feeder Pillar", "28.548998,77.180783"],
+  ["Pillar Earthing (Single)", "IIT NO 1:ID", "HKSFPL316", "Feeder Pillar", "28.544304,77.196185"],
+  ["Pillar Earthing (Single)", "NCERT NO 2:ID", "HKSFPG048", "Feeder Pillar", "28.540264,77.190237"],
+  ["Pillar Earthing (Single)", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT010", "Feeder Pillar", "28.544499,77.184353"],
+  ["Pillar Earthing (Single)", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG011", "Service Pillar", "28.542801,77.180431"],
+  ["Pillar Earthing (Single)", "SIIA NO 2 : ID", "HKSFPG021", "Feeder Pillar", "28.537441,77.188066"],
+  ["No Pole Earthing", "SIIA NO 2 : ID", "2581", "Pole", "28.537340, 77.188017"],
+  ["No Pole Earthing", "SIIA NO 5 KATWARIA:ID", "HKSK145", "Pole", "28.540853,77.18604"],
+  ["No Pole Earthing", "SIIA NO 5 KATWARIA:ID", "HKSG147", "Pole", "28.541121,77.184344"],
+  ["No Pole Earthing", "SIIA NO 5 KATWARIA:ID", "HKSG178", "Pole", "28.541226,77.18418"],
+  ["No Pole Earthing", "SIIA NO 5 KATWARIA:ID", "HKSG256", "Pole", "28.541247,77.184922"],
+  ["No Pole Earthing", "SIIA NO 5 KATWARIA:ID", "HKSK839", "Pole", "28.540651,77.185039"],
+  ["No Pole Earthing", "VILLAGE KATWARIA SARAI : PM", "HKSG224", "Pole", "28.541451,77.186684"],
+  ["No Pole Earthing", "VILLAGE KATWARIA SARAI : PM", "HKSK819", "Pole", "28.541712,77.186283"],
   ["Pillar Door Not Properly Locked", "IIT NO 1:ID", "HKSFPL316", "Feeder Pillar", "28.544304,77.196185"],
   ["Pillar Door Not Properly Locked", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT010", "Feeder Pillar", "28.544499,77.184353"],
   ["Pillar Door Not Properly Locked", "SIIA NO 2 : ID", "HKSFPG023", "Service Pillar", "28.53681,77.187774"],
@@ -1596,16 +1600,50 @@ function fillSummaryTable(data, bodyId, detailBodyId){
     if(!(key in counts)){ counts[key]=0; order.push(key); }
     counts[key]++;
   });
-  order.forEach(key=>{
+
+  const earthingOrder = [
+    {key:'Pillar Earthing (Single)', letter:'a'},
+    {key:'No Earthing Found', letter:'b'},
+    {key:'Stay Wire instead of Strip', letter:'c'},
+    {key:'No Pole Earthing', letter:'d'},
+  ];
+  const earthingKeys = new Set(earthingOrder.map(e=>e.key));
+
+  function renderRow(key, label){
     const tr = document.createElement('tr');
     tr.className = 'summary-row-clickable';
     const targetId = detailBodyId + '-grp-' + slugify(key);
     tr.innerHTML = `
-      <td data-label="Deficiency Type"><span class="cell-label">Deficiency Type</span><span class="cell-value">${key} <span class="jump-arrow">↓</span></span></td>
+      <td data-label="Deficiency Type"><span class="cell-label">Deficiency Type</span><span class="cell-value">${label} <span class="jump-arrow">↓</span></span></td>
       <td class="num badge-pending" data-label="Deficiency Count"><span class="cell-label">Deficiency Count</span><span class="cell-value">${counts[key]}</span></td>`;
     tr.addEventListener('click', ()=> jumpToDeficiencyGroup(targetId));
     body.appendChild(tr);
+  }
+
+  // Render non-earthing deficiency types as normal top-level rows, in original frequency order
+  order.forEach(key=>{
+    if(!earthingKeys.has(key)) renderRow(key, key);
   });
+
+  // Bundle earthing-related types under one "Earthing Cases" group
+  const presentEarthing = earthingOrder.filter(e => counts[e.key] > 0);
+  if(presentEarthing.length){
+    const totalEarthing = presentEarthing.reduce((s,e)=>s+counts[e.key], 0);
+    const groupRow = document.createElement('tr');
+    groupRow.className = 'group-header summary-group-header';
+    groupRow.innerHTML = `<td colspan="2"><span class="group-name">Earthing Cases</span><span class="group-count">${totalEarthing} total</span></td>`;
+    body.appendChild(groupRow);
+    presentEarthing.forEach(e=>{
+      const tr = document.createElement('tr');
+      tr.className = 'summary-row-clickable earthing-sub-row';
+      const targetId = detailBodyId + '-grp-' + slugify(e.key);
+      tr.innerHTML = `
+        <td data-label="Deficiency Type"><span class="cell-label">Deficiency Type</span><span class="cell-value">${e.letter}) ${e.key} <span class="jump-arrow">↓</span></span></td>
+        <td class="num badge-pending" data-label="Deficiency Count"><span class="cell-label">Deficiency Count</span><span class="cell-value">${counts[e.key]}</span></td>`;
+      tr.addEventListener('click', ()=> jumpToDeficiencyGroup(targetId));
+      body.appendChild(tr);
+    });
+  }
 }
 
 fillSummaryTable(pv1, 'pv1-summary', 'pv1-body');
@@ -1741,7 +1779,7 @@ async function refreshDashboard(){
     const FP = {SUBSTATION:10, POLE:24, ASSET:20, COORD:16, STATUS:62, DATEONLY:2, TEAM:67, PILLAR_EARTH:29, EARTH_METHOD:66,
       DEFS: [[27,'NO','Pillar Back Door Not OK'],[28,'NO','Pillar Door Not Properly Locked'],
              [30,'Not Ok','Pillar Plinth Condition Not OK'],[31,'Not Ok','HRC Fuse Condition Not OK'],
-             [34,'Not Fenced','Pillar Not Fenced'],[39,'Earthing Not Found','Pole Earthing Not Found'],
+             [34,'Not Fenced','Pillar Not Fenced'],[39,'Earthing Not Found','No Pole Earthing'],
              [65,'NO','Danger Board Missing on Pole/Pillar']]};
 
     let fpDone=0, fpPending=0;
@@ -1766,16 +1804,16 @@ async function refreshDashboard(){
       // Pillar Earthing Needed: earthing count of 0 or 1 is a deficiency
       const earthVal = parseFloat(String(r[FP.PILLAR_EARTH]||'').trim());
       if(!isNaN(earthVal) && (earthVal === 0 || earthVal === 1)){
-        fpDef.push(['Pillar Earthing Needed', sub, r[FP.POLE]||'-', r[FP.ASSET]||'-', r[FP.COORD]||'']);
+        fpDef.push(['Pillar Earthing (Single)', sub, r[FP.POLE]||'-', r[FP.ASSET]||'-', r[FP.COORD]||'']);
       }
       // Earthing check on Pillars only (poles excluded): based on 'Earthing Via Strip or Stay'
       const assetType = String(r[FP.ASSET]||'').trim();
       if(status==='Done' && assetType.toLowerCase() !== 'pole'){
         const earthMethod = String(r[FP.EARTH_METHOD]||'').trim();
         if(earthMethod === 'Stay wire'){
-          fpDef.push(['Stay wire used Instead of Strip Earthing', sub, r[FP.POLE]||'-', r[FP.ASSET]||'-', r[FP.COORD]||'']);
+          fpDef.push(['Stay Wire instead of Strip', sub, r[FP.POLE]||'-', r[FP.ASSET]||'-', r[FP.COORD]||'']);
         } else if(earthMethod === ''){
-          fpDef.push(['No Connection Found', sub, r[FP.POLE]||'-', r[FP.ASSET]||'-', r[FP.COORD]||'']);
+          fpDef.push(['No Earthing Found', sub, r[FP.POLE]||'-', r[FP.ASSET]||'-', r[FP.COORD]||'']);
         }
       }
     });
