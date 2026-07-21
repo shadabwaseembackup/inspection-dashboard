@@ -916,7 +916,7 @@
       <div class="panel-head">
         <span class="tag">A</span>
         <h2>Deficiency Summary — FP SP Inspection</h2>
-        <span class="sub" id="pv1-sub">47 records inspected · 123 cases</span>
+        <span class="sub" id="pv1-sub">47 records inspected · 125 cases</span>
       </div>
       <div class="table-scroll"><table class="table-def table-def2">
         <thead><tr><th>Deficiency Type</th><th class="num">Deficiency Count</th></tr></thead>
@@ -1359,6 +1359,8 @@ const pv1 = [
   ["Danger Board Missing - Pole", "VILLAGE KATWARIA SARAI : PM", "HKSG224", "Pole", "28.541451,77.186684"],
   ["Danger Board Missing - Pole", "VILLAGE KATWARIA SARAI : PM", "HKSK819", "Pole", "28.541712,77.186283"],
   ["Danger Board Missing - Pole", "VILLAGE KATWARIA SARAI : PM", "HKSK765", "Pole", "28.541813,77.186077"],
+  ["Stay Wire Egg Insulator Damaged", "SIIA NO 5 KATWARIA:ID", "HKSG172", "Pole", "28.541143, 77.184471"],
+  ["Stay Wire Egg Insulator Damaged", "IIT NO 2:ID", "HKS C-330", "Pole", "28.542922, 77.196155"],
 ];
 
 const pv2 = [
@@ -1788,7 +1790,8 @@ async function refreshDashboard(){
     const FP = {SUBSTATION:10, POLE:24, ASSET:20, COORD:16, STATUS:62, DATEONLY:2, TEAM:67, PILLAR_EARTH:29, EARTH_METHOD:66,
       DEFS: [[27,'NO','Pillar Back Door Not OK'],[28,'NO','Pillar Door Not Properly Locked'],
              [30,'Not Ok','Pillar Plinth Condition Not OK'],[31,'Not Ok','HRC Fuse Condition Not OK'],
-             [34,'Not Fenced','Pillar Not Fenced'],[39,'Earthing Not Found','No Pole Earthing']]};
+             [34,'Not Fenced','Pillar Not Fenced'],[39,'Earthing Not Found','No Pole Earthing'],
+             [41,'Not Ok/Damaged','Stay Wire Egg Insulator Damaged']]};
 
     let fpDone=0, fpPending=0;
     const fpDateTeam = {}; // key date|team -> count
