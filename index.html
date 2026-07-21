@@ -819,16 +819,16 @@
   <div class="tab-panel active" id="panel-fpsp">
     <div class="stat-row">
       <div class="stat"><div class="lbl">Total Assets</div><div class="num" id="fp-total">555</div></div>
-      <div class="stat"><div class="lbl">Done</div><div class="num" id="fp-done">47</div></div>
-      <div class="stat"><div class="lbl">Pending</div><div class="num" id="fp-pending">508</div></div>
-      <div class="stat"><div class="lbl">Completion</div><div class="num" id="fp-pct">8%</div></div>
+      <div class="stat"><div class="lbl">Done</div><div class="num" id="fp-done">55</div></div>
+      <div class="stat"><div class="lbl">Pending</div><div class="num" id="fp-pending">500</div></div>
+      <div class="stat"><div class="lbl">Completion</div><div class="num" id="fp-pct">10%</div></div>
     </div>
 
     <section class="panel">
       <div class="panel-head">
         <span class="tag">A</span>
         <h2>Date-wise → Team-wise Done Count</h2>
-        <span class="sub" id="fp-t1-sub">47 inspections completed</span>
+        <span class="sub" id="fp-t1-sub">55 inspections completed</span>
       </div>
       <div class="table-scroll"><table class="table-dtd">
         <thead><tr><th>Date</th><th>Team</th><th class="num">Done</th></tr></thead>
@@ -855,16 +855,16 @@
   <div class="tab-panel" id="panel-stl">
     <div class="stat-row">
       <div class="stat"><div class="lbl">Total Assets</div><div class="num" id="stl-total">832</div></div>
-      <div class="stat"><div class="lbl">Done</div><div class="num" id="stl-done">186</div></div>
-      <div class="stat"><div class="lbl">Pending</div><div class="num" id="stl-pending">646</div></div>
-      <div class="stat"><div class="lbl">Completion</div><div class="num" id="stl-pct">22%</div></div>
+      <div class="stat"><div class="lbl">Done</div><div class="num" id="stl-done">218</div></div>
+      <div class="stat"><div class="lbl">Pending</div><div class="num" id="stl-pending">614</div></div>
+      <div class="stat"><div class="lbl">Completion</div><div class="num" id="stl-pct">26%</div></div>
     </div>
 
     <section class="panel">
       <div class="panel-head">
         <span class="tag">A</span>
         <h2>Date-wise → Team-wise Done Count</h2>
-        <span class="sub" id="stl-t3-sub">186 inspections completed</span>
+        <span class="sub" id="stl-t3-sub">218 inspections completed</span>
       </div>
       <div class="table-scroll"><table class="table-dtd">
         <thead><tr><th>Date</th><th>Team</th><th class="num">Done</th></tr></thead>
@@ -916,7 +916,7 @@
       <div class="panel-head">
         <span class="tag">A</span>
         <h2>Deficiency Summary — FP SP Inspection</h2>
-        <span class="sub" id="pv1-sub">47 records inspected · 125 cases</span>
+        <span class="sub" id="pv1-sub">55 records inspected · 130 cases</span>
       </div>
       <div class="table-scroll"><table class="table-def table-def2">
         <thead><tr><th>Deficiency Type</th><th class="num">Deficiency Count</th></tr></thead>
@@ -942,7 +942,7 @@
       <div class="panel-head">
         <span class="tag">A</span>
         <h2>Deficiency Summary — STL Inspection</h2>
-        <span class="sub" id="pv2-sub">186 records inspected · 135 cases</span>
+        <span class="sub" id="pv2-sub">218 records inspected · 149 cases</span>
       </div>
       <div class="table-scroll"><table class="table-def table-def2">
         <thead><tr><th>Deficiency Type</th><th class="num">Deficiency Count</th></tr></thead>
@@ -997,39 +997,44 @@ const t1 = [
   ["02-Jul","Ashok Kumar & Deshraj",6],
   ["02-Jul","Sanjay Kumar & Shiv Pujan",6],
   ["04-Jul","Ashok Kumar & Ravinder Kumar",1],
-  ["05-Jul","Sanjay Kumar & Ameer",4],
+  ["05-Jul","Sanjay Kumar & Ameer",2],
   ["05-Jul","Sanjay Kumar & Shiv Pujan",1],
   ["07-Jul","Harikishan Mukhiya & Mohd Habib",1],
   ["08-Jul","Ramraj & Ameer",1],
-  ["09-Jul","Rahmat Tulla Shah & Deshraj",7],
+  ["09-Jul","Rahmat Tulla Shah & Deshraj",6],
   ["10-Jul","Ashok Kumar & Ravinder Kumar",1],
   ["10-Jul","Sanjay Kumar & Avneesh Dubey",1],
   ["12-Jul","Umesh Jha & Anil",4],
   ["13-Jul","Sanjay Kumar & Ameer",2],
-  ["14-Jul","Rahmat Tulla Shah & Deshraj",9],
   ["14-Jul","Rajesh Yadav & Mohd Habib",3],
+  ["17-Jul","Harikishan Mukhiya & Mohd Habib",6],
+  ["18-Jul","Rajesh Yadav & Mohd Habib",1],
+  ["18-Jul","Sanjay Kumar & Ameer",2],
+  ["20-Jul","Harikishan Mukhiya & Mohd Habib",1],
+  ["20-Jul","Rahmat Tulla Shah & Deshraj",1],
+  ["21-Jul","Rahmat Tulla Shah & Deshraj",9],
 ];
 
 const t2 = [
   ["C-3, SIIA (DR CHANDA):PM",0,13],
   ["DDA FLAT BER SARAI : ID",6,34],
-  ["DDA FLAT KATWARIA SARAI : ID",0,21],
+  ["DDA FLAT KATWARIA SARAI : ID",3,18],
   ["HARIJAN BASTI KATWARIA SARAI VILL : PKG",0,42],
   ["HARYANA GOVT. NURSERY:PM",0,16],
   ["IIT MINI CAMPUS:ID",1,5],
   ["IIT NO 1:ID",1,88],
-  ["IIT NO 2:ID",3,55],
+  ["IIT NO 2:ID",4,55],
   ["JIA SARAI:PL",0,42],
   ["NCERT NO 2:ID",4,9],
   ["PROFESSORS APPARTMENT,IIT DELHI",0,13],
   ["S/STN. IIT SOLAR HOUSE : ID",5,4],
   ["SIIA -1 (GURUNANAK FOUNDATION) :ID",3,5],
-  ["SIIA NO 2 : ID",9,4],
+  ["SIIA NO 2 : ID",9,3],
   ["SIIA NO 3 : ID",0,5],
   ["SIIA NO 4 : ID",2,8],
   ["SIIA NO 5 KATWARIA:ID",9,36],
   ["VILLAGE BER SARAI :ID",0,28],
-  ["VILLAGE KATWARIA SARAI : PM",3,51],
+  ["VILLAGE KATWARIA SARAI : PM",7,47],
 ];
 
 const t3 = [
@@ -1052,10 +1057,12 @@ const t3 = [
   ["12-Jul","Umesh Jha & Anil",10],
   ["13-Jul","Harikishan Mukhiya & Shyam Sunder",4],
   ["13-Jul","Rajesh Yadav & Mohd Habib",12],
-  ["14-Jul","Rahmat Tulla Shah & Deshraj",4],
-  ["15-Jul","Umesh Jha & Anil",6],
   ["15-Jul","Ashok Kumar & Ravinder Kumar",17],
+  ["15-Jul","Umesh Jha & Anil",6],
   ["16-Jul","Pradeep Kumar & Avneesh Dubey",4],
+  ["17-Jul","Ashok Kumar & Ravinder Kumar",21],
+  ["19-Jul","Umesh Jha & Anil",11],
+  ["21-Jul","Rahmat Tulla Shah & Deshraj",4],
 ];
 
 const dt1 = [
@@ -1200,42 +1207,39 @@ fillSubstationTable(dt2, 't5-body', 't5-done', 't5-pending', 't5-total');
 
 // ==================== Deficiency Pivot Data ====================
 const pv1 = [
-  ["Pillar Not Fenced", "-", "HKSL391", "Service Pillar", "28.544401, 77.196056"],
-  ["Pillar Not Fenced", "DDA FLAT BER SARAI : ID", "HKSFPG010", "Service Pillar", "28.549253,77.18107"],
-  ["Pillar Not Fenced", "DDA FLAT BER SARAI : ID", "HKSFPG008", "Feeder Pillar", "28.548597,77.180635"],
-  ["Pillar Not Fenced", "DDA FLAT BER SARAI : ID", "HKSFPG007", "Service Pillar", "28.54865,77.180655"],
-  ["Pillar Not Fenced", "DDA FLAT BER SARAI : ID", "HKSFPG009", "Service Pillar", "28.548664,77.18019"],
-  ["Pillar Not Fenced", "DDA FLAT BER SARAI : ID", "HKSFPG083", "Feeder Pillar", "28.548746,77.180754"],
-  ["Pillar Not Fenced", "DDA FLAT BER SARAI : ID", "HKSFPG082", "Feeder Pillar", "28.548998,77.180783"],
-  ["Pillar Not Fenced", "IIT MINI CAMPUS:ID", "HKSFPG004", "Feeder Pillar", "28.545724,77.181228"],
-  ["Pillar Not Fenced", "IIT NO 1:ID", "HKSFPL316", "Feeder Pillar", "28.544304,77.196185"],
-  ["Pillar Not Fenced", "IIT NO 2:ID", "HKSFPG037", "Feeder Pillar", "28.541175,77.198111"],
-  ["Pillar Not Fenced", "IIT NO 2:ID", "HKSFPL184", "Feeder Pillar", "28.541569,77.196845"],
-  ["Pillar Not Fenced", "IIT NO 2:ID", "HKSFPG053", "Service Pillar", "28.541386, 77.194012"],
-  ["Pillar Not Fenced", "NCERT NO 2:ID", "HKSFPG046", "Feeder Pillar", "28.539435,77.19025"],
-  ["Pillar Not Fenced", "NCERT NO 2:ID", "HKSFPG043", "Service Pillar", "28.539868,77.190033"],
-  ["Pillar Not Fenced", "NCERT NO 2:ID", "HKSFPG048", "Feeder Pillar", "28.540264,77.190237"],
-  ["Pillar Not Fenced", "NCERT NO 2:ID", "HKSFPG051", "Feeder Pillar", "28.540982,77.190731"],
-  ["Pillar Not Fenced", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT012", "Feeder Pillar", "28.544095,77.185752"],
-  ["Pillar Not Fenced", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT011", "Feeder Pillar", "28.544191,77.185333"],
-  ["Pillar Not Fenced", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT013", "Feeder Pillar", "28.54427,77.185894"],
-  ["Pillar Not Fenced", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT007", "Feeder Pillar", "28.544271,77.182906"],
-  ["Pillar Not Fenced", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT010", "Feeder Pillar", "28.544499,77.184353"],
-  ["Pillar Not Fenced", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG094", "Service Pillar", "28.542065,77.178261"],
-  ["Pillar Not Fenced", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG099", "Feeder Pillar", "28.542303,77.176971"],
-  ["Pillar Not Fenced", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG011", "Service Pillar", "28.542801,77.180431"],
-  ["Pillar Not Fenced", "SIIA NO 2 : ID", "HKSFPG023", "Service Pillar", "28.53681,77.187774"],
-  ["Pillar Not Fenced", "SIIA NO 2 : ID", "HKSFPG026", "Service Pillar", "28.537099,77.188964"],
-  ["Pillar Not Fenced", "SIIA NO 2 : ID", "HKSFPG021", "Feeder Pillar", "28.537441,77.188066"],
-  ["Pillar Not Fenced", "SIIA NO 2 : ID", "HKSFPG087", "Feeder Pillar", "28.536529,77.188574"],
-  ["Pillar Not Fenced", "SIIA NO 2 : ID", "HKSFPG025", "Feeder Pillar", "28.536576,77.188729"],
-  ["Pillar Not Fenced", "SIIA NO 2 : ID", "HKSFPG024", "Service Pillar", "28.536844,77.18768"],
-  ["Pillar Not Fenced", "SIIA NO 2 : ID", "HKSFPG027", "Service Pillar", "28.537233,77.188887"],
-  ["Pillar Not Fenced", "SIIA NO 2 : ID", "HKSFPG022", "Feeder Pillar", "28.537481,77.187941"],
-  ["Pillar Not Fenced", "SIIA NO 4 : ID", "HKSFPG016", "Feeder Pillar", "28.53827,77.182288"],
-  ["Pillar Not Fenced", "SIIA NO 4 : ID", "HKSFPG013", "Service Pillar", "28.54014,77.183086"],
-  ["Pillar Not Fenced", "SIIA NO 5 KATWARIA:ID", "HKSFPG090", "Feeder Pillar", "28.541151,77.184311"],
-  ["Pillar Not Fenced", "SIIA NO 5 KATWARIA:ID", "HKSFPG062", "Feeder Pillar", "28.54122,77.184533"],
+  ["Danger Board Missing - Pillar", "DDA FLAT BER SARAI : ID", "HKSFPG010", "Service Pillar", "28.549253,77.18107"],
+  ["Danger Board Missing - Pillar", "DDA FLAT BER SARAI : ID", "HKSFPG008", "Feeder Pillar", "28.548597,77.180635"],
+  ["Danger Board Missing - Pillar", "DDA FLAT BER SARAI : ID", "HKSFPG007", "Service Pillar", "28.54865,77.180655"],
+  ["Danger Board Missing - Pillar", "DDA FLAT BER SARAI : ID", "HKSFPG009", "Service Pillar", "28.548664,77.18019"],
+  ["Danger Board Missing - Pillar", "DDA FLAT BER SARAI : ID", "HKSFPG083", "Feeder Pillar", "28.548746,77.180754"],
+  ["Danger Board Missing - Pillar", "DDA FLAT BER SARAI : ID", "HKSFPG082", "Feeder Pillar", "28.548998,77.180783"],
+  ["Danger Board Missing - Pillar", "IIT MINI CAMPUS:ID", "HKSFPG004", "Feeder Pillar", "28.545724,77.181228"],
+  ["Danger Board Missing - Pillar", "IIT NO 1:ID", "HKSFPL316", "Feeder Pillar", "28.544304,77.196185"],
+  ["Danger Board Missing - Pillar", "IIT NO 2:ID", "HKSFPG037", "Feeder Pillar", "28.541175,77.198111"],
+  ["Danger Board Missing - Pillar", "IIT NO 2:ID", "HKSFPG053", "Service Pillar", "28.541386, 77.194012"],
+  ["Danger Board Missing - Pillar", "NCERT NO 2:ID", "HKSFPG046", "Feeder Pillar", "28.539435,77.19025"],
+  ["Danger Board Missing - Pillar", "NCERT NO 2:ID", "HKSFPG043", "Service Pillar", "28.539868,77.190033"],
+  ["Danger Board Missing - Pillar", "NCERT NO 2:ID", "HKSFPG051", "Feeder Pillar", "28.540982,77.190731"],
+  ["Danger Board Missing - Pillar", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT012", "Feeder Pillar", "28.544095,77.185752"],
+  ["Danger Board Missing - Pillar", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT011", "Feeder Pillar", "28.544191,77.185333"],
+  ["Danger Board Missing - Pillar", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT013", "Feeder Pillar", "28.54427,77.185894"],
+  ["Danger Board Missing - Pillar", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT010", "Feeder Pillar", "28.544499,77.184353"],
+  ["Danger Board Missing - Pillar", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG094", "Service Pillar", "28.542065,77.178261"],
+  ["Danger Board Missing - Pillar", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG099", "Feeder Pillar", "28.542303,77.176971"],
+  ["Danger Board Missing - Pillar", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG011", "Service Pillar", "28.542801,77.180431"],
+  ["Danger Board Missing - Pillar", "SIIA NO 2 : ID", "HKSFPG019", "Feeder Pillar", "28.53666,77.18459"],
+  ["Danger Board Missing - Pillar", "SIIA NO 2 : ID", "HKSFPG023", "Service Pillar", "28.53681,77.187774"],
+  ["Danger Board Missing - Pillar", "SIIA NO 2 : ID", "HKSFPG026", "Service Pillar", "28.537099,77.188964"],
+  ["Danger Board Missing - Pillar", "SIIA NO 2 : ID", "HKSFPG021", "Feeder Pillar", "28.537441,77.188066"],
+  ["Danger Board Missing - Pillar", "SIIA NO 2 : ID", "HKSFPG087", "Feeder Pillar", "28.536529,77.188574"],
+  ["Danger Board Missing - Pillar", "SIIA NO 2 : ID", "HKSFPG025", "Feeder Pillar", "28.536576,77.188729"],
+  ["Danger Board Missing - Pillar", "SIIA NO 2 : ID", "HKSFPG024", "Service Pillar", "28.536844,77.18768"],
+  ["Danger Board Missing - Pillar", "SIIA NO 2 : ID", "HKSFPG027", "Service Pillar", "28.537233,77.188887"],
+  ["Danger Board Missing - Pillar", "SIIA NO 2 : ID", "HKSFPG022", "Feeder Pillar", "28.537481,77.187941"],
+  ["Danger Board Missing - Pillar", "SIIA NO 4 : ID", "HKSFPG016", "Feeder Pillar", "28.53827,77.182288"],
+  ["Danger Board Missing - Pillar", "SIIA NO 4 : ID", "HKSFPG013", "Service Pillar", "28.54014,77.183086"],
+  ["Danger Board Missing - Pillar", "SIIA NO 5 KATWARIA:ID", "HKSFPG090", "Feeder Pillar", "28.541151,77.184311"],
+  ["Danger Board Missing - Pillar", "SIIA NO 5 KATWARIA:ID", "HKSFPG062", "Feeder Pillar", "28.54122,77.184533"],
   ["Stay Wire instead of Strip", "-", "HKSL391", "Service Pillar", "28.544401, 77.196056"],
   ["Stay Wire instead of Strip", "DDA FLAT BER SARAI : ID", "HKSFPG010", "Service Pillar", "28.549253,77.18107"],
   ["Stay Wire instead of Strip", "DDA FLAT BER SARAI : ID", "HKSFPG008", "Feeder Pillar", "28.548597,77.180635"],
@@ -1249,6 +1253,7 @@ const pv1 = [
   ["Stay Wire instead of Strip", "IIT NO 2:ID", "HKSFPG053", "Service Pillar", "28.541386, 77.194012"],
   ["Stay Wire instead of Strip", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT007", "Feeder Pillar", "28.544271,77.182906"],
   ["Stay Wire instead of Strip", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG094", "Service Pillar", "28.542065,77.178261"],
+  ["Stay Wire instead of Strip", "SIIA NO 2 : ID", "HKSFPG019", "Feeder Pillar", "28.53666,77.18459"],
   ["Stay Wire instead of Strip", "SIIA NO 2 : ID", "HKSFPG023", "Service Pillar", "28.53681,77.187774"],
   ["Stay Wire instead of Strip", "SIIA NO 2 : ID", "HKSFPG026", "Service Pillar", "28.537099,77.188964"],
   ["Stay Wire instead of Strip", "SIIA NO 2 : ID", "HKSFPG021", "Feeder Pillar", "28.537441,77.188066"],
@@ -1270,12 +1275,38 @@ const pv1 = [
   ["Pillar Plinth Condition Not OK", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG094", "Service Pillar", "28.542065,77.178261"],
   ["Pillar Plinth Condition Not OK", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG099", "Feeder Pillar", "28.542303,77.176971"],
   ["Pillar Plinth Condition Not OK", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG011", "Service Pillar", "28.542801,77.180431"],
+  ["Pillar Plinth Condition Not OK", "SIIA NO 2 : ID", "HKSFPG019", "Feeder Pillar", "28.53666,77.18459"],
   ["Pillar Plinth Condition Not OK", "SIIA NO 2 : ID", "HKSFPG023", "Service Pillar", "28.53681,77.187774"],
   ["Pillar Plinth Condition Not OK", "SIIA NO 2 : ID", "HKSFPG021", "Feeder Pillar", "28.537441,77.188066"],
   ["Pillar Plinth Condition Not OK", "SIIA NO 2 : ID", "HKSFPG024", "Service Pillar", "28.536844,77.18768"],
   ["Pillar Plinth Condition Not OK", "SIIA NO 4 : ID", "HKSFPG016", "Feeder Pillar", "28.53827,77.182288"],
   ["Pillar Plinth Condition Not OK", "SIIA NO 4 : ID", "HKSFPG013", "Service Pillar", "28.54014,77.183086"],
   ["Pillar Plinth Condition Not OK", "SIIA NO 5 KATWARIA:ID", "HKSFPG062", "Feeder Pillar", "28.54122,77.184533"],
+  ["No Pole Earthing", "DDA FLAT KATWARIA SARAI : ID", "HKSG223", "Pole", "28.541367,77.186157"],
+  ["No Pole Earthing", "DDA FLAT KATWARIA SARAI : ID", "HKSG341", "Pole", "28.541649,77.187143"],
+  ["No Pole Earthing", "IIT NO 2:ID", "HKS C-330", "Pole", "28.542922, 77.196155"],
+  ["No Pole Earthing", "SIIA NO 5 KATWARIA:ID", "HKSK145", "Pole", "28.540853,77.18604"],
+  ["No Pole Earthing", "SIIA NO 5 KATWARIA:ID", "HKSG147", "Pole", "28.541121,77.184344"],
+  ["No Pole Earthing", "SIIA NO 5 KATWARIA:ID", "HKSG178", "Pole", "28.541226,77.18418"],
+  ["No Pole Earthing", "SIIA NO 5 KATWARIA:ID", "HKSG256", "Pole", "28.541247,77.184922"],
+  ["No Pole Earthing", "SIIA NO 5 KATWARIA:ID", "HKSK839", "Pole", "28.540651,77.185039"],
+  ["No Pole Earthing", "VILLAGE KATWARIA SARAI : PM", "HKSG224", "Pole", "28.541451,77.186684"],
+  ["No Pole Earthing", "VILLAGE KATWARIA SARAI : PM", "HKSK819", "Pole", "28.541712,77.186283"],
+  ["No Pole Earthing", "VILLAGE KATWARIA SARAI : PM", "HKSG345", "Pole", "28.542065,77.187789"],
+  ["No Pole Earthing", "VILLAGE KATWARIA SARAI : PM", "HKSG346", "Pole", "28.542085,77.187909"],
+  ["No Pole Earthing", "VILLAGE KATWARIA SARAI : PM", "HKSG349", "Pole", "28.542467,77.187573"],
+  ["Danger Board Missing - Pole", "DDA FLAT KATWARIA SARAI : ID", "HKSK114", "Pole", "28.541066,77.186803"],
+  ["Danger Board Missing - Pole", "IIT NO 2:ID", "HKS C-330", "Pole", "28.542922, 77.196155"],
+  ["Danger Board Missing - Pole", "SIIA NO 5 KATWARIA:ID", "HKSK145", "Pole", "28.540853,77.18604"],
+  ["Danger Board Missing - Pole", "SIIA NO 5 KATWARIA:ID", "HKSK372", "Pole", "28.54093,77.184506"],
+  ["Danger Board Missing - Pole", "SIIA NO 5 KATWARIA:ID", "HKSG147", "Pole", "28.541121,77.184344"],
+  ["Danger Board Missing - Pole", "SIIA NO 5 KATWARIA:ID", "HKSG178", "Pole", "28.541226,77.18418"],
+  ["Danger Board Missing - Pole", "SIIA NO 5 KATWARIA:ID", "HKSG256", "Pole", "28.541247,77.184922"],
+  ["Danger Board Missing - Pole", "SIIA NO 5 KATWARIA:ID", "HKSK839", "Pole", "28.540651,77.185039"],
+  ["Danger Board Missing - Pole", "SIIA NO 5 KATWARIA:ID", "HKSG172", "Pole", "28.541143, 77.184471"],
+  ["Danger Board Missing - Pole", "VILLAGE KATWARIA SARAI : PM", "HKSG224", "Pole", "28.541451,77.186684"],
+  ["Danger Board Missing - Pole", "VILLAGE KATWARIA SARAI : PM", "HKSK819", "Pole", "28.541712,77.186283"],
+  ["Danger Board Missing - Pole", "VILLAGE KATWARIA SARAI : PM", "HKSK765", "Pole", "28.541813,77.186077"],
   ["HRC Fuse Condition Not OK", "DDA FLAT BER SARAI : ID", "HKSFPG083", "Feeder Pillar", "28.548746,77.180754"],
   ["HRC Fuse Condition Not OK", "IIT MINI CAMPUS:ID", "HKSFPG004", "Feeder Pillar", "28.545724,77.181228"],
   ["HRC Fuse Condition Not OK", "IIT NO 1:ID", "HKSFPL316", "Feeder Pillar", "28.544304,77.196185"],
@@ -1289,78 +1320,23 @@ const pv1 = [
   ["No Earthing Found", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT012", "Feeder Pillar", "28.544095,77.185752"],
   ["No Earthing Found", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT011", "Feeder Pillar", "28.544191,77.185333"],
   ["No Earthing Found", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT013", "Feeder Pillar", "28.54427,77.185894"],
-  ["No Earthing Found", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT010", "Feeder Pillar", "28.544499,77.184353"],
   ["No Earthing Found", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG099", "Feeder Pillar", "28.542303,77.176971"],
   ["No Earthing Found", "SIIA NO 4 : ID", "HKSFPG013", "Service Pillar", "28.54014,77.183086"],
   ["No Earthing Found", "SIIA NO 5 KATWARIA:ID", "HKSFPG090", "Feeder Pillar", "28.541151,77.184311"],
   ["No Earthing Found", "SIIA NO 5 KATWARIA:ID", "HKSFPG062", "Feeder Pillar", "28.54122,77.184533"],
   ["Pillar Earthing (Single)", "DDA FLAT BER SARAI : ID", "HKSFPG010", "Service Pillar", "28.549253,77.18107"],
-  ["Pillar Earthing (Single)", "DDA FLAT BER SARAI : ID", "HKSFPG009", "Service Pillar", "28.548664,77.18019"],
-  ["Pillar Earthing (Single)", "DDA FLAT BER SARAI : ID", "HKSFPG082", "Feeder Pillar", "28.548998,77.180783"],
   ["Pillar Earthing (Single)", "IIT NO 1:ID", "HKSFPL316", "Feeder Pillar", "28.544304,77.196185"],
   ["Pillar Earthing (Single)", "NCERT NO 2:ID", "HKSFPG048", "Feeder Pillar", "28.540264,77.190237"],
-  ["Pillar Earthing (Single)", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT010", "Feeder Pillar", "28.544499,77.184353"],
   ["Pillar Earthing (Single)", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG011", "Service Pillar", "28.542801,77.180431"],
   ["Pillar Earthing (Single)", "SIIA NO 2 : ID", "HKSFPG021", "Feeder Pillar", "28.537441,77.188066"],
-  ["No Pole Earthing", "SIIA NO 2 : ID", "2581", "Pole", "28.537340, 77.188017"],
-  ["No Pole Earthing", "SIIA NO 5 KATWARIA:ID", "HKSK145", "Pole", "28.540853,77.18604"],
-  ["No Pole Earthing", "SIIA NO 5 KATWARIA:ID", "HKSG147", "Pole", "28.541121,77.184344"],
-  ["No Pole Earthing", "SIIA NO 5 KATWARIA:ID", "HKSG178", "Pole", "28.541226,77.18418"],
-  ["No Pole Earthing", "SIIA NO 5 KATWARIA:ID", "HKSG256", "Pole", "28.541247,77.184922"],
-  ["No Pole Earthing", "SIIA NO 5 KATWARIA:ID", "HKSK839", "Pole", "28.540651,77.185039"],
-  ["No Pole Earthing", "VILLAGE KATWARIA SARAI : PM", "HKSG224", "Pole", "28.541451,77.186684"],
-  ["No Pole Earthing", "VILLAGE KATWARIA SARAI : PM", "HKSK819", "Pole", "28.541712,77.186283"],
   ["Pillar Door Not Properly Locked", "IIT NO 1:ID", "HKSFPL316", "Feeder Pillar", "28.544304,77.196185"],
   ["Pillar Door Not Properly Locked", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT010", "Feeder Pillar", "28.544499,77.184353"],
   ["Pillar Door Not Properly Locked", "SIIA NO 2 : ID", "HKSFPG023", "Service Pillar", "28.53681,77.187774"],
   ["Pillar Door Not Properly Locked", "SIIA NO 2 : ID", "HKSFPG024", "Service Pillar", "28.536844,77.18768"],
   ["Pillar Door Not Properly Locked", "SIIA NO 5 KATWARIA:ID", "HKSFPG090", "Feeder Pillar", "28.541151,77.184311"],
-  ["Pillar Back Door Not OK", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG094", "Service Pillar", "28.542065,77.178261"],
-  ["Danger Board Missing - Pillar", "DDA FLAT BER SARAI : ID", "HKSFPG010", "Service Pillar", "28.549253,77.18107"],
-  ["Danger Board Missing - Pillar", "DDA FLAT BER SARAI : ID", "HKSFPG008", "Feeder Pillar", "28.548597,77.180635"],
-  ["Danger Board Missing - Pillar", "DDA FLAT BER SARAI : ID", "HKSFPG007", "Service Pillar", "28.54865,77.180655"],
-  ["Danger Board Missing - Pillar", "DDA FLAT BER SARAI : ID", "HKSFPG009", "Service Pillar", "28.548664,77.18019"],
-  ["Danger Board Missing - Pillar", "DDA FLAT BER SARAI : ID", "HKSFPG083", "Feeder Pillar", "28.548746,77.180754"],
-  ["Danger Board Missing - Pillar", "DDA FLAT BER SARAI : ID", "HKSFPG082", "Feeder Pillar", "28.548998,77.180783"],
-  ["Danger Board Missing - Pillar", "IIT MINI CAMPUS:ID", "HKSFPG004", "Feeder Pillar", "28.545724,77.181228"],
-  ["Danger Board Missing - Pillar", "IIT NO 1:ID", "HKSFPL316", "Feeder Pillar", "28.544304,77.196185"],
-  ["Danger Board Missing - Pillar", "IIT NO 2:ID", "HKSFPG037", "Feeder Pillar", "28.541175,77.198111"],
-  ["Danger Board Missing - Pillar", "IIT NO 2:ID", "HKSFPG053", "Service Pillar", "28.541386, 77.194012"],
-  ["Danger Board Missing - Pillar", "NCERT NO 2:ID", "HKSFPG046", "Feeder Pillar", "28.539435,77.19025"],
-  ["Danger Board Missing - Pillar", "NCERT NO 2:ID", "HKSFPG043", "Service Pillar", "28.539868,77.190033"],
-  ["Danger Board Missing - Pillar", "NCERT NO 2:ID", "HKSFPG051", "Feeder Pillar", "28.540982,77.190731"],
-  ["Danger Board Missing - Pillar", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT012", "Feeder Pillar", "28.544095,77.185752"],
-  ["Danger Board Missing - Pillar", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT011", "Feeder Pillar", "28.544191,77.185333"],
-  ["Danger Board Missing - Pillar", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT013", "Feeder Pillar", "28.54427,77.185894"],
-  ["Danger Board Missing - Pillar", "S/STN. IIT SOLAR HOUSE : ID", "HKSFPT010", "Feeder Pillar", "28.544499,77.184353"],
-  ["Danger Board Missing - Pillar", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG094", "Service Pillar", "28.542065,77.178261"],
-  ["Danger Board Missing - Pillar", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG099", "Feeder Pillar", "28.542303,77.176971"],
-  ["Danger Board Missing - Pillar", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG011", "Service Pillar", "28.542801,77.180431"],
-  ["Danger Board Missing - Pillar", "SIIA NO 2 : ID", "HKSFPG023", "Service Pillar", "28.53681,77.187774"],
-  ["Danger Board Missing - Pillar", "SIIA NO 2 : ID", "HKSFPG026", "Service Pillar", "28.537099,77.188964"],
-  ["Danger Board Missing - Pillar", "SIIA NO 2 : ID", "HKSFPG021", "Feeder Pillar", "28.537441,77.188066"],
-  ["Danger Board Missing - Pillar", "SIIA NO 2 : ID", "HKSFPG087", "Feeder Pillar", "28.536529,77.188574"],
-  ["Danger Board Missing - Pillar", "SIIA NO 2 : ID", "HKSFPG025", "Feeder Pillar", "28.536576,77.188729"],
-  ["Danger Board Missing - Pillar", "SIIA NO 2 : ID", "HKSFPG024", "Service Pillar", "28.536844,77.18768"],
-  ["Danger Board Missing - Pillar", "SIIA NO 2 : ID", "HKSFPG027", "Service Pillar", "28.537233,77.188887"],
-  ["Danger Board Missing - Pillar", "SIIA NO 2 : ID", "HKSFPG022", "Feeder Pillar", "28.537481,77.187941"],
-  ["Danger Board Missing - Pillar", "SIIA NO 4 : ID", "HKSFPG016", "Feeder Pillar", "28.53827,77.182288"],
-  ["Danger Board Missing - Pillar", "SIIA NO 4 : ID", "HKSFPG013", "Service Pillar", "28.54014,77.183086"],
-  ["Danger Board Missing - Pillar", "SIIA NO 5 KATWARIA:ID", "HKSFPG090", "Feeder Pillar", "28.541151,77.184311"],
-  ["Danger Board Missing - Pillar", "SIIA NO 5 KATWARIA:ID", "HKSFPG062", "Feeder Pillar", "28.54122,77.184533"],
-  ["Danger Board Missing - Pole", "SIIA NO 2 : ID", "2581", "Pole", "28.537340, 77.188017"],
-  ["Danger Board Missing - Pole", "SIIA NO 5 KATWARIA:ID", "HKSK145", "Pole", "28.540853,77.18604"],
-  ["Danger Board Missing - Pole", "SIIA NO 5 KATWARIA:ID", "HKSK372", "Pole", "28.54093,77.184506"],
-  ["Danger Board Missing - Pole", "SIIA NO 5 KATWARIA:ID", "HKSG147", "Pole", "28.541121,77.184344"],
-  ["Danger Board Missing - Pole", "SIIA NO 5 KATWARIA:ID", "HKSG178", "Pole", "28.541226,77.18418"],
-  ["Danger Board Missing - Pole", "SIIA NO 5 KATWARIA:ID", "HKSG256", "Pole", "28.541247,77.184922"],
-  ["Danger Board Missing - Pole", "SIIA NO 5 KATWARIA:ID", "HKSK839", "Pole", "28.540651,77.185039"],
-  ["Danger Board Missing - Pole", "SIIA NO 5 KATWARIA:ID", "HKSG172", "Pole", "28.541143, 77.184471"],
-  ["Danger Board Missing - Pole", "VILLAGE KATWARIA SARAI : PM", "HKSG224", "Pole", "28.541451,77.186684"],
-  ["Danger Board Missing - Pole", "VILLAGE KATWARIA SARAI : PM", "HKSK819", "Pole", "28.541712,77.186283"],
-  ["Danger Board Missing - Pole", "VILLAGE KATWARIA SARAI : PM", "HKSK765", "Pole", "28.541813,77.186077"],
-  ["Stay Wire Egg Insulator Damaged", "SIIA NO 5 KATWARIA:ID", "HKSG172", "Pole", "28.541143, 77.184471"],
   ["Stay Wire Egg Insulator Damaged", "IIT NO 2:ID", "HKS C-330", "Pole", "28.542922, 77.196155"],
+  ["Stay Wire Egg Insulator Damaged", "SIIA NO 5 KATWARIA:ID", "HKSG172", "Pole", "28.541143, 77.184471"],
+  ["Pillar Back Door Not OK", "SIIA -1 (GURUNANAK FOUNDATION) :ID", "HKSFPG094", "Service Pillar", "28.542065,77.178261"],
 ];
 
 const pv2 = [
@@ -1424,6 +1400,7 @@ const pv2 = [
   ["Street Light Junction Box Not Covered", "DDA FLAT BER SARAI : ID", "2820", "28.547425, 77.180587"],
   ["Street Light Junction Box Not Covered", "DDA FLAT BER SARAI : ID", "2816", "28.547659, 77.180587"],
   ["Street Light Junction Box Not Covered", "DDA FLAT BER SARAI : ID", "2824", "28.547614, 77.181347"],
+  ["Street Light Junction Box Not Covered", "DDA FLAT BER SARAI : ID", "2889", "28.548957, 77.180397"],
   ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2622", "28.540650, 77.186458"],
   ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2622", "28.540848, 77.186503"],
   ["Street Light Junction Box Not Covered", "DDA FLAT KATWARIA SARAI : ID", "2623", "28.540808, 77.186559"],
@@ -1462,8 +1439,8 @@ const pv2 = [
   ["Street Light Junction Box Not Covered", "SIIA NO 2 : ID", "2607", "28.539073, 77.188858"],
   ["Street Light Junction Box Not Covered", "SIIA NO 2 : ID", "2582", "28.537611, 77.188149"],
   ["Street Light Junction Box Not Covered", "SIIA NO 2 : ID", "2591", "28.537986, 77.187802"],
-  ["Street Light Junction Box Not Covered", "SIIA NO 2 : ID", "2582", "28.537437, 77.187975"],
-  ["Street Light Junction Box Not Covered", "SIIA NO 2 : ID", "2588", "28.537588, 77.188248"],
+  ["Street Light Junction Box Not Covered", "SIIA NO 2 : ID", "2582", "28.536900, 77.187575"],
+  ["Street Light Junction Box Not Covered", "SIIA NO 2 : ID", "2588", "28.536891, 77.187456"],
   ["Street Light Junction Box Not Covered", "VILLAGE BER SARAI :I D", "2820", "28.547212, 77.180533"],
   ["Street Light Junction Box Not Covered", "VILLAGE BER SARAI :I D", "2823", "28.547612, 77.180545"],
   ["Street Light Junction Box Not Covered", "VILLAGE BER SARAI :I D", "2819", "28.547680, 77.180586"],
@@ -1476,6 +1453,18 @@ const pv2 = [
   ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "2822", "28.547391, 77.180515"],
   ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "2821", "28.547417, 77.180584"],
   ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "Number Nahin Hai", "28.548718, 77.180718"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "2882", "28.548804, 77.181273"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "2899", "28.548668, 77.180680"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "2890", "28.548330, 77.180234"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "2891", "28.548234, 77.180115"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "2892", "28.548313, 77.180187"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "2893", "28.548554, 77.180221"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "2894", "28.548735, 77.180311"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "2895", "28.548778, 77.180304"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "2896", "28.548967, 77.180390"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "2889", "28.548957, 77.180397"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "2825", "28.547788, 77.180225"],
+  ["CCMS Pole Earthing Not Found", "DDA FLAT BER SARAI : ID", "2827", "28.547722, 77.180331"],
   ["CCMS Pole Earthing Not Found", "DDA FLAT KATWARIA SARAI : ID", "2736", "28.541723, 77.183628"],
   ["CCMS Pole Earthing Not Found", "DDA FLAT KATWARIA SARAI : ID", "2628", "28.540600, 77.186501"],
   ["CCMS Pole Earthing Not Found", "DDA FLAT KATWARIA SARAI : ID", "2636", "28.540540, 77.186439"],
@@ -1488,6 +1477,7 @@ const pv2 = [
   ["CCMS Pole Earthing Not Found", "DDA FLAT KATWARIA SARAI : ID", "2774", "28.541692, 77.184204"],
   ["CCMS Pole Earthing Not Found", "DDA FLAT KATWARIA SARAI : ID", "2775", "28.542178, 77.183856"],
   ["CCMS Pole Earthing Not Found", "SIIA NO 2 : ID", "2585", "28.536964, 77.187684"],
+  ["CCMS Pole Earthing Not Found", "SIIA NO 2 : ID", "2584", "28.536934, 77.187546"],
   ["CCMS Pole Earthing Not Found", "SIIA NO 4 : ID", "2793", "28.539547, 77.180876"],
   ["CCMS Pole Earthing Not Found", "VILLAGE BER SARAI :I D", "54", "28.547751, 77.180650"],
   ["CCMS Pole Earthing Not Found", "VILLAGE BER SARAI :I D", "2822", "28.547811, 77.180165"],
