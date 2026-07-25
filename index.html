@@ -463,6 +463,21 @@
   }
 
   tr.summary-row-clickable{cursor:pointer;}
+
+  tr.date-group-row{cursor:pointer;}
+  tr.date-group-row:hover{background:rgba(245,166,35,0.06);}
+  .expand-icon{
+    display:inline-block;
+    margin-right:6px;
+    font-size:11px;
+    color:var(--sub);
+    transition:transform .15s ease;
+  }
+  tr.date-group-row.expanded .expand-icon{transform:rotate(90deg);color:var(--amber);}
+  tr.date-team-subrow td:nth-child(2){padding-left:28px;}
+  tr.date-team-subrow{background:rgba(255,255,255,0.015);}
+  tr.date-team-subrow .cell-value{font-size:13px;color:var(--sub);}
+  tr.date-team-subrow:hover .cell-value{color:var(--text);}
   tr.summary-row-clickable:hover{background:rgba(245,166,35,0.08);}
   tr.earthing-sub-row td:first-child{padding-left:38px;}
   tr.earthing-sub-row .cell-value{font-size:13px;color:var(--sub);}
@@ -631,6 +646,7 @@
     }
     table.table-dtd th:first-child, table.table-dtd td:first-child{width:19%;}
     table.table-dtd th:nth-child(2), table.table-dtd td:nth-child(2){width:56%;}
+    table.table-dtd tr.date-team-subrow td:nth-child(2){padding-left:20px;}
     table.table-dtd th:last-child, table.table-dtd td:last-child{width:25%;text-align:right;}
     table.table-dtd .cell-label{display:none;}
     table.table-dtd .cell-value{display:inline;text-align:inherit;}
@@ -1156,14 +1172,43 @@ const dt2 = [
 function fillDateTeamTable(data, bodyId, totalId){
   const body = document.getElementById(bodyId);
   let total = 0;
+  const dateOrder = [];
+  const dateMap = {};
   data.forEach(([date, team, count])=>{
     total += count;
+    if(!(date in dateMap)){ dateMap[date] = []; dateOrder.push(date); }
+    dateMap[date].push([team, count]);
+  });
+  dateOrder.forEach((date, idx)=>{
+    const teams = dateMap[date];
+    const dateTotal = teams.reduce((s,t)=>s+t[1], 0);
+    const parentId = bodyId + '-date' + idx;
+
     const tr = document.createElement('tr');
+    tr.className = 'date-group-row';
     tr.innerHTML = `
-      <td class="mono" data-label="Date"><span class="cell-label">Date</span><span class="cell-value">${date}</span></td>
-      <td data-label="Team"><span class="cell-label">Team</span><span class="cell-value">${team}</span></td>
-      <td class="num badge-done" data-label="Done"><span class="cell-label">Done</span><span class="cell-value">${count}</span></td>`;
+      <td class="mono" data-label="Date"><span class="cell-label">Date</span><span class="cell-value"><span class="expand-icon">▸</span>${date}</span></td>
+      <td data-label="Team"><span class="cell-label">Team</span><span class="cell-value">${teams.length} team${teams.length>1?'s':''}</span></td>
+      <td class="num badge-done" data-label="Done"><span class="cell-label">Done</span><span class="cell-value">${dateTotal}</span></td>`;
+    tr.addEventListener('click', ()=>{
+      const subRows = body.querySelectorAll(`tr[data-parent="${parentId}"]`);
+      const willShow = subRows.length && subRows[0].style.display === 'none';
+      subRows.forEach(r=> r.style.display = willShow ? '' : 'none');
+      tr.classList.toggle('expanded', willShow);
+    });
     body.appendChild(tr);
+
+    teams.forEach(([team, count])=>{
+      const subtr = document.createElement('tr');
+      subtr.className = 'date-team-subrow';
+      subtr.dataset.parent = parentId;
+      subtr.style.display = 'none';
+      subtr.innerHTML = `
+        <td class="mono" data-label="Date"><span class="cell-label">Date</span><span class="cell-value"></span></td>
+        <td data-label="Team"><span class="cell-label">Team</span><span class="cell-value">${team}</span></td>
+        <td class="num badge-done" data-label="Done"><span class="cell-label">Done</span><span class="cell-value">${count}</span></td>`;
+      body.appendChild(subtr);
+    });
   });
   document.getElementById(totalId).textContent = total;
 }
