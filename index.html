@@ -478,6 +478,33 @@
   tr.date-team-subrow{background:rgba(255,255,255,0.015);}
   tr.date-team-subrow .cell-value{font-size:13px;color:var(--sub);}
   tr.date-team-subrow:hover .cell-value{color:var(--text);}
+
+  tr.substation-row-expandable{cursor:pointer;}
+  tr.substation-row-expandable:hover{background:rgba(245,166,35,0.06);}
+  tr.substation-row-expandable .expand-icon{
+    display:inline-block;
+    margin-right:6px;
+    font-size:11px;
+    color:var(--sub);
+    transition:transform .15s ease;
+  }
+  tr.substation-row-expandable.expanded .expand-icon{transform:rotate(90deg);color:var(--amber);}
+  tr.substation-breakdown-row td{padding:0 !important;border-bottom:1px solid var(--line);}
+  .breakdown-wrap{padding:10px 22px 14px;background:rgba(255,255,255,0.02);}
+  table.breakdown-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  table.breakdown-table thead th{
+    text-align:left;
+    padding:6px 8px;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    color:var(--sub);
+    border-bottom:1px solid var(--line);
+    font-weight:600;
+  }
+  table.breakdown-table td{padding:7px 8px;border-bottom:1px solid rgba(34,48,73,0.4);color:var(--text);}
+  table.breakdown-table tr:last-child td{border-bottom:none;}
+  table.breakdown-table td.num, table.breakdown-table th.num{text-align:right;font-family:'JetBrains Mono',monospace;}
   tr.summary-row-clickable:hover{background:rgba(245,166,35,0.08);}
   tr.earthing-sub-row td:first-child{padding-left:38px;}
   tr.earthing-sub-row .cell-value{font-size:13px;color:var(--sub);}
@@ -647,6 +674,22 @@
     table.table-dtd th:first-child, table.table-dtd td:first-child{width:19%;}
     table.table-dtd th:nth-child(2), table.table-dtd td:nth-child(2){width:56%;}
     table.table-dtd tr.date-team-subrow td:nth-child(2){padding-left:20px;}
+
+    /* Nested asset-type breakdown table: force real table layout on mobile, ignore generic card CSS */
+    table.breakdown-table{display:table;width:100%;}
+    table.breakdown-table thead{display:table-header-group;}
+    table.breakdown-table tbody{display:table-row-group;}
+    table.breakdown-table tr{display:table-row;width:auto;padding:0;border-bottom:none;}
+    table.breakdown-table th, table.breakdown-table td{
+      display:table-cell;
+      width:auto;
+      padding:6px 6px;
+      font-size:11px;
+      text-align:left;
+      justify-content:normal;
+    }
+    table.breakdown-table td.num, table.breakdown-table th.num{text-align:right;}
+    .breakdown-wrap{padding:8px 10px 12px;}
     table.table-dtd th:last-child, table.table-dtd td:last-child{width:25%;text-align:right;}
     table.table-dtd .cell-label{display:none;}
     table.table-dtd .cell-value{display:inline;text-align:inherit;}
@@ -1031,6 +1074,29 @@ const t1 = [
   ["21-Jul","Rahmat Tulla Shah & Deshraj",9],
 ];
 
+const subAssetBreakdown = {
+  "C-3, SIIA (DR CHANDA):PM": [["Pole",13,0,0]],
+  "DDA FLAT BER SARAI : ID": [["Feeder Pillar",5,3,8], ["Service Pillar",4,3,9], ["Pole",31,0,0]],
+  "DDA FLAT KATWARIA SARAI : ID": [["Feeder Pillar",4,0,0], ["Service Pillar",6,0,0], ["Pole",11,3,3]],
+  "HARIJAN BASTI KATWARIA SARAI VILL : PKG": [["Feeder Pillar",2,0,0], ["Service Pillar",1,0,0], ["Pole",39,0,0]],
+  "HARYANA GOVT. NURSERY:PM": [["Pole",16,0,0]],
+  "IIT MINI CAMPUS:ID": [["Feeder Pillar",6,1,4]],
+  "IIT NO 1:ID": [["Feeder Pillar",15,1,6], ["Service Pillar",5,0,0], ["Pole",69,0,0]],
+  "IIT NO 2:ID": [["Feeder Pillar",13,2,3], ["Service Pillar",1,1,3], ["Pole",45,1,3]],
+  "JIA SARAI:PL": [["Pole",42,0,0]],
+  "NCERT NO 2:ID": [["Feeder Pillar",8,3,6], ["Service Pillar",5,1,2]],
+  "PROFESSORS APPARTMENT,IIT DELHI": [["Feeder Pillar",13,0,0]],
+  "S/STN. IIT SOLAR HOUSE : ID": [["Feeder Pillar",9,5,9]],
+  "SIIA -1 (GURUNANAK FOUNDATION) :ID": [["Feeder Pillar",6,1,3], ["Service Pillar",2,2,7]],
+  "SIIA NO 2 : ID": [["Feeder Pillar",6,5,14], ["Service Pillar",5,4,12], ["Pole",1,0,0]],
+  "SIIA NO 3 : ID": [["Feeder Pillar",3,0,0], ["Service Pillar",2,0,0]],
+  "SIIA NO 4 : ID": [["Feeder Pillar",4,1,4], ["Service Pillar",1,1,4], ["Pole",5,0,0]],
+  "SIIA NO 5 KATWARIA:ID": [["Feeder Pillar",9,2,8], ["Service Pillar",3,0,0], ["Pole",33,7,13]],
+  "Unknown": [["Service Pillar",2,1,0], ["Pole",28,0,0]],
+  "VILLAGE BER SARAI :ID": [["Pole",28,0,0]],
+  "VILLAGE KATWARIA SARAI : PM": [["Pole",54,7,8]],
+};
+
 const t2 = [
   ["C-3, SIIA (DR CHANDA):PM",0,13],
   ["DDA FLAT BER SARAI : ID",6,34],
@@ -1213,16 +1279,21 @@ function fillDateTeamTable(data, bodyId, totalId){
   document.getElementById(totalId).textContent = total;
 }
 
-function fillSubstationTable(data, bodyId, doneId, pendingId, totalId){
+function fillSubstationTable(data, bodyId, doneId, pendingId, totalId, breakdownData){
   const body = document.getElementById(bodyId);
   let sumDone=0, sumPending=0;
-  data.forEach(([name, done, pending])=>{
+  data.forEach(([name, done, pending], idx)=>{
     const total = done + pending;
     const pct = total ? Math.round((done/total)*100) : 0;
     sumDone += done; sumPending += pending;
+    const hasBreakdown = breakdownData && breakdownData[name] && breakdownData[name].length;
     const tr = document.createElement('tr');
+    if(hasBreakdown) tr.className = 'substation-row-expandable';
+    const nameCell = hasBreakdown
+      ? `<span class="expand-icon">▸</span>${name}`
+      : name;
     tr.innerHTML = `
-      <td data-label="Substation"><span class="cell-label">Substation</span><span class="cell-value">${name}</span></td>
+      <td data-label="Substation"><span class="cell-label">Substation</span><span class="cell-value">${nameCell}</span></td>
       <td class="num badge-done" data-label="Done"><span class="cell-label">Done</span><span class="cell-value">${done}</span></td>
       <td class="num badge-pending" data-label="Pending"><span class="cell-label">Pending</span><span class="cell-value">${pending}</span></td>
       <td class="num" data-label="Total"><span class="cell-label">Total</span><span class="cell-value">${total}</span></td>
@@ -1236,6 +1307,26 @@ function fillSubstationTable(data, bodyId, doneId, pendingId, totalId){
         </div>
       </span></td>`;
     body.appendChild(tr);
+
+    if(hasBreakdown){
+      const detailTr = document.createElement('tr');
+      detailTr.className = 'substation-breakdown-row';
+      detailTr.style.display = 'none';
+      let inner = `<div class="breakdown-wrap"><table class="breakdown-table">
+        <thead><tr><th>Asset Type</th><th class="num">Total Qty</th><th class="num">Checked Qty</th><th class="num">Discrepancies</th></tr></thead><tbody>`;
+      breakdownData[name].forEach(([asset, tqty, cqty, defects])=>{
+        inner += `<tr><td>${asset}</td><td class="num">${tqty}</td><td class="num badge-done">${cqty}</td><td class="num ${defects>0?'badge-pending':''}">${defects}</td></tr>`;
+      });
+      inner += `</tbody></table></div>`;
+      detailTr.innerHTML = `<td colspan="5">${inner}</td>`;
+      body.appendChild(detailTr);
+
+      tr.addEventListener('click', ()=>{
+        const willShow = detailTr.style.display === 'none';
+        detailTr.style.display = willShow ? '' : 'none';
+        tr.classList.toggle('expanded', willShow);
+      });
+    }
   });
   document.getElementById(doneId).textContent = sumDone;
   document.getElementById(pendingId).textContent = sumPending;
@@ -1244,7 +1335,7 @@ function fillSubstationTable(data, bodyId, doneId, pendingId, totalId){
 
 // Populate all tables
 fillDateTeamTable(t1, 't1-body', 't1-total');
-fillSubstationTable(t2, 't2-body', 't2-done', 't2-pending', 't2-total');
+fillSubstationTable(t2, 't2-body', 't2-done', 't2-pending', 't2-total', subAssetBreakdown);
 fillDateTeamTable(t3, 't3-body', 't3-total');
 fillDateTeamTable(dt1, 't4-body', 't4-total');
 fillSubstationTable(dt2, 't5-body', 't5-done', 't5-pending', 't5-total');
