@@ -1928,13 +1928,19 @@ async function refreshDashboard(){
     let fpDone=0, fpPending=0;
     const fpDateTeam = {}; // key date|team -> count
     const fpSub = {}; // substation -> {done,pending}
+    const fpSubAsset = {}; // substation -> {assetType -> {total, checked}}
     const fpDef = [];
     fpRows.forEach(r=>{
       const status = (r[FP.STATUS]||'').trim();
       if(status==='Done') fpDone++; else if(status==='Pending') fpPending++;
       const sub = r[FP.SUBSTATION] || 'Unknown';
+      const assetType = String(r[FP.ASSET]||'Unknown').trim();
       if(!fpSub[sub]) fpSub[sub] = {done:0,pending:0};
       if(status==='Done') fpSub[sub].done++; else if(status==='Pending') fpSub[sub].pending++;
+      if(!fpSubAsset[sub]) fpSubAsset[sub] = {};
+      if(!fpSubAsset[sub][assetType]) fpSubAsset[sub][assetType] = {total:0, checked:0};
+      fpSubAsset[sub][assetType].total++;
+      if(status==='Done') fpSubAsset[sub][assetType].checked++;
       if(status==='Done'){
         const key = r[FP.DATEONLY] + '|' + r[FP.TEAM];
         fpDateTeam[key] = (fpDateTeam[key]||0) + 1;
@@ -1959,7 +1965,6 @@ async function refreshDashboard(){
         fpDef.push(['Pillar Earthing (Single)', sub, r[FP.POLE]||'-', r[FP.ASSET]||'-', r[FP.COORD]||'']);
       }
       // Earthing check on Pillars only (poles excluded): based on 'Earthing Via Strip or Stay'
-      const assetType = String(r[FP.ASSET]||'').trim();
       if(status==='Done' && assetType.toLowerCase() !== 'pole'){
         const earthMethod = String(r[FP.EARTH_METHOD]||'').trim();
         if(earthMethod === 'Stay wire'){
@@ -2091,7 +2096,7 @@ async function refreshDashboard(){
     // ---------------- Rebuild Substation tables ----------------
     const fpSubArr = Object.entries(fpSub).map(([name,v])=>[name, v.done, v.pending]);
     const dtSubArr = Object.entries(dtSub).map(([name,v])=>[name, v.done, v.pending]);
-    clearBody('t2-body'); fillSubstationTable(fpSubArr, 't2-body', 't2-done', 't2-pending', 't2-total');
+    clearBody('t2-body'); fillSubstationTable(fpSubArr, 't2-body', 't2-done', 't2-pending', 't2-total', liveSubAssetBreakdown);
     clearBody('t5-body'); fillSubstationTable(dtSubArr, 't5-body', 't5-done', 't5-pending', 't5-total');
     document.getElementById('fp-t2-sub').textContent = fpSubArr.length + ' substations';
     document.getElementById('dt-t5-sub').textContent = dtSubArr.length + ' substations';
@@ -2104,6 +2109,24 @@ async function refreshDashboard(){
       return rows.slice().sort((a,b)=> order.indexOf(a[0]) - order.indexOf(b[0]));
     }
     const fpDefSorted = sortByFrequency(fpDef).filter(row => row[0] !== 'Pillar Not Fenced');
+
+    // Rebuild the per-substation asset-type breakdown (Total Qty / Checked Qty / Discrepancies)
+    const liveSubAssetBreakdown = {};
+    const defectByAsset = {};
+    fpDefSorted.forEach(row=>{
+      const sub = row[1], asset = row[3];
+      const key = sub + '|||' + asset;
+      defectByAsset[key] = (defectByAsset[key]||0) + 1;
+    });
+    const assetOrderPref = {'Feeder Pillar':0, 'Service Pillar':1, 'Pole':2};
+    Object.entries(fpSubAsset).forEach(([sub, assets])=>{
+      const items = Object.entries(assets).map(([asset, v])=>{
+        const defects = defectByAsset[sub+'|||'+asset] || 0;
+        return [asset, v.total, v.checked, defects];
+      });
+      items.sort((a,b)=> (assetOrderPref[a[0]] ?? 99) - (assetOrderPref[b[0]] ?? 99));
+      liveSubAssetBreakdown[sub] = items;
+    });
     const stlDefSorted = sortByFrequency(stlDef);
     const dtDefSorted = sortByFrequency(dtDef);
 
