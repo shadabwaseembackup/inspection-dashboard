@@ -507,6 +507,44 @@
   table.breakdown-table td{padding:8px 8px;border:1px solid rgba(34,48,73,0.55);color:var(--text);text-align:center !important;}
   table.breakdown-table td:first-child{text-align:left !important;}
   table.breakdown-table tr:last-child td{border-bottom:1px solid rgba(34,48,73,0.55);}
+
+  .defect-count-clickable{
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    text-decoration:underline;
+    text-decoration-style:dotted;
+    text-underline-offset:3px;
+  }
+  .defect-count-clickable:hover{color:var(--text);}
+  .defect-arrow{
+    font-size:10px;
+    display:inline-block;
+    transition:transform .15s ease;
+  }
+  .defect-count-clickable.open .defect-arrow{transform:rotate(180deg);}
+
+  tr.case-detail-row td{
+    background:rgba(0,0,0,0.15) !important;
+    padding:6px 8px !important;
+    border:1px solid rgba(34,48,73,0.55);
+  }
+  .case-detail-list{display:flex;flex-direction:column;gap:4px;}
+  .case-detail-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    font-size:11.5px;
+    padding:5px 8px;
+    background:var(--panel);
+    border-radius:5px;
+    border:1px solid var(--line);
+  }
+  .case-type{color:var(--text);flex:1;}
+  .case-pole{font-family:'JetBrains Mono',monospace;color:var(--cyan);white-space:nowrap;}
+  .case-detail-item .map-link{padding:2px 6px;font-size:11px;}
   table.breakdown-table td.num, table.breakdown-table th.num{text-align:center !important;font-family:'JetBrains Mono',monospace;}
   tr.summary-row-clickable:hover{background:rgba(245,166,35,0.08);}
   tr.earthing-sub-row td:first-child{padding-left:38px;}
@@ -1080,26 +1118,26 @@ const t1 = [
 ];
 
 const subAssetBreakdown = {
-  "C-3, SIIA (DR CHANDA):PM": [["Pole",13,0,0]],
-  "DDA FLAT BER SARAI : ID": [["Feeder Pillar",5,3,8], ["Service Pillar",4,3,9], ["Pole",31,0,0]],
-  "DDA FLAT KATWARIA SARAI : ID": [["Feeder Pillar",4,0,0], ["Service Pillar",6,0,0], ["Pole",11,3,3]],
-  "HARIJAN BASTI KATWARIA SARAI VILL : PKG": [["Feeder Pillar",2,0,0], ["Service Pillar",1,0,0], ["Pole",39,0,0]],
-  "HARYANA GOVT. NURSERY:PM": [["Pole",16,0,0]],
-  "IIT MINI CAMPUS:ID": [["Feeder Pillar",6,1,4]],
-  "IIT NO 1:ID": [["Feeder Pillar",15,1,6], ["Service Pillar",5,0,0], ["Pole",69,0,0]],
-  "IIT NO 2:ID": [["Feeder Pillar",13,2,3], ["Service Pillar",1,1,3], ["Pole",45,1,3]],
-  "JIA SARAI:PL": [["Pole",42,0,0]],
-  "NCERT NO 2:ID": [["Feeder Pillar",8,3,6], ["Service Pillar",5,1,2]],
-  "PROFESSORS APPARTMENT,IIT DELHI": [["Feeder Pillar",13,0,0]],
-  "S/STN. IIT SOLAR HOUSE : ID": [["Feeder Pillar",9,5,9]],
-  "SIIA -1 (GURUNANAK FOUNDATION) :ID": [["Feeder Pillar",6,1,3], ["Service Pillar",2,2,7]],
-  "SIIA NO 2 : ID": [["Feeder Pillar",6,5,14], ["Service Pillar",5,4,12], ["Pole",1,0,0]],
-  "SIIA NO 3 : ID": [["Feeder Pillar",3,0,0], ["Service Pillar",2,0,0]],
-  "SIIA NO 4 : ID": [["Feeder Pillar",4,1,4], ["Service Pillar",1,1,4], ["Pole",5,0,0]],
-  "SIIA NO 5 KATWARIA:ID": [["Feeder Pillar",9,2,8], ["Service Pillar",3,0,0], ["Pole",33,7,13]],
-  "Unknown": [["Service Pillar",2,1,0], ["Pole",28,0,0]],
-  "VILLAGE BER SARAI :ID": [["Pole",28,0,0]],
-  "VILLAGE KATWARIA SARAI : PM": [["Pole",54,7,8]],
+  "C-3, SIIA (DR CHANDA):PM": [["Pole",13,0,0,[]]],
+  "DDA FLAT BER SARAI : ID": [["Feeder Pillar",5,3,8,[["Danger Board Missing - Pillar", "HKSFPG008", "28.548597,77.180635"], ["Danger Board Missing - Pillar", "HKSFPG083", "28.548746,77.180754"], ["Danger Board Missing - Pillar", "HKSFPG082", "28.548998,77.180783"], ["Stay Wire instead of Strip", "HKSFPG008", "28.548597,77.180635"], ["Stay Wire instead of Strip", "HKSFPG083", "28.548746,77.180754"], ["Stay Wire instead of Strip", "HKSFPG082", "28.548998,77.180783"], ["Plinth Not OK", "HKSFPG082", "28.548998,77.180783"], ["HRC Fuse/Base Not OK", "HKSFPG083", "28.548746,77.180754"]]], ["Service Pillar",4,3,9,[["Danger Board Missing - Pillar", "HKSFPG010", "28.549253,77.18107"], ["Danger Board Missing - Pillar", "HKSFPG007", "28.54865,77.180655"], ["Danger Board Missing - Pillar", "HKSFPG009", "28.548664,77.18019"], ["Stay Wire instead of Strip", "HKSFPG010", "28.549253,77.18107"], ["Stay Wire instead of Strip", "HKSFPG007", "28.54865,77.180655"], ["Stay Wire instead of Strip", "HKSFPG009", "28.548664,77.18019"], ["Plinth Not OK", "HKSFPG010", "28.549253,77.18107"], ["Plinth Not OK", "HKSFPG009", "28.548664,77.18019"], ["Pillar Earthing (Single)", "HKSFPG010", "28.549253,77.18107"]]], ["Pole",31,0,0,[]]],
+  "DDA FLAT KATWARIA SARAI : ID": [["Feeder Pillar",4,0,0,[]], ["Service Pillar",6,0,0,[]], ["Pole",11,3,3,[["No Pole Earthing", "HKSG223", "28.541367,77.186157"], ["No Pole Earthing", "HKSG341", "28.541649,77.187143"], ["Danger Board Missing - Pole", "HKSK114", "28.541066,77.186803"]]]],
+  "HARIJAN BASTI KATWARIA SARAI VILL : PKG": [["Feeder Pillar",2,0,0,[]], ["Service Pillar",1,0,0,[]], ["Pole",39,0,0,[]]],
+  "HARYANA GOVT. NURSERY:PM": [["Pole",16,0,0,[]]],
+  "IIT MINI CAMPUS:ID": [["Feeder Pillar",6,1,4,[["Danger Board Missing - Pillar", "HKSFPG004", "28.545724,77.181228"], ["Stay Wire instead of Strip", "HKSFPG004", "28.545724,77.181228"], ["Plinth Not OK", "HKSFPG004", "28.545724,77.181228"], ["HRC Fuse/Base Not OK", "HKSFPG004", "28.545724,77.181228"]]]],
+  "IIT NO 1:ID": [["Feeder Pillar",15,1,6,[["Danger Board Missing - Pillar", "HKSFPL316", "28.544304,77.196185"], ["Stay Wire instead of Strip", "HKSFPL316", "28.544304,77.196185"], ["Plinth Not OK", "HKSFPL316", "28.544304,77.196185"], ["HRC Fuse/Base Not OK", "HKSFPL316", "28.544304,77.196185"], ["Pillar Earthing (Single)", "HKSFPL316", "28.544304,77.196185"], ["Front/Back Door Not Locked", "HKSFPL316", "28.544304,77.196185"]]], ["Service Pillar",5,0,0,[]], ["Pole",69,0,0,[]]],
+  "IIT NO 2:ID": [["Feeder Pillar",13,2,3,[["Danger Board Missing - Pillar", "HKSFPG037", "28.541175,77.198111"], ["Stay Wire instead of Strip", "HKSFPG037", "28.541175,77.198111"], ["Plinth Not OK", "HKSFPG037", "28.541175,77.198111"]]], ["Service Pillar",1,1,3,[["Danger Board Missing - Pillar", "HKSFPG053", "28.541386, 77.194012"], ["Stay Wire instead of Strip", "HKSFPG053", "28.541386, 77.194012"], ["Plinth Not OK", "HKSFPG053", "28.541386, 77.194012"]]], ["Pole",45,1,3,[["No Pole Earthing", "HKS C-330", "28.542922, 77.196155"], ["Danger Board Missing - Pole", "HKS C-330", "28.542922, 77.196155"], ["Stay Wire Egg Insulator Damaged", "HKS C-330", "28.542922, 77.196155"]]]],
+  "JIA SARAI:PL": [["Pole",42,0,0,[]]],
+  "NCERT NO 2:ID": [["Feeder Pillar",8,3,6,[["Danger Board Missing - Pillar", "HKSFPG046", "28.539435,77.19025"], ["Danger Board Missing - Pillar", "HKSFPG051", "28.540982,77.190731"], ["Plinth Not OK", "HKSFPG048", "28.540264,77.190237"], ["Plinth Not OK", "HKSFPG051", "28.540982,77.190731"], ["No Earthing Found", "HKSFPG051", "28.540982,77.190731"], ["Pillar Earthing (Single)", "HKSFPG048", "28.540264,77.190237"]]], ["Service Pillar",5,1,2,[["Danger Board Missing - Pillar", "HKSFPG043", "28.539868,77.190033"], ["Plinth Not OK", "HKSFPG043", "28.539868,77.190033"]]]],
+  "PROFESSORS APPARTMENT,IIT DELHI": [["Feeder Pillar",13,0,0,[]]],
+  "S/STN. IIT SOLAR HOUSE : ID": [["Feeder Pillar",9,5,9,[["Danger Board Missing - Pillar", "HKSFPT012", "28.544095,77.185752"], ["Danger Board Missing - Pillar", "HKSFPT011", "28.544191,77.185333"], ["Danger Board Missing - Pillar", "HKSFPT013", "28.54427,77.185894"], ["Danger Board Missing - Pillar", "HKSFPT010", "28.544499,77.184353"], ["Stay Wire instead of Strip", "HKSFPT007", "28.544271,77.182906"], ["No Earthing Found", "HKSFPT012", "28.544095,77.185752"], ["No Earthing Found", "HKSFPT011", "28.544191,77.185333"], ["No Earthing Found", "HKSFPT013", "28.54427,77.185894"], ["Front/Back Door Not Locked", "HKSFPT010", "28.544499,77.184353"]]]],
+  "SIIA -1 (GURUNANAK FOUNDATION) :ID": [["Feeder Pillar",6,1,3,[["Danger Board Missing - Pillar", "HKSFPG099", "28.542303,77.176971"], ["Plinth Not OK", "HKSFPG099", "28.542303,77.176971"], ["No Earthing Found", "HKSFPG099", "28.542303,77.176971"]]], ["Service Pillar",2,2,7,[["Danger Board Missing - Pillar", "HKSFPG094", "28.542065,77.178261"], ["Danger Board Missing - Pillar", "HKSFPG011", "28.542801,77.180431"], ["Stay Wire instead of Strip", "HKSFPG094", "28.542065,77.178261"], ["Plinth Not OK", "HKSFPG094", "28.542065,77.178261"], ["Plinth Not OK", "HKSFPG011", "28.542801,77.180431"], ["Pillar Earthing (Single)", "HKSFPG011", "28.542801,77.180431"], ["Front/Back Door Not OK", "HKSFPG094", "28.542065,77.178261"]]]],
+  "SIIA NO 2 : ID": [["Feeder Pillar",6,5,14,[["Danger Board Missing - Pillar", "HKSFPG019", "28.53666,77.18459"], ["Danger Board Missing - Pillar", "HKSFPG021", "28.537441,77.188066"], ["Danger Board Missing - Pillar", "HKSFPG087", "28.536529,77.188574"], ["Danger Board Missing - Pillar", "HKSFPG025", "28.536576,77.188729"], ["Danger Board Missing - Pillar", "HKSFPG022", "28.537481,77.187941"], ["Stay Wire instead of Strip", "HKSFPG019", "28.53666,77.18459"], ["Stay Wire instead of Strip", "HKSFPG021", "28.537441,77.188066"], ["Stay Wire instead of Strip", "HKSFPG087", "28.536529,77.188574"], ["Stay Wire instead of Strip", "HKSFPG025", "28.536576,77.188729"], ["Stay Wire instead of Strip", "HKSFPG022", "28.537481,77.187941"], ["Plinth Not OK", "HKSFPG019", "28.53666,77.18459"], ["Plinth Not OK", "HKSFPG021", "28.537441,77.188066"], ["HRC Fuse/Base Not OK", "HKSFPG021", "28.537441,77.188066"], ["Pillar Earthing (Single)", "HKSFPG021", "28.537441,77.188066"]]], ["Service Pillar",5,4,12,[["Danger Board Missing - Pillar", "HKSFPG023", "28.53681,77.187774"], ["Danger Board Missing - Pillar", "HKSFPG026", "28.537099,77.188964"], ["Danger Board Missing - Pillar", "HKSFPG024", "28.536844,77.18768"], ["Danger Board Missing - Pillar", "HKSFPG027", "28.537233,77.188887"], ["Stay Wire instead of Strip", "HKSFPG023", "28.53681,77.187774"], ["Stay Wire instead of Strip", "HKSFPG026", "28.537099,77.188964"], ["Stay Wire instead of Strip", "HKSFPG024", "28.536844,77.18768"], ["Plinth Not OK", "HKSFPG023", "28.53681,77.187774"], ["Plinth Not OK", "HKSFPG024", "28.536844,77.18768"], ["HRC Fuse/Base Not OK", "HKSFPG024", "28.536844,77.18768"], ["Front/Back Door Not Locked", "HKSFPG023", "28.53681,77.187774"], ["Front/Back Door Not Locked", "HKSFPG024", "28.536844,77.18768"]]], ["Pole",1,0,0,[]]],
+  "SIIA NO 3 : ID": [["Feeder Pillar",3,0,0,[]], ["Service Pillar",2,0,0,[]]],
+  "SIIA NO 4 : ID": [["Feeder Pillar",4,1,4,[["Danger Board Missing - Pillar", "HKSFPG016", "28.53827,77.182288"], ["Stay Wire instead of Strip", "HKSFPG016", "28.53827,77.182288"], ["Plinth Not OK", "HKSFPG016", "28.53827,77.182288"], ["HRC Fuse/Base Not OK", "HKSFPG016", "28.53827,77.182288"]]], ["Service Pillar",1,1,4,[["Danger Board Missing - Pillar", "HKSFPG013", "28.54014,77.183086"], ["Plinth Not OK", "HKSFPG013", "28.54014,77.183086"], ["HRC Fuse/Base Not OK", "HKSFPG013", "28.54014,77.183086"], ["No Earthing Found", "HKSFPG013", "28.54014,77.183086"]]], ["Pole",5,0,0,[]]],
+  "SIIA NO 5 KATWARIA:ID": [["Feeder Pillar",9,2,8,[["Danger Board Missing - Pillar", "HKSFPG090", "28.541151,77.184311"], ["Danger Board Missing - Pillar", "HKSFPG062", "28.54122,77.184533"], ["Plinth Not OK", "HKSFPG062", "28.54122,77.184533"], ["HRC Fuse/Base Not OK", "HKSFPG090", "28.541151,77.184311"], ["HRC Fuse/Base Not OK", "HKSFPG062", "28.54122,77.184533"], ["No Earthing Found", "HKSFPG090", "28.541151,77.184311"], ["No Earthing Found", "HKSFPG062", "28.54122,77.184533"], ["Front/Back Door Not Locked", "HKSFPG090", "28.541151,77.184311"]]], ["Service Pillar",3,0,0,[]], ["Pole",33,7,13,[["No Pole Earthing", "HKSK145", "28.540853,77.18604"], ["No Pole Earthing", "HKSG147", "28.541121,77.184344"], ["No Pole Earthing", "HKSG178", "28.541226,77.18418"], ["No Pole Earthing", "HKSG256", "28.541247,77.184922"], ["No Pole Earthing", "HKSK839", "28.540651,77.185039"], ["Danger Board Missing - Pole", "HKSK145", "28.540853,77.18604"], ["Danger Board Missing - Pole", "HKSK372", "28.54093,77.184506"], ["Danger Board Missing - Pole", "HKSG147", "28.541121,77.184344"], ["Danger Board Missing - Pole", "HKSG178", "28.541226,77.18418"], ["Danger Board Missing - Pole", "HKSG256", "28.541247,77.184922"], ["Danger Board Missing - Pole", "HKSK839", "28.540651,77.185039"], ["Danger Board Missing - Pole", "HKSG172", "28.541143, 77.184471"], ["Stay Wire Egg Insulator Damaged", "HKSG172", "28.541143, 77.184471"]]]],
+  "Unknown": [["Service Pillar",2,1,0,[]], ["Pole",28,0,0,[]]],
+  "VILLAGE BER SARAI :ID": [["Pole",28,0,0,[]]],
+  "VILLAGE KATWARIA SARAI : PM": [["Pole",54,7,8,[["No Pole Earthing", "HKSG224", "28.541451,77.186684"], ["No Pole Earthing", "HKSK819", "28.541712,77.186283"], ["No Pole Earthing", "HKSG345", "28.542065,77.187789"], ["No Pole Earthing", "HKSG346", "28.542085,77.187909"], ["No Pole Earthing", "HKSG349", "28.542467,77.187573"], ["Danger Board Missing - Pole", "HKSG224", "28.541451,77.186684"], ["Danger Board Missing - Pole", "HKSK819", "28.541712,77.186283"], ["Danger Board Missing - Pole", "HKSK765", "28.541813,77.186077"]]]],
 };
 
 const t2 = [
@@ -1287,6 +1325,7 @@ function fillDateTeamTable(data, bodyId, totalId){
 function fillSubstationTable(data, bodyId, doneId, pendingId, totalId, breakdownData){
   const body = document.getElementById(bodyId);
   let sumDone=0, sumPending=0;
+
   data.forEach(([name, done, pending], idx)=>{
     const total = done + pending;
     const pct = total ? Math.round((done/total)*100) : 0;
@@ -1317,10 +1356,27 @@ function fillSubstationTable(data, bodyId, doneId, pendingId, totalId, breakdown
       const detailTr = document.createElement('tr');
       detailTr.className = 'substation-breakdown-row';
       detailTr.style.display = 'none';
-      let inner = `<div class="breakdown-wrap"><table class="breakdown-table">
+      const tableId = bodyId + '-breakdown' + idx;
+      let inner = `<div class="breakdown-wrap"><table class="breakdown-table" id="${tableId}">
         <thead><tr><th>Asset Type</th><th class="num">Total Qty</th><th class="num">Checked Qty</th><th class="num">Discrepancies</th></tr></thead><tbody>`;
-      breakdownData[name].forEach(([asset, tqty, cqty, defects])=>{
-        inner += `<tr><td>${asset}</td><td class="num">${tqty}</td><td class="num badge-done">${cqty}</td><td class="num ${defects>0?'badge-pending':''}">${defects}</td></tr>`;
+      breakdownData[name].forEach(([asset, tqty, cqty, defects, cases], ai)=>{
+        cases = cases || [];
+        const clickable = defects>0 && cases.length>0;
+        const rowId = tableId + '-row' + ai;
+        const defectCellClass = defects>0 ? 'badge-pending' : '';
+        const defectCell = clickable
+          ? `<span class="defect-count-clickable" data-row="${rowId}">${defects} <span class="defect-arrow">↓</span></span>`
+          : `${defects}`;
+        inner += `<tr><td>${asset}</td><td class="num">${tqty}</td><td class="num badge-done">${cqty}</td><td class="num ${defectCellClass}">${defectCell}</td></tr>`;
+        if(clickable){
+          let caseRows = cases.map(([type, poleNo, coord])=>{
+            const mapCell = coord
+              ? `<a class="map-link" href="https://www.google.com/maps?q=${encodeURIComponent(coord)}" target="_blank" rel="noopener noreferrer">📍</a>`
+              : '—';
+            return `<div class="case-detail-item"><span class="case-type">${type}</span><span class="case-pole">${poleNo}</span>${mapCell}</div>`;
+          }).join('');
+          inner += `<tr class="case-detail-row" id="${rowId}" style="display:none;"><td colspan="4"><div class="case-detail-list">${caseRows}</div></td></tr>`;
+        }
       });
       inner += `</tbody></table></div>`;
       detailTr.innerHTML = `<td colspan="5">${inner}</td>`;
@@ -1330,6 +1386,15 @@ function fillSubstationTable(data, bodyId, doneId, pendingId, totalId, breakdown
         const willShow = detailTr.style.display === 'none';
         detailTr.style.display = willShow ? '' : 'none';
         tr.classList.toggle('expanded', willShow);
+      });
+
+      detailTr.querySelectorAll('.defect-count-clickable').forEach(el=>{
+        el.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          const row = document.getElementById(el.dataset.row);
+          if(row) row.style.display = row.style.display === 'none' ? '' : 'none';
+          el.classList.toggle('open');
+        });
       });
     }
   });
@@ -2114,16 +2179,21 @@ async function refreshDashboard(){
     // Rebuild the per-substation asset-type breakdown (Total Qty / Checked Qty / Discrepancies)
     const liveSubAssetBreakdown = {};
     const defectByAsset = {};
+    const casesByAsset = {};
     fpDefSorted.forEach(row=>{
-      const sub = row[1], asset = row[3];
+      const [label, sub, poleNo, asset, coord] = row;
       const key = sub + '|||' + asset;
       defectByAsset[key] = (defectByAsset[key]||0) + 1;
+      if(!casesByAsset[key]) casesByAsset[key] = [];
+      casesByAsset[key].push([label, poleNo, coord]);
     });
     const assetOrderPref = {'Feeder Pillar':0, 'Service Pillar':1, 'Pole':2};
     Object.entries(fpSubAsset).forEach(([sub, assets])=>{
       const items = Object.entries(assets).map(([asset, v])=>{
-        const defects = defectByAsset[sub+'|||'+asset] || 0;
-        return [asset, v.total, v.checked, defects];
+        const key = sub+'|||'+asset;
+        const defects = defectByAsset[key] || 0;
+        const cases = casesByAsset[key] || [];
+        return [asset, v.total, v.checked, defects, cases];
       });
       items.sort((a,b)=> (assetOrderPref[a[0]] ?? 99) - (assetOrderPref[b[0]] ?? 99));
       liveSubAssetBreakdown[sub] = items;
