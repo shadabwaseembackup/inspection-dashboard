@@ -2096,12 +2096,8 @@ async function refreshDashboard(){
     // ---------------- Rebuild Substation tables ----------------
     const fpSubArr = Object.entries(fpSub).map(([name,v])=>[name, v.done, v.pending]);
     const dtSubArr = Object.entries(dtSub).map(([name,v])=>[name, v.done, v.pending]);
-    clearBody('t2-body'); fillSubstationTable(fpSubArr, 't2-body', 't2-done', 't2-pending', 't2-total', liveSubAssetBreakdown);
-    clearBody('t5-body'); fillSubstationTable(dtSubArr, 't5-body', 't5-done', 't5-pending', 't5-total');
-    document.getElementById('fp-t2-sub').textContent = fpSubArr.length + ' substations';
-    document.getElementById('dt-t5-sub').textContent = dtSubArr.length + ' substations';
 
-    // ---------------- Rebuild Deficiency tables ----------------
+    // ---------------- Rebuild Deficiency data (needed for substation breakdown too) ----------------
     function sortByFrequency(rows){
       const counts = {};
       rows.forEach(r=>{ counts[r[0]] = (counts[r[0]]||0)+1; });
@@ -2127,6 +2123,13 @@ async function refreshDashboard(){
       items.sort((a,b)=> (assetOrderPref[a[0]] ?? 99) - (assetOrderPref[b[0]] ?? 99));
       liveSubAssetBreakdown[sub] = items;
     });
+
+    clearBody('t2-body'); fillSubstationTable(fpSubArr, 't2-body', 't2-done', 't2-pending', 't2-total', liveSubAssetBreakdown);
+    clearBody('t5-body'); fillSubstationTable(dtSubArr, 't5-body', 't5-done', 't5-pending', 't5-total');
+    document.getElementById('fp-t2-sub').textContent = fpSubArr.length + ' substations';
+    document.getElementById('dt-t5-sub').textContent = dtSubArr.length + ' substations';
+
+    // ---------------- Rebuild Deficiency tables ----------------
     const stlDefSorted = sortByFrequency(stlDef);
     const dtDefSorted = sortByFrequency(dtDef);
 
