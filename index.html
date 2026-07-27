@@ -1369,7 +1369,7 @@ function fillSubstationTable(data, bodyId, doneId, pendingId, totalId, breakdown
           : `${defects}`;
         inner += `<tr><td>${asset}</td><td class="num">${tqty}</td><td class="num badge-done">${cqty}</td><td class="num ${defectCellClass}">${defectCell}</td></tr>`;
         if(clickable){
-          let caseRows = cases.map(([type, poleNo, coord])=>{
+          let caseRows = cases.slice().sort((a,b)=> String(a[1]).localeCompare(String(b[1]), undefined, {numeric:true})).map(([type, poleNo, coord])=>{
             const mapCell = coord
               ? `<a class="map-link" href="https://www.google.com/maps?q=${encodeURIComponent(coord)}" target="_blank" rel="noopener noreferrer">📍</a>`
               : '—';
