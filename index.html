@@ -1373,7 +1373,7 @@ function fillSubstationTable(data, bodyId, doneId, pendingId, totalId, breakdown
             const mapCell = coord
               ? `<a class="map-link" href="https://www.google.com/maps?q=${encodeURIComponent(coord)}" target="_blank" rel="noopener noreferrer">📍</a>`
               : '—';
-            return `<div class="case-detail-item"><span class="case-type">${type}</span><span class="case-pole">${poleNo}</span>${mapCell}</div>`;
+            return `<div class="case-detail-item"><span class="case-pole">${poleNo}</span><span class="case-type">${type}</span>${mapCell}</div>`;
           }).join('');
           inner += `<tr class="case-detail-row" id="${rowId}" style="display:none;"><td colspan="4"><div class="case-detail-list">${caseRows}</div></td></tr>`;
         }
