@@ -185,6 +185,31 @@
   .refresh-status.error{color:var(--danger);}
   .refresh-status.ok{color:var(--done);}
 
+  .month-filter-wrap{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .month-filter-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--sub);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+  .month-filter{
+    background:linear-gradient(180deg,var(--panel),var(--panel-2));
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    padding:8px 12px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .month-filter:focus{outline:none;border-color:var(--amber);}
+
   .pdf-export-row{
     display:flex;
     justify-content:flex-end;
@@ -207,6 +232,35 @@
   }
   .export-pdf-btn:hover{border-color:var(--cyan);}
   .export-pdf-icon{font-size:15px;}
+
+  .month-filter-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:12px 22px;
+    background:var(--panel-2);
+    border-bottom:1px solid var(--line);
+  }
+  .month-filter-row label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    color:var(--sub);
+    text-transform:uppercase;
+    letter-spacing:.05em;
+  }
+  .month-select{
+    background:var(--bg);
+    border:1px solid var(--line);
+    color:var(--text);
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    padding:7px 12px;
+    border-radius:7px;
+    outline:none;
+    cursor:pointer;
+  }
+  .month-select:focus{border-color:var(--amber);}
 
   .tabs{
     display:flex;
@@ -887,6 +941,12 @@
       <h1>Inspection Dashboard</h1>
     </div>
     <div class="refresh-block">
+      <div class="month-filter-wrap">
+        <label for="month-filter" class="month-filter-label">Month</label>
+        <select id="month-filter" class="month-filter">
+          <option value="all">All Months</option>
+        </select>
+      </div>
       <button id="refresh-btn" class="refresh-btn">
         <span class="refresh-icon">⟳</span><span class="refresh-label">Refresh Data</span>
       </button>
@@ -932,6 +992,10 @@
         <h2>Date-wise → Team-wise Done Count</h2>
         <span class="sub" id="fp-t1-sub">55 inspections completed</span>
       </div>
+      <div class="month-filter-row">
+        <label for="fp-month-filter">Month:</label>
+        <select id="fp-month-filter" class="month-select"></select>
+      </div>
       <div class="table-scroll"><table class="table-dtd">
         <thead><tr><th>Date</th><th>Team</th><th class="num">Done</th></tr></thead>
         <tbody id="t1-body"></tbody>
@@ -968,6 +1032,10 @@
         <h2>Date-wise → Team-wise Done Count</h2>
         <span class="sub" id="stl-t3-sub">218 inspections completed</span>
       </div>
+      <div class="month-filter-row">
+        <label for="stl-month-filter">Month:</label>
+        <select id="stl-month-filter" class="month-select"></select>
+      </div>
       <div class="table-scroll"><table class="table-dtd">
         <thead><tr><th>Date</th><th>Team</th><th class="num">Done</th></tr></thead>
         <tbody id="t3-body"></tbody>
@@ -990,6 +1058,10 @@
         <span class="tag">A</span>
         <h2>Date-wise → Team-wise Done Count</h2>
         <span class="sub" id="dt-t4-sub">22 inspections completed</span>
+      </div>
+      <div class="month-filter-row">
+        <label for="dt-month-filter">Month:</label>
+        <select id="dt-month-filter" class="month-select"></select>
       </div>
       <div class="table-scroll"><table class="table-dtd">
         <thead><tr><th>Date</th><th>Team</th><th class="num">Done</th></tr></thead>
@@ -1409,6 +1481,45 @@ fillSubstationTable(t2, 't2-body', 't2-done', 't2-pending', 't2-total', subAsset
 fillDateTeamTable(t3, 't3-body', 't3-total');
 fillDateTeamTable(dt1, 't4-body', 't4-total');
 fillSubstationTable(dt2, 't5-body', 't5-done', 't5-pending', 't5-total');
+
+// ==================== MONTH FILTER ====================
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function getMonthFromDate(dateStr){
+  const m = String(dateStr||'').match(/-([A-Za-z]{3})/);
+  return m ? m[1] : null;
+}
+function populateMonthFilter(){
+  const found = new Set();
+  [...t1, ...t3, ...dt1].forEach(([date])=>{
+    const m = getMonthFromDate(date);
+    if(m) found.add(m);
+  });
+  const sorted = MONTH_NAMES.filter(m=>found.has(m));
+  const sel = document.getElementById('month-filter');
+  sorted.forEach(m=>{
+    const opt = document.createElement('option');
+    opt.value = m;
+    opt.textContent = m;
+    sel.appendChild(opt);
+  });
+}
+function applyMonthFilter(){
+  const month = document.getElementById('month-filter').value;
+  const filterRows = (data) => month === 'all' ? data : data.filter(([date])=> getMonthFromDate(date) === month);
+  const suffix = month === 'all' ? '' : ' in ' + month;
+
+  const t1f = filterRows(t1), t3f = filterRows(t3), dt1f = filterRows(dt1);
+
+  clearBody('t1-body'); fillDateTeamTable(t1f, 't1-body', 't1-total');
+  clearBody('t3-body'); fillDateTeamTable(t3f, 't3-body', 't3-total');
+  clearBody('t4-body'); fillDateTeamTable(dt1f, 't4-body', 't4-total');
+
+  document.getElementById('fp-t1-sub').textContent = t1f.reduce((s,r)=>s+r[2],0) + ' inspections completed' + suffix;
+  document.getElementById('stl-t3-sub').textContent = t3f.reduce((s,r)=>s+r[2],0) + ' inspections completed' + suffix;
+  document.getElementById('dt-t4-sub').textContent = dt1f.reduce((s,r)=>s+r[2],0) + ' inspections completed' + suffix;
+}
+populateMonthFilter();
+document.getElementById('month-filter').addEventListener('change', applyMonthFilter);
 
 
 // ==================== Deficiency Pivot Data ====================
