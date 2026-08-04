@@ -147,6 +147,13 @@
     align-items:flex-end;
     gap:6px;
   }
+  .control-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
   .refresh-btn{
     display:inline-flex;
     align-items:center;
@@ -696,6 +703,7 @@
   @media(max-width:720px){
     header{flex-direction:column;align-items:flex-start;gap:10px;}
     .refresh-block{align-items:flex-start;width:100%;}
+    .control-row{justify-content:flex-start;width:100%;}
     .refresh-status{text-align:left;max-width:100%;}
     .meta{text-align:left;}
     .tabs{gap:2px;}
@@ -941,15 +949,17 @@
       <h1>Inspection Dashboard</h1>
     </div>
     <div class="refresh-block">
-      <div class="month-filter-wrap">
-        <label for="month-filter" class="month-filter-label">Month</label>
-        <select id="month-filter" class="month-filter">
-          <option value="all">All Months</option>
-        </select>
+      <div class="control-row">
+        <div class="month-filter-wrap">
+          <label for="month-filter" class="month-filter-label">Month</label>
+          <select id="month-filter" class="month-filter">
+            <option value="all">All Months</option>
+          </select>
+        </div>
+        <button id="refresh-btn" class="refresh-btn">
+          <span class="refresh-icon">⟳</span><span class="refresh-label">Refresh Data</span>
+        </button>
       </div>
-      <button id="refresh-btn" class="refresh-btn">
-        <span class="refresh-icon">⟳</span><span class="refresh-label">Refresh Data</span>
-      </button>
       <div id="refresh-status" class="refresh-status">Not refreshed this session</div>
     </div>
   </header>
