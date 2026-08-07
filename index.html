@@ -1025,6 +1025,19 @@
         <tfoot><tr><td>Total</td><td class="num" id="t2-done" data-label="Done"></td><td class="num" id="t2-pending" data-label="Pending"></td><td class="num" id="t2-total" data-label="Total"></td><td data-label=""></td></tr></tfoot>
       </table></div>
     </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <span class="tag">C</span>
+        <h2>Overall Asset-Type Progress</h2>
+        <span class="sub">Feeder Pillar · Service Pillar · Poles</span>
+      </div>
+      <div class="table-scroll"><table class="table-sub">
+        <thead><tr><th>Types</th><th class="num">Total</th><th class="num">Done</th><th class="num">Pending</th></tr></thead>
+        <tbody id="t6-body"></tbody>
+        <tfoot><tr><td>Total</td><td class="num" id="t6-total" data-label="Total"></td><td class="num" id="t6-done" data-label="Done"></td><td class="num" id="t6-pending" data-label="Pending"></td></tr></tfoot>
+      </table></div>
+    </section>
   </div>
 
   <!-- ==================== TAB 2: STL ==================== -->
@@ -1491,6 +1504,40 @@ fillSubstationTable(t2, 't2-body', 't2-done', 't2-pending', 't2-total', subAsset
 fillDateTeamTable(t3, 't3-body', 't3-total');
 fillDateTeamTable(dt1, 't4-body', 't4-total');
 fillSubstationTable(dt2, 't5-body', 't5-done', 't5-pending', 't5-total');
+
+// ==================== Section C: Overall Asset-Type Progress (FP SP) ====================
+function fillAssetTypeTotals(breakdownData, bodyId, totalId, doneId, pendingId){
+  const totals = {};
+  const order = [];
+  Object.values(breakdownData).forEach(items=>{
+    items.forEach(([asset, tqty, cqty])=>{
+      if(!(asset in totals)){ totals[asset] = {total:0, done:0}; order.push(asset); }
+      totals[asset].total += tqty;
+      totals[asset].done += cqty;
+    });
+  });
+  const assetOrderPref = {'Feeder Pillar':0, 'Service Pillar':1, 'Pole':2};
+  order.sort((a,b)=> (assetOrderPref[a] ?? 99) - (assetOrderPref[b] ?? 99));
+  const displayName = {'Pole':'Poles'};
+
+  const body = document.getElementById(bodyId);
+  let sumTotal=0, sumDone=0, sumPending=0;
+  order.forEach(asset=>{
+    const t = totals[asset].total, d = totals[asset].done, p = t - d;
+    sumTotal += t; sumDone += d; sumPending += p;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td data-label="Types"><span class="cell-label">Types</span><span class="cell-value">${displayName[asset]||asset}</span></td>
+      <td class="num" data-label="Total"><span class="cell-label">Total</span><span class="cell-value">${t}</span></td>
+      <td class="num badge-done" data-label="Done"><span class="cell-label">Done</span><span class="cell-value">${d}</span></td>
+      <td class="num badge-pending" data-label="Pending"><span class="cell-label">Pending</span><span class="cell-value">${p}</span></td>`;
+    body.appendChild(tr);
+  });
+  document.getElementById(totalId).textContent = sumTotal;
+  document.getElementById(doneId).textContent = sumDone;
+  document.getElementById(pendingId).textContent = sumPending;
+}
+fillAssetTypeTotals(subAssetBreakdown, 't6-body', 't6-total', 't6-done', 't6-pending');
 
 // ==================== MONTH FILTER ====================
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
