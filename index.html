@@ -2368,6 +2368,7 @@ async function refreshDashboard(){
     });
 
     clearBody('t2-body'); fillSubstationTable(fpSubArr, 't2-body', 't2-done', 't2-pending', 't2-total', liveSubAssetBreakdown);
+    clearBody('t6-body'); fillAssetTypeTotals(liveSubAssetBreakdown, 't6-body', 't6-total', 't6-done', 't6-pending');
     clearBody('t5-body'); fillSubstationTable(dtSubArr, 't5-body', 't5-done', 't5-pending', 't5-total');
     document.getElementById('fp-t2-sub').textContent = fpSubArr.length + ' substations';
     document.getElementById('dt-t5-sub').textContent = dtSubArr.length + ' substations';
