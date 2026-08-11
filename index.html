@@ -1508,31 +1508,64 @@ fillSubstationTable(dt2, 't5-body', 't5-done', 't5-pending', 't5-total');
 // ==================== Section C: Overall Asset-Type Progress (FP SP) ====================
 function fillAssetTypeTotals(breakdownData, bodyId, totalId, doneId, pendingId){
   const totals = {};
-  const order = [];
   Object.values(breakdownData).forEach(items=>{
     items.forEach(([asset, tqty, cqty])=>{
-      if(!(asset in totals)){ totals[asset] = {total:0, done:0}; order.push(asset); }
+      if(!(asset in totals)) totals[asset] = {total:0, done:0};
       totals[asset].total += tqty;
       totals[asset].done += cqty;
     });
   });
-  const assetOrderPref = {'Feeder Pillar':0, 'Service Pillar':1, 'Pole':2};
-  order.sort((a,b)=> (assetOrderPref[a] ?? 99) - (assetOrderPref[b] ?? 99));
-  const displayName = {'Pole':'Poles'};
 
   const body = document.getElementById(bodyId);
   let sumTotal=0, sumDone=0, sumPending=0;
-  order.forEach(asset=>{
-    const t = totals[asset].total, d = totals[asset].done, p = t - d;
-    sumTotal += t; sumDone += d; sumPending += p;
+
+  function addRow(label, t, d, expandable, parentId){
+    const p = t - d;
     const tr = document.createElement('tr');
+    if(expandable) tr.className = 'date-group-row';
+    if(parentId){ tr.className = 'date-team-subrow'; tr.dataset.parent = parentId; tr.style.display = 'none'; }
+    const nameCell = expandable ? `<span class="expand-icon">▸</span>${label}` : label;
     tr.innerHTML = `
-      <td data-label="Types"><span class="cell-label">Types</span><span class="cell-value">${displayName[asset]||asset}</span></td>
+      <td data-label="Types"><span class="cell-label">Types</span><span class="cell-value">${nameCell}</span></td>
       <td class="num" data-label="Total"><span class="cell-label">Total</span><span class="cell-value">${t}</span></td>
       <td class="num badge-done" data-label="Done"><span class="cell-label">Done</span><span class="cell-value">${d}</span></td>
       <td class="num badge-pending" data-label="Pending"><span class="cell-label">Pending</span><span class="cell-value">${p}</span></td>`;
     body.appendChild(tr);
-  });
+    return tr;
+  }
+
+  // Pillars = Feeder Pillar + Service Pillar, collapsed with drill-down
+  const feeder = totals['Feeder Pillar'] || {total:0, done:0};
+  const service = totals['Service Pillar'] || {total:0, done:0};
+  const pillarsTotal = feeder.total + service.total;
+  const pillarsDone = feeder.done + service.done;
+  if(pillarsTotal > 0){
+    const parentId = bodyId + '-pillars';
+    const parentRow = addRow('Pillars', pillarsTotal, pillarsDone, true);
+    parentRow.addEventListener('click', ()=>{
+      const subRows = body.querySelectorAll(`tr[data-parent="${parentId}"]`);
+      const willShow = subRows.length && subRows[0].style.display === 'none';
+      subRows.forEach(r=> r.style.display = willShow ? '' : 'none');
+      parentRow.classList.toggle('expanded', willShow);
+    });
+    if(feeder.total>0){
+      const r = addRow('Feeder Pillar', feeder.total, feeder.done, false, parentId);
+      r.dataset.parent = parentId;
+    }
+    if(service.total>0){
+      const r = addRow('Service Pillar', service.total, service.done, false, parentId);
+      r.dataset.parent = parentId;
+    }
+  }
+  sumTotal += pillarsTotal; sumDone += pillarsDone; sumPending += pillarsTotal - pillarsDone;
+
+  // Poles as its own standalone row
+  const pole = totals['Pole'];
+  if(pole && pole.total>0){
+    addRow('Poles', pole.total, pole.done, false);
+    sumTotal += pole.total; sumDone += pole.done; sumPending += pole.total - pole.done;
+  }
+
   document.getElementById(totalId).textContent = sumTotal;
   document.getElementById(doneId).textContent = sumDone;
   document.getElementById(pendingId).textContent = sumPending;
