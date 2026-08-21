@@ -193,7 +193,7 @@
   .refresh-status.ok{color:var(--done);}
 
   .month-filter-wrap{
-    display:flex;
+    display:none;
     align-items:center;
     gap:8px;
   }
@@ -1165,7 +1165,7 @@
       <div class="panel-head">
         <span class="tag">A</span>
         <h2>Deficiency Summary — DT Inspection</h2>
-        <span class="sub" id="pv3-sub">28 records inspected · 37 cases</span>
+        <span class="sub" id="pv3-sub">28 records inspected · 21 cases</span>
       </div>
       <div class="table-scroll"><table class="table-def table-def2">
         <thead><tr><th>Deficiency Type</th><th class="num">Deficiency Count</th></tr></thead>
@@ -2301,22 +2301,6 @@ const pv2 = [
 ];
 
 const pv3 = [
-  ["No Earthing Connection Found", "DDA FLAT BER SARAI : ID", "28.549012541,77.181091423"],
-  ["No Earthing Connection Found", "DDA FLAT BER SARAI : ID", "28.549012541,77.181091423"],
-  ["No Earthing Connection Found", "HARYANA GOVT. NURSERY:PM", "28.5356671437,77.1948861522"],
-  ["No Earthing Connection Found", "JIA SARAI:PL", "28.5475775017,77.1899706077"],
-  ["No Earthing Connection Found", "JIA SARAI:PL", "28.5475775017,77.1899706077"],
-  ["No Earthing Connection Found", "NCERT NO 2:ID", "28.5402012621,77.1897789213"],
-  ["No Earthing Connection Found", "NCERT NO 2:ID", "28.5402012621,77.1897789213"],
-  ["No Earthing Connection Found", "SIIA NO 2 : ID", "28.5368118683,77.1867886965"],
-  ["No Earthing Connection Found", "SIIA NO 2 : ID", "28.5368118683,77.1867886965"],
-  ["No Earthing Connection Found", "SIIA NO 3 : ID", "28.5378181702,77.1857414739"],
-  ["No Earthing Connection Found", "SIIA NO 4 : ID", "28.5393965822,77.1808974119"],
-  ["No Earthing Connection Found", "SIIA NO 5 KATWARIA:ID", "28.5409302909,77.1848440653"],
-  ["No Earthing Connection Found", "SIIA NO 5 KATWARIA:ID", "28.5409302909,77.1848440653"],
-  ["No Earthing Connection Found", "VILLAGE BER SARAI :ID", "28.5475297855,77.180631652"],
-  ["No Earthing Connection Found", "VILLAGE BER SARAI :ID", "28.5475297855,77.180631652"],
-  ["No Earthing Connection Found", "VILLAGE KATWARIA SARAI : PM", "28.5416377668,77.1875289039"],
   ["Condition of Silica Gel Not OK", "C-3, SIIA  (DR CHANDA):PM", "28.5363571701,77.1905607159"],
   ["Condition of Silica Gel Not OK", "DDA FLAT BER SARAI : ID", "28.549012541,77.181091423"],
   ["Condition of Silica Gel Not OK", "DDA FLAT BER SARAI : ID", "28.549012541,77.181091423"],
@@ -2709,10 +2693,6 @@ async function refreshDashboard(){
         const team = ((r[DT.LM]||'') + ' & ' + (r[DT.ALM]||'')).replace(/^\s*&\s*|\s*&\s*$/g,'').trim() || '-';
         const key = fmtDate(r[DT.DATE]) + '|' + team;
         dtDateTeam[key] = (dtDateTeam[key]||0) + 1;
-        // No Earthing Connection Found: inspected (Done) but DT Body Earth Value is blank
-        if(String(r[DT.EARTH_VAL]||'').trim() === ''){
-          dtDef.push(['No Earthing Connection Found', sub, r[DT.COORD]||'']);
-        }
       } else {
         dtPending++; dtSub[sub].pending++;
       }
@@ -2876,6 +2856,7 @@ document.getElementById('refresh-btn').addEventListener('click', refreshDashboar
     lockScreen.style.display = 'none';
     mainContent.classList.remove('main-content-hidden');
     sessionStorage.setItem('dashboard-unlocked', 'true');
+    refreshDashboard();
   }
 
   function tryUnlock(){
