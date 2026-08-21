@@ -1602,7 +1602,7 @@ function fillAssetTypeTotals(breakdownData, bodyId, totalId, doneId, pendingId, 
       pendTr.id = rowId;
       pendTr.style.display = 'none';
       if(parentId){ pendTr.dataset.parent = parentId; }
-      const sortedList = pendingList.slice().sort((a,b)=> String(a[1]).localeCompare(String(b[1]), undefined, {numeric:true}));
+      const sortedList = pendingList.slice().sort((a,b)=> String(a[0]).localeCompare(String(b[0]), undefined, {numeric:true}));
       const items = sortedList.map(([sub, pole, coord])=>{
         const mapCell = coord
           ? `<a class="map-link" href="https://www.google.com/maps?q=${encodeURIComponent(coord)}" target="_blank" rel="noopener noreferrer">📍</a>`
