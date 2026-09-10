@@ -1200,6 +1200,12 @@
 </div>
 
 <script>
+const PHOTO_FOLDERS = {
+  fp: '1HWE78bJ4GFyI0ryHYY2gGzsJ1MDeuckh',   // Inspection- FP SP Pole_Images
+  stl: '1LNyG0TyRFvhIAFoxTWIhuHd8LmUEMKfh',  // STL Inspection_Images
+  dt: '1Psx6vX-YyifIRIG0jWUMFO5gN3Z37J2y',   // DT Inspection_Images
+};
+
 const t1 = [
   ["02-Sep","Ashok Kumar &Ravinder Kumar",7],
   ["02-Sep","Harikishan Mukhiya &",1],
@@ -1493,8 +1499,9 @@ function fillSubstationTable(data, bodyId, doneId, pendingId, totalId, breakdown
             const mapCell = coord
               ? `<a class="map-link" href="https://www.google.com/maps?q=${encodeURIComponent(coord)}" target="_blank" rel="noopener noreferrer">📍</a>`
               : '—';
-            const photoCell = photo
-              ? `<a class="map-link" href="https://drive.google.com/drive/search?q=${encodeURIComponent(photo)}" target="_blank" rel="noopener noreferrer">📷</a>`
+            const photoUrl = photo ? buildPhotoSearchUrl(photo, PHOTO_FOLDERS.fp) : '';
+            const photoCell = photoUrl
+              ? `<a class="map-link" href="${photoUrl}" target="_blank" rel="noopener noreferrer">📷</a>`
               : '';
             return `<div class="case-detail-item"><span class="case-pole">${poleNo}</span><span class="case-type">${type}</span>${mapCell}${photoCell}</div>`;
           }).join('');
@@ -2103,7 +2110,15 @@ function slugify(str){
   return String(str).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
 }
 
-function fillGroupedDeficiencyTable(data, bodyId, labels){
+function buildPhotoSearchUrl(photoPath, folderId){
+  if(!photoPath) return '';
+  // Strip the "FolderName/" prefix stored in the sheet, keep just the filename
+  const filename = String(photoPath).split('/').pop();
+  const query = folderId ? `parent:${folderId} "${filename}"` : filename;
+  return `https://drive.google.com/drive/search?q=${encodeURIComponent(query)}`;
+}
+
+function fillGroupedDeficiencyTable(data, bodyId, labels, photoFolderKey){
   const body = document.getElementById(bodyId);
   const cols = labels.length + 2; // +1 Map, +1 Photo
   // group by first element (deficiency parameter), preserving order of first appearance
@@ -2136,10 +2151,11 @@ function fillGroupedDeficiencyTable(data, bodyId, labels){
             : `<span class="map-link disabled">—</span>`;
           html += `<td data-label="Map"><span class="cell-label">Map</span><span class="cell-value">${mapCell}</span></td>`;
         } else if(i === vals.length-1){
-          // last value is a photo filename -> search Drive for it
+          // last value is a photo filename -> search the specific images folder for it
           const photo = (v && v !== '-') ? String(v).trim() : '';
-          const photoCell = photo
-            ? `<a class="map-link" href="https://drive.google.com/drive/search?q=${encodeURIComponent(photo)}" target="_blank" rel="noopener noreferrer">📷 Photo</a>`
+          const photoUrl = photo ? buildPhotoSearchUrl(photo, PHOTO_FOLDERS[photoFolderKey]) : '';
+          const photoCell = photoUrl
+            ? `<a class="map-link" href="${photoUrl}" target="_blank" rel="noopener noreferrer">📷 Photo</a>`
             : `<span class="map-link disabled">—</span>`;
           html += `<td data-label="Photo"><span class="cell-label">Photo</span><span class="cell-value">${photoCell}</span></td>`;
         } else {
@@ -2154,9 +2170,9 @@ function fillGroupedDeficiencyTable(data, bodyId, labels){
 }
 
 const pv1Filtered = pv1.filter(row => row[0] !== 'Pillar Not Fenced');
-fillGroupedDeficiencyTable(pv1Filtered, 'pv1-body', ['Substation','Pole/Pillar No','Asset Type']);
-fillGroupedDeficiencyTable(pv2, 'pv2-body', ['Substation','CCMS Pole No']);
-fillGroupedDeficiencyTable(pv3, 'pv3-body', ['Substation']);
+fillGroupedDeficiencyTable(pv1Filtered, 'pv1-body', ['Substation','Pole/Pillar No','Asset Type'], 'fp');
+fillGroupedDeficiencyTable(pv2, 'pv2-body', ['Substation','CCMS Pole No'], 'stl');
+fillGroupedDeficiencyTable(pv3, 'pv3-body', ['Substation'], 'dt');
 
 function jumpToDeficiencyGroup(targetId){
   const el = document.getElementById(targetId);
@@ -2632,9 +2648,9 @@ async function refreshDashboard(){
     const stlDefSorted = sortByFrequency(stlDef);
     const dtDefSorted = sortByFrequency(dtDef);
 
-    clearBody('pv1-body'); fillGroupedDeficiencyTable(fpDefSorted, 'pv1-body', ['Substation','Pole/Pillar No','Asset Type']);
-    clearBody('pv2-body'); fillGroupedDeficiencyTable(stlDefSorted, 'pv2-body', ['Substation','CCMS Pole No']);
-    clearBody('pv3-body'); fillGroupedDeficiencyTable(dtDefSorted, 'pv3-body', ['Substation']);
+    clearBody('pv1-body'); fillGroupedDeficiencyTable(fpDefSorted, 'pv1-body', ['Substation','Pole/Pillar No','Asset Type'], 'fp');
+    clearBody('pv2-body'); fillGroupedDeficiencyTable(stlDefSorted, 'pv2-body', ['Substation','CCMS Pole No'], 'stl');
+    clearBody('pv3-body'); fillGroupedDeficiencyTable(dtDefSorted, 'pv3-body', ['Substation'], 'dt');
 
     clearBody('pv1-summary'); fillSummaryTable(fpDefSorted, 'pv1-summary', 'pv1-body');
     clearBody('pv2-summary'); fillSummaryTable(stlDefSorted, 'pv2-summary', 'pv2-body');
