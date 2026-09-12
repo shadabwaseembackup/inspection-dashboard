@@ -2406,11 +2406,12 @@ async function refreshDashboard(){
 
     // ---------------- FP SP ----------------
     const FP = {SUBSTATION:10, POLE:24, ASSET:20, COORD:16, STATUS:62, DATEONLY:2, TEAM:67, PILLAR_EARTH:29, EARTH_METHOD:66,
-      LOCK_FRONT:55, LOCK_BACK:58, EARTH_PHOTO:59, EXTRA_PHOTO:63,
+      LOCK_FRONT:55, LOCK_BACK:58, EARTH_PHOTO:59, EXTRA_PHOTO:63, LEAK_PHOTO:53, LEAK_COL:46,
       DEFS: [[28,'NO','Front/Back Door Not Locked'],
              [30,'Not Ok','Plinth Not OK'],[31,'Not Ok','HRC Fuse/Base Not OK'],
              [34,'Not Fenced','Pillar Not Fenced'],[39,'Earthing Not Found','No Pole Earthing'],
-             [41,'Not Ok/Damaged','Stay Wire Egg Insulator Damaged']]};
+             [41,'Not Ok/Damaged','Stay Wire Egg Insulator Damaged'],
+             [46,'YES','Current Leakage Found']]};
 
     function fpPhotoFor(label, r){
       if(label === 'Front/Back Door Not OK' || label === 'Front/Back Door Not Locked'){
@@ -2418,6 +2419,9 @@ async function refreshDashboard(){
       }
       if(['Pillar Earthing (Single)','No Earthing Found','Stay Wire instead of Strip','No Pole Earthing'].includes(label)){
         return r[FP.EARTH_PHOTO] || '';
+      }
+      if(label === 'Current Leakage Found'){
+        return r[FP.LEAK_PHOTO] || '';
       }
       return r[FP.EXTRA_PHOTO] || '';
     }
@@ -2514,6 +2518,8 @@ async function refreshDashboard(){
 
     // ---------------- DT ----------------
     const DT = {SUBSTATION:0, COORD:3, DATE:6, LM:8, ALM:9, EARTH_VAL:20,
+      OIL_LEVEL:10, OIL_PHOTO:34,
+      RMU_GAS:[[12,28],[13,29],[14,31],[15,32]], // [valueCol, photoCol] for RMU Gas-1..4
       DEFS: [[11,'NO','Sub Station Not Locked'],[16,'NOT OK','Condition of Breather Not OK'],
              [17,'NOT OK','Condition of Silica Gel Not OK'],[18,'NOT OK','Condition of OTI Not OK'],
              [22,'Not OK','Explosion Vent Diaphragm Not OK']]};
@@ -2540,6 +2546,18 @@ async function refreshDashboard(){
           const pcol = dtPhotoCol[label];
           const photo = pcol ? (r[pcol]||'') : '';
           dtDef.push([label, sub, r[DT.COORD]||'', photo]);
+        }
+      });
+      // Oil Level: flagged when recorded but not "OK"
+      const oilVal = String(r[DT.OIL_LEVEL]||'').trim();
+      if(oilVal && oilVal.toUpperCase() !== 'OK'){
+        dtDef.push(['Oil Level Not OK', sub, r[DT.COORD]||'', r[DT.OIL_PHOTO]||'']);
+      }
+      // RMU Gas 1-4: flagged when recorded but not "Ok"
+      DT.RMU_GAS.forEach(([valCol, photoCol], gi)=>{
+        const gasVal = String(r[valCol]||'').trim();
+        if(gasVal && gasVal.toUpperCase() !== 'OK'){
+          dtDef.push([`RMU Gas-${gi+1} Not OK`, sub, r[DT.COORD]||'', r[photoCol]||'']);
         }
       });
     });
