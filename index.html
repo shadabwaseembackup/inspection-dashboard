@@ -493,6 +493,20 @@
     border-bottom:1px solid var(--line);
     font-weight:600;
   }
+  thead th.sortable{
+    cursor:pointer;
+    user-select:none;
+    transition:color .15s ease;
+  }
+  thead th.sortable:hover{color:var(--text);}
+  thead th.sortable.sort-active{color:var(--amber);}
+  .sort-arrow{
+    display:inline-block;
+    margin-left:4px;
+    font-size:9px;
+    opacity:.4;
+  }
+  thead th.sortable.sort-active .sort-arrow{opacity:1;}
   tbody td{
     padding:11px 22px;
     border-bottom:1px solid rgba(34,48,73,0.5);
@@ -1030,7 +1044,13 @@
         <span class="sub" id="fp-t2-sub">20 substations</span>
       </div>
       <div class="table-scroll"><table class="table-sub">
-        <thead><tr><th>Substation</th><th class="num">Done</th><th class="num">Pending</th><th class="num">Total</th><th>Progress</th></tr></thead>
+        <thead><tr>
+          <th class="sortable" data-sort-table="t2" data-sort-col="0" data-sort-type="text">Substation<span class="sort-arrow"></span></th>
+          <th class="num sortable" data-sort-table="t2" data-sort-col="1" data-sort-type="num">Done<span class="sort-arrow"></span></th>
+          <th class="num sortable" data-sort-table="t2" data-sort-col="2" data-sort-type="num">Pending<span class="sort-arrow"></span></th>
+          <th class="num sortable" data-sort-table="t2" data-sort-col="3" data-sort-type="num">Total<span class="sort-arrow"></span></th>
+          <th>Progress</th>
+        </tr></thead>
         <tbody id="t2-body"></tbody>
         <tfoot><tr><td>Total</td><td class="num" id="t2-done" data-label="Done"></td><td class="num" id="t2-pending" data-label="Pending"></td><td class="num" id="t2-total" data-label="Total"></td><td data-label=""></td></tr></tfoot>
       </table></div>
@@ -1110,7 +1130,13 @@
         <span class="sub" id="dt-t5-sub">67 substations</span>
       </div>
       <div class="table-scroll"><table class="table-sub">
-        <thead><tr><th>Substation</th><th class="num">Done</th><th class="num">Pending</th><th class="num">Total</th><th>Progress</th></tr></thead>
+        <thead><tr>
+          <th class="sortable" data-sort-table="t5" data-sort-col="0" data-sort-type="text">Substation<span class="sort-arrow"></span></th>
+          <th class="num sortable" data-sort-table="t5" data-sort-col="1" data-sort-type="num">Done<span class="sort-arrow"></span></th>
+          <th class="num sortable" data-sort-table="t5" data-sort-col="2" data-sort-type="num">Pending<span class="sort-arrow"></span></th>
+          <th class="num sortable" data-sort-table="t5" data-sort-col="3" data-sort-type="num">Total<span class="sort-arrow"></span></th>
+          <th>Progress</th>
+        </tr></thead>
         <tbody id="t5-body"></tbody>
         <tfoot><tr><td>Total</td><td class="num" id="t5-done" data-label="Done"></td><td class="num" id="t5-pending" data-label="Pending"></td><td class="num" id="t5-total" data-label="Total"></td><td data-label=""></td></tr></tfoot>
       </table></div>
@@ -1539,6 +1565,48 @@ fillSubstationTable(t2, 't2-body', 't2-done', 't2-pending', 't2-total', subAsset
 fillDateTeamTable(t3, 't3-body', 't3-total');
 fillDateTeamTable(dt1, 't4-body', 't4-total');
 fillSubstationTable(dt2, 't5-body', 't5-done', 't5-pending', 't5-total');
+
+// ==================== Click-to-sort for Substation tables ====================
+const currentTableData = {};
+function registerTableData(key, data, bodyId, doneId, pendingId, totalId, breakdownData){
+  currentTableData[key] = {data, bodyId, doneId, pendingId, totalId, breakdownData};
+}
+registerTableData('t2', t2, 't2-body', 't2-done', 't2-pending', 't2-total', subAssetBreakdown);
+registerTableData('t5', dt2, 't5-body', 't5-done', 't5-pending', 't5-total', null);
+
+const sortState = {};
+function handleSortClick(th){
+  const key = th.dataset.sortTable;
+  const col = parseInt(th.dataset.sortCol, 10);
+  const type = th.dataset.sortType;
+  const info = currentTableData[key];
+  if(!info) return;
+  const prev = sortState[key] || {col:-1, dir:1};
+  const dir = (prev.col === col) ? -prev.dir : 1;
+  sortState[key] = {col, dir};
+
+  const sorted = info.data.slice().sort((a,b)=>{
+    let av = a[col], bv = b[col];
+    if(type === 'num'){ return (Number(av) - Number(bv)) * dir; }
+    return String(av).localeCompare(String(bv), undefined, {numeric:true}) * dir;
+  });
+
+  document.getElementById(info.bodyId).innerHTML = '';
+  fillSubstationTable(sorted, info.bodyId, info.doneId, info.pendingId, info.totalId, info.breakdownData);
+  info.data = sorted;
+
+  document.querySelectorAll(`th[data-sort-table="${key}"]`).forEach(h=>{
+    h.classList.remove('sort-active');
+    const arrow = h.querySelector('.sort-arrow');
+    if(arrow) arrow.textContent = '';
+  });
+  th.classList.add('sort-active');
+  const arrow = th.querySelector('.sort-arrow');
+  if(arrow) arrow.textContent = dir === 1 ? '▲' : '▼';
+}
+document.querySelectorAll('th.sortable').forEach(th=>{
+  th.addEventListener('click', ()=> handleSortClick(th));
+});
 
 // ==================== Section C: Overall Asset-Type Progress (FP SP) ====================
 function fillAssetTypeTotals(breakdownData, bodyId, totalId, doneId, pendingId, pctId){
@@ -2661,6 +2729,12 @@ async function refreshDashboard(){
     clearBody('t5-body'); fillSubstationTable(dtSubArr, 't5-body', 't5-done', 't5-pending', 't5-total');
     document.getElementById('fp-t2-sub').textContent = fpSubArr.length + ' substations';
     document.getElementById('dt-t5-sub').textContent = dtSubArr.length + ' substations';
+    if(typeof registerTableData === 'function'){
+      registerTableData('t2', fpSubArr, 't2-body', 't2-done', 't2-pending', 't2-total', liveSubAssetBreakdown);
+      registerTableData('t5', dtSubArr, 't5-body', 't5-done', 't5-pending', 't5-total', null);
+      sortState.t2 = null; sortState.t5 = null;
+      document.querySelectorAll('th.sortable').forEach(h=>{ h.classList.remove('sort-active'); const a=h.querySelector('.sort-arrow'); if(a) a.textContent=''; });
+    }
 
     // ---------------- Rebuild Deficiency tables ----------------
     const stlDefSorted = sortByFrequency(stlDef);
