@@ -452,7 +452,7 @@ function viewDef(D){
   const open=wd.filter(r=>r.fix!=='rect').length;
   const tc={};wd.forEach(r=>r.defs.forEach(d=>{const k=d.t==='remark'?'Team remark':d.label.replace(/ \(\d+\)$/,'');tc[k]=(tc[k]||0)+1;}));
   const tk=Object.keys(tc).sort((a,b)=>tc[b]-tc[a]);
-  const lms=[...new Set(wd.map(r=>r.lm||'—'))].sort();
+  const lms=[...new Set(D.rows.map(r=>r.lm||'—'))].sort();
   let h='<div class="grid">'+stat('Assets with deficiency',wd.length,'r')+stat('Deficiency items',items,'w')+stat('From team remark',rem,'w')+stat('Not yet rectified',open,open?'r':'g')+stat('Pending / not checked',num(pending.length),pending.length?'w':'g')+'</div>';
   h+='<section class="card"><h3>Deficiency summary</h3>'+(tk.length?tk.map((k,i)=>'<div class="row'+(i?'':' first')+'"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],wd.length),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
   h+='<section class="card"><h3>Deficiency detail</h3><div class="filters"><input type="search" id="fq" placeholder="Search asset / substation / remark" value="'+esc(S.q)+'"><select id="flm"><option value="">All linemen</option>'+lms.map(n=>'<option'+(S.lm===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fst"><option value="">All status</option><option value="open"'+(S.st==='open'?' selected':'')+'>Not rectified</option><option value="rect"'+(S.st==='rect'?' selected':'')+'>Rectified</option><option value="pending"'+(S.st==='pending'?' selected':'')+'>Pending / not checked</option></select></div><div id="deflist"></div></section>';
