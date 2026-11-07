@@ -2,264 +2,436 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Loading &amp; Loss board</title>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alaknanda Division – Inspection Dashboard</title>
 <style>
-:root{--bg:#0a1020;--p:#111a2e;--p2:#16213a;--ln:#22304d;--ink:#e8eefc;--mu:#8ea0c4;--bl:#4c8dff;--cy:#22d3ee;--vi:#8b5cf6;--gr:#22c55e;--am:#f59e0b;--rd:#ef4444}
+:root{--bg:#f3f5fa;--card:#fff;--ink:#16202e;--mut:#6b778a;--line:#e3e8f0;--pri:#1f5eff;--pri2:#e8eeff;--ok:#12a150;--bad:#d93025;--warn:#b26f00;--warnbg:#fff4d6;--badbg:#fde8e6;--okbg:#e3f6ec}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1520;--card:#18202e;--ink:#e8edf6;--mut:#93a0b5;--line:#2a3547;--pri:#6b9bff;--pri2:#1f2d4d;--ok:#3ccf7e;--bad:#ff6b5e;--warn:#f0b43c;--warnbg:#3a2f12;--badbg:#3d1a17;--okbg:#12301f}}
 *{box-sizing:border-box}
-body{margin:0;background:radial-gradient(1200px 500px at 70% -10%,#16275a55,transparent),var(--bg);color:var(--ink);font:14px/1.5 Manrope,system-ui,sans-serif}
-button,select,input{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--cy);outline-offset:2px}
-header{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center;padding:16px 28px;border-bottom:1px solid var(--ln);position:sticky;top:0;background:#0a1020ee;backdrop-filter:blur(8px);z-index:5}
-.logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--bl),var(--vi));display:grid;place-items:center;font-weight:800}
-header h1{margin:0;font-size:19px;font-weight:800}header small{display:block;font-size:12px;color:var(--mu);font-weight:400}
-.sp{flex:1}
-select{background:var(--p);border:1px solid var(--ln);border-radius:8px;padding:7px 10px}
-#reload{background:linear-gradient(135deg,var(--bl),var(--vi));border:0;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600}
-main{padding:22px 28px 50px;max-width:1500px;margin:auto}
-#msg{padding:70px 28px;color:var(--mu)}#msg.err{color:var(--rd)}
-.brief{border:1px solid transparent;border-radius:16px;padding:20px 22px;background:linear-gradient(var(--p),var(--p)) padding-box,linear-gradient(120deg,var(--cy),var(--vi),var(--bl)) border-box;margin-bottom:18px}
-.brief h2{margin:0 0 6px;font-size:13px;color:var(--cy);font-weight:600}
-.brief p{margin:0 0 14px;font-size:19px;line-height:1.45;font-weight:500;max-width:1100px}
-.brief b{color:#fff}.brief .r{color:var(--rd)}
-.ask{display:flex;gap:8px;flex-wrap:wrap}
-.ask input{flex:1;min-width:240px;background:var(--bg);border:1px solid var(--ln);border-radius:10px;padding:10px 14px}
-.ask button{background:var(--p2);border:1px solid var(--ln);border-radius:10px;padding:9px 14px;cursor:pointer}
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.chips button{font-size:12px;color:var(--mu);background:none;border:1px solid var(--ln);border-radius:20px;padding:3px 10px;cursor:pointer}
-#ans{margin-top:12px;color:var(--ink);font-size:14px}
-.kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px}
-.k{background:var(--p);border:1px solid var(--ln);border-radius:14px;padding:14px 16px}
-.k span{color:var(--mu);font-size:12px}.k b{display:block;font-size:26px;font-weight:800;font-variant-numeric:tabular-nums}
-.k em{font-style:normal;font-size:12px}.up{color:var(--rd)}.dn{color:var(--gr)}
-.k svg{display:block;margin-top:6px}
-.g{display:grid;gap:14px;margin-bottom:18px}
-.g3{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}.g2{grid-template-columns:repeat(auto-fit,minmax(440px,1fr))}
-.c{background:var(--p);border:1px solid var(--ln);border-radius:14px;padding:16px;min-width:0}
-.c h3{margin:0 0 2px;font-size:15px;font-weight:700}.c .s{color:var(--mu);font-size:12px;margin:0 0 12px}
-.ins{border-left:4px solid var(--bl)}.ins.crit{border-color:var(--rd)}.ins.warn{border-color:var(--am)}.ins.ok{border-color:var(--gr)}
-.ins h3{font-size:14px}.ins p{margin:4px 0;color:#c7d3ee;font-size:13px}.ins .a{color:var(--cy);font-size:12.5px}
-.ch{position:relative;height:250px}
-.hm{display:grid;gap:3px;font-size:11px;color:var(--mu);overflow:auto}
-.hm i{display:grid;place-items:center;height:26px;border-radius:5px;font-style:normal;color:#fff;font-size:11px}
-.w{overflow:auto;max-height:520px}
-table{border-collapse:collapse;width:100%;font-size:13px}
-th{position:sticky;top:0;background:var(--p);color:var(--mu);font-weight:500;text-align:left;padding:8px;border-bottom:1px solid var(--ln);white-space:nowrap}
-td{padding:8px;border-bottom:1px solid #1a2744;white-space:nowrap}td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
-td small{display:block;color:var(--mu);font-size:11px}
-.t{padding:2px 9px;border-radius:12px;font-size:12px;font-weight:600}
-.t0{background:#ef444426;color:#ff8f8f}.t1{background:#f59e0b26;color:#fbbf55}.t2{background:#4c8dff26;color:#8db6ff}.t3{background:#22c55e22;color:#6fe09a}
-.bar{display:inline-block;height:6px;border-radius:3px;background:var(--bl);vertical-align:middle;margin-right:6px}
-@media(max-width:600px){header,main{padding-left:14px;padding-right:14px}.g2{grid-template-columns:1fr}}
+body{margin:0;font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Devanagari",sans-serif;background:var(--bg);color:var(--ink)}
+header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);padding:10px 14px 0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;max-width:900px;margin:auto}
+h1{font-size:17px;margin:0}.top p{margin:0;color:var(--mut);font-size:12px}
+.icon{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;width:36px;height:36px;font-size:18px;cursor:pointer}
+.hd{max-width:900px;margin:auto}
+#status{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;font-size:11.5px}
+.sp{padding:2px 8px;border-radius:99px;background:var(--pri2)}
+.sp.err{background:var(--badbg);color:var(--bad)}.sp.ok{background:var(--okbg);color:var(--ok)}
+.tabs{display:flex;gap:6px}
+.tabs button{flex:1;padding:9px 6px;border:0;background:none;color:var(--mut);font-weight:600;font-size:14px;border-bottom:3px solid transparent;cursor:pointer}
+.tabs button.on{color:var(--pri);border-color:var(--pri)}
+.subs{display:flex;gap:6px;padding:8px 0}
+.subs button{flex:1;padding:7px;border:1px solid var(--line);border-radius:99px;background:var(--card);color:var(--ink);font-size:13px;cursor:pointer}
+.subs button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+main{padding:12px 14px 60px;max-width:900px;margin:auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px}
+.card h3{margin:0 0 8px;font-size:14px}
+.note{color:var(--mut);font-size:12px;margin:6px 0 0}
+.hero{display:flex;align-items:center;gap:14px}
+.hero .big{font-size:34px;font-weight:700;color:var(--pri);min-width:100px}
+.hero .bar{flex:1}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+@media(min-width:600px){.grid{grid-template-columns:repeat(4,1fr)}}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.stat b{display:block;font-size:22px}.stat span{color:var(--mut);font-size:12px}
+b.g{color:var(--ok)}b.r{color:var(--bad)}b.w{color:var(--warn)}
+.bar{height:8px;border-radius:9px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--pri);border-radius:9px}
+.bar.red i{background:var(--bad)}
+.row{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
+.row.first{border-top:0}
+.rn{font-size:13px;overflow-wrap:anywhere}
+.rv{font-size:13px;text-align:right;white-space:nowrap}.rv small{display:block;color:var(--mut);font-size:11px}
+.chip{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11.5px;margin:2px 4px 2px 0}
+.chip.r{background:var(--badbg);color:var(--bad)}.chip.w{background:var(--warnbg);color:var(--warn)}
+.chip.g{background:var(--okbg);color:var(--ok)}.chip.n{background:var(--pri2);color:var(--pri)}
+.filters{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:10px}
+@media(min-width:600px){.filters{grid-template-columns:2fr 1fr 1fr}}
+input[type=search],select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:14px}
+.item{border-top:1px solid var(--line);padding:9px 0}
+.item:first-child{border-top:0}
+.it{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.it small,.im{color:var(--mut);font-size:12px}
+.rem{margin-top:4px;padding:6px 8px;background:var(--warnbg);border-radius:8px;font-size:12.5px;overflow-wrap:anywhere}
+.empty{text-align:center;padding:28px 12px;color:var(--mut)}
+details.card summary{cursor:pointer;list-style:none}
+details.card summary::-webkit-details-marker{display:none}
+.lmh{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.lmh b.n{font-size:20px}
+.btn{display:inline-block;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);cursor:pointer;font-size:13px;margin:4px 6px 4px 0}
+a{color:var(--pri)}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 <header>
-  <div class="logo">⚡</div>
-  <h1>Loading &amp; Loss board · Alaknanda<small id="sub">Loading from Google Sheets…</small></h1>
-  <div class="sp"></div>
-  <select id="fDiv" aria-label="Division"></select><select id="fZone" aria-label="Zone"></select><select id="fMonth" aria-label="Month"></select>
-  <button id="reload">Refresh data</button>
+  <div class="top">
+    <div><h1>Alaknanda Division</h1><p>GK-2 · Inspection Dashboard</p></div>
+    <button class="icon" id="rf" title="Refresh from Google Sheet">⟳</button>
+  </div>
+  <div class="hd">
+    <div id="status"></div>
+    <div class="tabs">
+      <button data-main="fpsp">FP SP Inspection</button>
+      <button data-main="dt">DT Inspection</button>
+    </div>
+    <div class="subs">
+      <button data-sub="progress">Progress</button>
+      <button data-sub="lineman">Lineman</button>
+      <button data-sub="def">Deficiency</button>
+    </div>
+  </div>
 </header>
-<div id="msg">Reading the sheet tabs…</div>
-<main id="app" hidden>
-  <section class="brief"><h2>Network brief</h2><p id="brief"></p>
-    <div class="ask"><input id="q" placeholder="Ask about your network, e.g. “which dwarka zone has the highest loss?”" aria-label="Ask a question"><button id="go">Ask</button></div>
-    <div class="chips" id="chips"></div><div id="ans"></div></section>
-  <section class="kp" id="kp"></section>
-  <section class="g g3" id="ins"></section>
-  <section class="g g2">
-    <div class="c"><h3>Overload trend</h3><p class="s">Number of DTs at or above 80% and 100% of rating, by month, with next-month projection</p><div class="ch"><canvas id="c1"></canvas></div></div>
-    <div class="c"><h3>Risk tiers</h3><p class="s">Score combines peak load, time spent above 80%, persistence, growth and energy loss</p><div class="ch"><canvas id="c2"></canvas></div></div>
-  </section>
-  <section class="g g2">
-    <div class="c"><h3>Zone heatmap</h3><p class="s">Share of DTs at 80% or more, by month. Darker red means more stress.</p><div class="hm" id="hm"></div></div>
-    <div class="c"><h3>Energy loss by zone</h3><p class="s">Rolling loss against FY-26, from the energy tab</p><div class="ch"><canvas id="c3"></canvas></div></div>
-  </section>
-  <section class="c" style="margin-bottom:18px"><h3 id="atitle">Action list</h3><p class="s">Ranked by risk score, with a suggested fix. Rows follow the zone and month filters and any question you ask.</p><div class="w"><table id="tb"></table></div></section>
-  <section class="g g2">
-    <div class="c"><h3>Feeders carrying the most risk</h3><p class="s">DT Loading joined to HT Network by functional location</p><div class="w"><table id="tf"></table></div></div>
-    <div class="c"><h3>Data quality</h3><p class="s">Problems in the sheets that can hide real losses</p><div class="w"><table id="tq"></table></div></div>
+<main>
+  <div id="view"></div>
+  <section class="card">
+    <h3>Data source</h3>
+    <p class="note" style="margin-top:0">Reads your Google Sheet live and refreshes automatically every 5 minutes, so new inspection-form entries appear without any upload.</p>
+    <details style="margin-bottom:6px"><summary class="note">Manual fallback (only if the live fetch is blocked)</summary>
+    <label class="btn">Load Excel file (.xlsx)<input type="file" accept=".xlsx,.xlsm,.xls" data-xlsx="1" hidden></label>
+    <label class="btn">Load FP SP CSV<input type="file" accept=".csv,text/csv" data-file="fpsp" hidden></label>
+    <label class="btn">Load DT CSV<input type="file" accept=".csv,text/csv" data-file="dt" hidden></label></details>
+    <a class="btn" style="text-decoration:none;color:inherit" target="_blank" rel="noopener" href="https://docs.google.com/spreadsheets/d/1mmvLq7GbnX935I4-EzTnZXA-K2nccotRJYS8PppVqOc/edit">Open sheet ↗</a>
+    <details style="margin-top:8px"><summary class="note">How things are counted</summary>
+      <p class="note">• <b>Done</b>: Date of Visit or Lineman filled (FP SP also: status not Pending; DT also: any check column filled).<br>
+      • <b>Deficiency</b>: a check marked Not OK / No / खराब, pillar earthing = 0, HRC base/fuse needed &gt; 0, substation not locked, plus any non-blank team remark (other than OK/No/Nil).<br>
+      • "No WTI" is treated as not available, not a failure.<br>
+      • <b>Remark status</b>: "Rectified" when the rectified column says OK/Yes; "Open" when blank/No; otherwise "unclear".<br>
+      • Duplicate FP SP rows are merged on DT code + feeder + pole number.<br>
+      • DT rows with no asset ID are ignored.</p>
+    </details>
   </section>
 </main>
+
 <script>
-const SHEET_ID="1xnEkqyYsGhJLNZH0C2niWmZRqzfRdQUGpJH6Av5cHP8";
-const TABS=["Consumer & Energy","HT Network","DT Loading","Feeder Code vs FL "];
-const $=id=>document.getElementById(id);
-const fmt=(v,d=0)=>isFinite(v)?new Intl.NumberFormat("en-IN",{maximumFractionDigits:d}).format(v):"–";
-const num=v=>{const x=parseFloat(String(v??"").replace(/,/g,"").replace(/[^\d.\-eE]/g,""));return isFinite(x)?x:NaN};
-const pctv=s=>{const n=num(s);return /%/.test(String(s))?n:(Math.abs(n)<=1.5?n*100:n)};
-const key=c=>String(c||"").trim().toUpperCase().split("-").pop();
-const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const uniq=a=>[...new Set(a.filter(Boolean))];
-const cl=(v,a,b)=>Math.min(b,Math.max(a,v));
-const med=a=>{a=a.filter(isFinite).sort((x,y)=>x-y);return a.length?a[a.length>>1]:NaN};
-const MK=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],mkey=s=>{const[a,b]=s.split("-");return(+b||0)*12+MK.indexOf(a)};
-const SIZES=[100,160,200,250,315,400,500,630,800,990,1260,1600];
-const TIER=["Critical","High","Watch","Healthy"],TC=["#ef4444","#f59e0b","#4c8dff","#22c55e"];
-let D={},CH={},focus="";
+(function(){
+'use strict';
 
-function parseCSV(t){const rows=[];let r=[],f="",q=false;for(let i=0;i<t.length;i++){const c=t[i];
-  if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
-  else if(c==='"')q=true;else if(c===","){r.push(f);f=""}
-  else if(c==="\n"||c==="\r"){if(c==="\r"&&t[i+1]==="\n")i++;r.push(f);rows.push(r);r=[];f=""}else f+=c}
-  if(f!==""||r.length){r.push(f);rows.push(r)}return rows}
-async function tab(name){const base=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=`;
-  let res=await fetch(base+encodeURIComponent(name));
-  if(!res.ok&&name!==name.trim())res=await fetch(base+encodeURIComponent(name.trim()));
-  if(!res.ok)throw new Error(`Could not read the “${name.trim()}” tab (HTTP ${res.status})`);return parseCSV(await res.text())}
+/* ================= CONFIG ================= */
+const SHEET='1mmvLq7GbnX935I4-EzTnZXA-K2nccotRJYS8PppVqOc';
+const gv=n=>'https://docs.google.com/spreadsheets/d/'+SHEET+'/gviz/tq?tqx=out:csv&headers=1&sheet='+encodeURIComponent(n);
+const AK_CFG={fpsp:gv('FP SP Inspection'),dt:gv('DT Inspection')};
+const REFRESH_MS=5*60*1000;
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-async function load(){
-  $("msg").hidden=false;$("msg").className="";$("msg").textContent="Reading the sheet tabs…";$("app").hidden=true;
-  try{
-    const [c,h,d,m]=await Promise.all(TABS.map(tab));
-    D.map=Object.fromEntries(m.filter(r=>r[0]&&!/EXTERNAL/i.test(r[0])).map(r=>[r[0].trim(),(r[1]||"").trim()]));
-    D.cons=c.filter(r=>r[0]&&r[0].trim()==="2510").map(r=>({div:r[0].trim(),key:key(r[2]),fl:r[2],name:r[3],consumers:num(r[10])||0,sc:(r[12]||"").trim(),zone:(r[14]||"").trim(),
-      inF:num(r[15]),inR:num(r[16]),bF:num(r[17]),bR:num(r[18]),lossF:pctv(r[19]),lossR:pctv(r[20]),scF:pctv(r[21]),scR:pctv(r[22]),band:(r[24]||"").trim()}));
-    D.ht=h.filter(r=>r[2]&&!/EXTERNAL/i.test(r[2])&&(D.map[r[2].trim()]==="ALN"||/ALAK/i.test(r[0]||""))).map(r=>({grid:(r[0]||"").trim(),feeder:(r[1]||"").trim(),scada:r[2].trim(),bKey:key(r[6]),len:num(r[8])||0}));
-    D.dt=d.filter(r=>r[2]&&r[2]!=="DT_CODE"&&r[1]&&/ALAK.*ANDA/i.test(r[19]||"")).map(r=>({code:r[2],month:r[1].trim(),key:key(r[3]),kva:num(r[5]),peak:num(r[6]),
-      hrs:r.slice(8,19).map(x=>num(x)||0),div:(r[19]||"").trim(),zone:(r[20]||"").trim(),name:(r[21]||"").trim()}));
-    D.dt.forEach(x=>x.pct=x.kva>0?x.peak/x.kva*100:NaN);
-    D.months=uniq(D.dt.map(x=>x.month)).sort((a,b)=>mkey(a)-mkey(b));
-    D.fd={};D.ht.forEach(r=>{const f=D.fd[r.scada]??={scada:r.scada,name:r.feeder.replace(/^11kV FDR\s*/i,""),grid:r.grid,len:0};f.len+=r.len});
-    D.fBy={};D.ht.forEach(r=>{if(r.bKey)D.fBy[r.bKey]??=D.fd[r.scada]});
-    D.cBy={};D.cons.forEach(x=>D.cBy[x.key]??=x);
-    const vote={};D.dt.forEach(x=>{const c=D.cBy[x.key];if(c&&x.div){const v=vote[c.div]??={};v[x.div]=(v[x.div]||0)+1}});
-    D.dn={};Object.entries(vote).forEach(([k,v])=>D.dn[k]=Object.entries(v).sort((a,b)=>b[1]-a[1])[0][0]);
-    D.cons.forEach(x=>x.dname=D.dn[x.div]||"Division "+x.div);
-    D.dt.forEach(x=>{x.f=D.fBy[x.key];x.c=D.cBy[x.key]});
-    D.ser={};D.dt.forEach(x=>{(D.ser[x.code]??={})[x.month]=x});
-    const ms=[...D.months].reverse();opts($("fMonth"),ms);$("fMonth").value=ms[0];
-    $("fDiv").hidden=true;zones();
-    $("msg").hidden=true;$("app").hidden=false;render();
-    $("sub").textContent=`Alaknanda division only · live from Master-Sheets · ${fmt(D.cons.length)} locations · ${fmt(uniq(D.dt.map(x=>x.code)).length)} DTs · ${D.months.length} months · ${new Date().toLocaleTimeString("en-IN")}`;
-  }catch(e){$("msg").className="err";$("msg").textContent=e.message+". Open this page from a normal browser or web host (not the chat preview), and make sure the sheet is shared as “Anyone with the link – Viewer”."}}
-function opts(el,vals,all){const cur=el.value;el.innerHTML=(all?`<option value="">${all}</option>`:"")+vals.map(v=>`<option>${esc(v)}</option>`).join("");if(vals.includes(cur))el.value=cur}
-function zones(){const dv=$("fDiv").value;opts($("fZone"),uniq(D.dt.filter(x=>!dv||x.div===dv).map(x=>x.zone)).sort(),"All zones")}
-$("fDiv").onchange=()=>{zones();focus="";render()};$("fZone").onchange=()=>{focus="";render()};$("fMonth").onchange=render;$("reload").onclick=load;
-$("go").onclick=ask;$("q").onkeydown=e=>{if(e.key==="Enter")ask()};
+/* ================= RULES ================= */
+const FP_RULES=[
+ {l:'Door damaged',re:/^Pillar.*दरवा.*ठीक है/,t:'bool'},
+ {l:'Door not locked',re:/^Pillar.*(बंद|lock)/i,t:'bool'},
+ {l:'Pillar earthing = 0',re:/^Pillar.*अर्थिंग की संख्या/,t:'zero'},
+ {l:'Plinth poor',re:/Plinth|प्लिंथ/i,t:'bool'},
+ {l:'HRC fuse poor',re:/एचआरसी फ्यूज स्थिति/,t:'bool'},
+ {l:'HRC base needed',re:/HRC बेस/,t:'need'},
+ {l:'HRC fuse needed',re:/कितने HRC (?!बेस)/,t:'need'},
+ {l:'Fencing poor',re:/फेंसिंग/,t:'bool'},
+ {l:'Pole condition poor',re:/^Pole.*पोल की स्थिति/,t:'bool'},
+ {l:'Pole earthing missing',re:/^Pole.*पोल अर्थिंग/,t:'bool'},
+ {l:'Egg insulator missing',re:/एग इंसुलेटर/,t:'bool'},
+ {l:'Danger board missing',re:/डेंजर बोर्ड/,t:'bool'}
+];
+const DT_RULES=[
+ {l:'Oil level',re:/^Oil Level/i,t:'bool'},
+ {l:'Substation not locked',re:/Sub ?Station Locked/i,t:'no'},
+ {l:'Breather',re:/^ब्रीदर की स्थिति/,t:'bool'},
+ {l:'Silica gel',re:/^सिलिका/,t:'bool'},
+ {l:'OTI',re:/^OTI/i,t:'bool'},
+ {l:'WTI',re:/^WTI/i,t:'bool'},
+ {l:'Explosion vent',re:/^एक्सप्लोजन/,t:'bool'},
+ {l:'RMU gas',re:/^RMU Gas/i,t:'bool',hdr:1},
+ {l:'VPI',re:/^VPI/i,t:'bool',hdr:1},
+ {l:'FPI',re:/^FPI/i,t:'bool',hdr:1}
+];
+const NOREMARK=/^(ok|okay|0k|ko|o\.?k\.?|no|nil|none|na|n\/a|nahi|nhi|नहीं|नही|कोई नहीं|kuch nahi|-+|\.+|all ok|ok ok|nothing|done|fine|yes)$/i;
+const FIX_YES=/^(ok|okay|0k|yes|y|done|हाँ|हां|ठीक|fixed|rectified)$/i;
+const FIX_NO=/^(no|n|nahi|nhi|नहीं|नही)$/i;
 
-/* ---- intelligence ---- */
-function score(x,mo){
-  const i=D.months.indexOf(mo),hist=D.months.slice(Math.max(0,i-2),i+1).map(m=>D.ser[x.code]?.[m]).filter(Boolean);
-  const ps=hist.map(h=>h.pct).filter(isFinite),p=x.pct;
-  const tot=x.hrs.reduce((a,b)=>a+b,0)||1,hiShare=(x.hrs[8]+x.hrs[9]+x.hrs[10])/tot;
-  const persist=ps.filter(v=>v>=100).length,slope=ps.length>1?(ps[ps.length-1]-ps[0])/(ps.length-1):0;
-  const loss=x.c&&isFinite(x.c.lossR)&&Math.abs(x.c.lossR)<=100?Math.max(0,x.c.lossR):0;
-  x.slope=slope;x.fc=isFinite(p)?Math.max(0,p+slope):NaN;x.persist=persist;
-  x.risk=isFinite(p)?Math.round(45*cl(p/110,0,1)+20*cl(hiShare*4,0,1)+15*persist/3+10*cl(slope/10,0,1)+10*cl(loss/30,0,1)):0;
-  x.tier=x.risk>=70?0:x.risk>=50?1:x.risk>=30?2:3;return x}
-function advise(x,pool){
-  if(!isFinite(x.pct))return"No usable load data";
-  if(x.pct>100){const need=x.peak/.8,s=SIZES.find(v=>v>=need);const mate=pool.find(o=>o!==x&&o.zone===x.zone&&o.pct<50&&o.kva>=x.kva*.5);
-    return(s&&s>x.kva?`Upsize ${fmt(x.kva)} → ${s} kVA`:"Add a parallel DT")+(mate?`, or shift load to ${mate.name||mate.code}`:"")}
-  if(x.pct>=80)return x.slope>3?"Rising fast: plan upgrade before next peak":"Balance phases and check feeder split";
-  if(x.pct<20&&x.kva>=400)return"Under-used: candidate for downsizing or reuse";
-  return"Monitor";}
+/* ================= STATE ================= */
+const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',data:{fpsp:null,dt:null},src:{fpsp:{s:'none'},dt:{s:'none'}}};
 
-function view(){
-  const dv=$("fDiv").value,zn=$("fZone").value,mo=$("fMonth").value;
-  const dts=D.dt.filter(x=>x.month===mo&&(!dv||x.div===dv)&&(!zn||x.zone===zn)).map(x=>score(x,mo));
-  const cons=D.cons.filter(x=>(!dv||x.dname===dv)&&(!zn||x.zone===zn));
-  return{dv,zn,mo,dts,cons}}
-const loss=(i,b)=>i>0?(i-b)/i*100:NaN;
-const spark=(v,col)=>{v=v.filter(isFinite);if(v.length<2)return"";const mx=Math.max(...v),mn=Math.min(...v),w=150,h=28;
-  const pts=v.map((y,i)=>`${i/(v.length-1)*w},${h-2-(mx===mn?.5:(y-mn)/(mx-mn))*(h-4)}`).join(" ");
-  return`<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"/></svg>`};
+/* ================= UTILS ================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm=s=>String(s==null?'':s).replace(/\s+/g,' ').trim();
+const v=(row,i)=>i<0?'':norm(row[i]);
+const pct=(d,t)=>t?Math.round(d*1000/t)/10:0;
+const hm=d=>d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+const num=n=>n.toLocaleString('en-IN');
 
-function render(){
-  const V=view(),{dts,cons,mo}=V,ok=dts.filter(x=>isFinite(x.pct));
-  const n100=ok.filter(x=>x.pct>100),n80=ok.filter(x=>x.pct>=80),crit=dts.filter(x=>x.tier===0),rising=ok.filter(x=>x.slope>3&&x.pct>=70&&x.pct<=100);
-  const mi=D.months.indexOf(mo),prev=D.months[mi-1];
-  const cnt=(m,t)=>D.dt.filter(x=>x.month===m&&(!V.dv||x.div===V.dv)&&(!V.zn||x.zone===V.zn)&&x.pct>=t).length;
-  const s80=D.months.map(m=>cnt(m,80)),s100=D.months.map(m=>cnt(m,100));
-  const iR=cons.reduce((s,x)=>s+(x.inR||0),0),bR=cons.reduce((s,x)=>s+(x.bR||0),0),iF=cons.reduce((s,x)=>s+(x.inF||0),0),bF=cons.reduce((s,x)=>s+(x.bF||0),0);
-  const lR=loss(iR,bR),lF=loss(iF,bF),dOver=prev?n100.length-cnt(prev,100):0;
-  const fcOver=ok.filter(x=>x.fc>100).length;
-  $("brief").innerHTML=`${fmt(dts.length)} transformers reviewed for ${esc(mo)}. <b class="r">${fmt(n100.length)} peaked above rating</b>${prev?` (${dOver>=0?"up":"down"} ${Math.abs(dOver)} on ${esc(prev)})`:""}, ${fmt(crit.length)} are rated critical, and on current trends <b>${fmt(fcOver)}</b> will be overloaded next month. Energy loss is <b>${fmt(lR,1)}%</b> on the rolling year against ${fmt(lF,1)}% for FY-26.`;
-  const kv=(l,v,sub,sp,col)=>`<div class="k"><span>${l}</span><b>${v}</b><em>${sub||""}</em>${spark(sp||[],col||"#4c8dff")}</div>`;
-  $("kp").innerHTML=kv("DTs at 100%+",fmt(n100.length),prev?`<span class="${dOver>0?"up":"dn"}">${dOver>=0?"▲":"▼"} ${Math.abs(dOver)} vs ${esc(prev)}</span>`:"",s100,"#ef4444")+
-    kv("DTs at 80%+",fmt(n80.length),`${fmt(n80.length/Math.max(ok.length,1)*100)}% of DTs`,s80,"#f59e0b")+
-    kv("Critical risk",fmt(crit.length),`${fmt(dts.filter(x=>x.tier===1).length)} high`,[],"")+
-    kv("Capacity (MVA)",fmt(ok.reduce((s,x)=>s+x.kva,0)/1000,1),`${fmt(ok.reduce((s,x)=>s+x.peak,0)/1000,1)} MVA peak`,[],"")+
-    kv("Consumers",fmt(cons.reduce((s,x)=>s+x.consumers,0)),`${fmt(cons.length)} locations`,[],"")+
-    kv("Energy loss",fmt(lR,1)+"%",`FY-26 ${fmt(lF,1)}%`,[],"");
-  insights(V,ok,n100,rising,cons);charts(V,s80,s100,ok);heat(V);table(V);feeders(V);quality(V);
-  $("chips").innerHTML=["Which DTs are most at risk?","Where is loss highest?","Which loads are rising fastest?","Under-used transformers"].map(t=>`<button>${t}</button>`).join("");
-  $("chips").querySelectorAll("button").forEach(b=>b.onclick=()=>{$("q").value=b.textContent;ask()});
+function parseCSV(t){
+  const rows=[];let r=[],f='',q=false;
+  for(let i=0;i<t.length;i++){
+    const c=t[i];
+    if(q){ if(c==='"'){ if(t[i+1]==='"'){f+='"';i++;} else q=false; } else f+=c; }
+    else if(c==='"') q=true;
+    else if(c===','){r.push(f);f='';}
+    else if(c==='\n'){r.push(f);rows.push(r);r=[];f='';}
+    else if(c==='\r'){}
+    else f+=c;
+  }
+  if(f.length||r.length){r.push(f);rows.push(r);}
+  return rows;
+}
+function mk(y,mon,d){const p=n=>('0'+n).slice(-2);return {key:y+'-'+p(mon)+'-'+p(d),label:d+' '+(MON[mon-1]||'?')+' '+y};}
+function pd(s){
+  s=norm(s); if(!s) return null; s=s.split(/[ T]/)[0]; let m;
+  if((m=s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/))) return mk(+m[1],+m[2],+m[3]);
+  if((m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/))){
+    let a=+m[1],b=+m[2],y=+m[3]; if(y<100) y+=2000;
+    if(a<=12&&b>12) return mk(y,a,b);
+    return mk(y,b,a);
+  }
+  return {key:'y'+s,label:s};
+}
+function isBad(s){
+  s=norm(s).toLowerCase(); if(!s) return false;
+  if(/no wti|not available|n\/a/.test(s)) return false;
+  if(/^(no|n|nahi|nhi|नहीं|नही)$/.test(s)) return true;
+  return /(not ?-?ok|खराब|ख़राब|kharab|टूट|damage|broken|missing|जंग|झुक|tilt|lean|\blow\b|leak|नहीं|नही)/.test(s);
+}
+function prep(rules,H){return rules.map(r=>Object.assign({},r,{cols:H.map((h,i)=>r.re.test(h)?i:-1).filter(i=>i>=0)}));}
+function evalRules(row,H,rules){
+  const out=[],seen=new Set();
+  rules.forEach(r=>r.cols.forEach(ci=>{
+    const val=norm(row[ci]); if(!val) return;
+    const n=parseFloat(val); let bad=false;
+    if(r.t==='zero') bad=isNaN(n)?isBad(val):n===0;
+    else if(r.t==='need') bad=!isNaN(n)&&n>0;
+    else if(r.t==='no') bad=FIX_NO.test(val);
+    else bad=isBad(val);
+    if(!bad) return;
+    let label=r.hdr?H[ci]:r.l; if(r.t==='need') label+=' ('+val+')';
+    if(seen.has(label)) return; seen.add(label);
+    out.push({t:'rule',label});
+  }));
+  return out;
+}
+function finish(row,ci,defs,done){
+  let remark='',fix='',fixRaw='';
+  if(done){
+    const rem=v(row,ci.rem);
+    if(rem&&!NOREMARK.test(rem)){remark=rem;defs.push({t:'remark',label:'Team remark'});}
+  } else defs=[];
+  if(defs.length){
+    fixRaw=v(row,ci.fix);
+    fix=FIX_YES.test(fixRaw)?'rect':(!fixRaw||FIX_NO.test(fixRaw))?'open':'unclear';
+  }
+  return {defs,remark,fix,fixRaw};
 }
 
-function insights(V,ok,n100,rising,cons){
-  const I=[];const mo=V.mo;
-  const pers=ok.filter(x=>x.persist>=2);
-  if(n100.length)I.push(["crit",`${n100.length} DTs run above 100% at peak`,`${pers.length} of them did so in at least 2 of the last 3 months, so this is sustained, not a one-off spike.`,`Start with the top ${Math.min(10,n100.length)} rows of the action list.`]);
-  const zs={};ok.forEach(x=>{const o=zs[x.zone]??={n:0,h:0};o.n++;if(x.pct>=80)o.h++});
-  const wz=Object.entries(zs).filter(([k,o])=>k&&o.n>=5).sort((a,b)=>b[1].h/b[1].n-a[1].h/a[1].n)[0];
-  if(wz)I.push(["warn",`${wz[0]} is the most stressed zone`,`${fmt(wz[1].h/wz[1].n*100)}% of its ${wz[1].n} DTs reach 80% load, against ${fmt(ok.filter(x=>x.pct>=80).length/Math.max(ok.length,1)*100)}% overall.`,"Review the feeder split and spare capacity in this zone first."]);
-  if(rising.length)I.push(["warn",`${rising.length} DTs are heading for overload`,`Their peak load is between 70% and 100% and rising by more than 3 points a month, so they should cross 100% within about a month or two.`,"Schedule upgrades or load transfers before the next peak season."]);
-  const lz={};cons.forEach(x=>{if(x.zone&&isFinite(x.inR)&&x.inR>0){const o=lz[x.zone]??={i:0,b:0};o.i+=x.inR;o.b+=x.bR||0}});
-  const lm=med(Object.values(lz).map(o=>loss(o.i,o.b))),wl=Object.entries(lz).map(([k,o])=>[k,loss(o.i,o.b),o.i]).filter(a=>isFinite(a[1])&&a[2]>0.5).sort((a,b)=>b[1]-a[1])[0];
-  if(wl&&wl[1]>lm*1.5)I.push(["crit",`${wl[0]} has the highest energy loss`,`${fmt(wl[1],1)}% rolling loss, about ${fmt(wl[1]/lm,1)} times the median zone (${fmt(lm,1)}%).`,"Check metering, theft and billing efficiency at its service centres."]);
-  const idle=ok.filter(x=>x.pct<20&&x.kva>=400);
-  if(idle.length)I.push(["ok",`${idle.length} large DTs are under-used`,`${fmt(idle.reduce((s,x)=>s+x.kva,0)/1000,1)} MVA of capacity peaks below 20% of rating.`,"Candidates for load transfer targets, downsizing or redeployment."]);
-  const neg=cons.filter(x=>x.lossR<-5&&x.lossR>=-100).length,zero=cons.filter(x=>!(x.inR>0)&&x.bR>0).length;
-  if(neg+zero)I.push(["warn",`${fmt(neg+zero)} locations have suspect energy data`,`${fmt(neg)} bill more energy than they receive and ${fmt(zero)} show billing with no input energy. These distort loss figures.`,"Fix meter mapping before trusting loss at these locations."]);
-  const fc=Object.values(D.fd).map(f=>({f,k:ok.filter(x=>x.f===f&&x.tier<=1).length})).sort((a,b)=>b.k-a.k)[0];
-  if(fc&&fc.k>1)I.push(["crit",`${fc.f.name} carries the most risk`,`${fc.k} of its DTs are rated critical or high.`,"Look at feeder reconfiguration or an additional feeder."]);
-  $("ins").innerHTML=I.slice(0,6).map(i=>`<div class="c ins ${i[0]}"><h3>${esc(i[1])}</h3><p>${esc(i[2])}</p><p class="a">${esc(i[3])}</p></div>`).join("")||`<div class="c ins ok"><h3>Nothing urgent</h3><p>No overloads or loss hotspots in this selection.</p></div>`}
+/* ================= BUILDERS ================= */
+function buildFP(rows){
+  const H=rows[0].map(norm),c=re=>H.findIndex(h=>re.test(h));
+  const ci={st:c(/^inspection_?sta/i),sub:c(/^substation_?name$/i),fdr:c(/^feedername$/i),pole:c(/^pole-?pillar ?no/i),
+    cat:c(/^asset-final$/i),dt:c(/^dt_code$/i),date:c(/^date of visit$/i),lm:c(/लाइनमैन/),rem:c(/आई कमी/),fix:c(/दूर की/)};
+  if(ci.pole<0) throw new Error('Columns not recognised – expected the FP SP Inspection tab');
+  const rules=prep(FP_RULES,H),map=new Map();
+  rows.slice(1).forEach(row=>{
+    const pole=v(row,ci.pole); if(!pole) return;
+    const st=v(row,ci.st),d=pd(v(row,ci.date)),lm=v(row,ci.lm);
+    const done=!!(d||lm||(st&&!/pending/i.test(st)));
+    const f=finish(row,ci,evalRules(row,H,rules),done);
+    const cat=v(row,ci.cat)||'Pole';
+    const o={name:pole,sub:v(row,ci.sub)||'—',fdr:v(row,ci.fdr),dt:v(row,ci.dt),cat,
+      grp:/pole/i.test(cat)?'Pole':'Pillar',lm,dk:d&&d.key,dl:d&&d.label,done,
+      defs:f.defs,remark:f.remark,fix:f.fix,fixRaw:f.fixRaw};
+    const key=[o.dt,o.fdr,o.name].join('|'),old=map.get(key);
+    if(!old||(!old.done&&o.done)||(old.done&&o.done&&o.defs.length>old.defs.length)) map.set(key,o);
+  });
+  return {rows:[...map.values()],note:''};
+}
+function buildDT(rows){
+  const H=rows[0].map(norm),c=re=>H.findIndex(h=>re.test(h));
+  const ci={typ:c(/^asset type$/i),sub:c(/^substation_?name$/i),eq:c(/^sapequipmentid$/i),kva:c(/^kvarating$/i),
+    code:c(/^asset_code$/i),fl:c(/^fl code$/i),date:c(/^date of visit$/i),lm:c(/लाइनमैन/),rem:c(/आई कमी/),fix:c(/दूर की/)};
+  if(ci.eq<0) throw new Error('Columns not recognised – expected the DT Inspection tab');
+  const rules=prep(DT_RULES,H),checkCols=[...new Set(rules.reduce((a,r)=>a.concat(r.cols),[]))];
+  const map=new Map();let orphan=0;
+  rows.slice(1).forEach(row=>{
+    const eq=v(row,ci.eq),code=v(row,ci.code);
+    if(!eq&&!code){orphan++;return;}
+    const d=pd(v(row,ci.date)),lm=v(row,ci.lm);
+    const done=!!(d||lm||checkCols.some(i=>v(row,i)));
+    const f=finish(row,ci,evalRules(row,H,rules),done);
+    const typ=v(row,ci.typ)||'Asset';
+    const o={name:code||eq,eq,sub:v(row,ci.sub)||'—',fl:v(row,ci.fl),typ,grp:/rmu/i.test(typ)?'RMU':'Transformer',
+      kva:v(row,ci.kva),lm,dk:d&&d.key,dl:d&&d.label,done,defs:f.defs,remark:f.remark,fix:f.fix,fixRaw:f.fixRaw};
+    const key=eq||code,old=map.get(key);
+    if(!old||(!old.done&&o.done)) map.set(key,o);
+  });
+  return {rows:[...map.values()],note:orphan?orphan+' row(s) without asset ID ignored':''};
+}
 
-function mk(id,cfg){CH[id]?.destroy();Chart.defaults.color="#8ea0c4";Chart.defaults.borderColor="#22304d";Chart.defaults.font.family="Manrope";cfg.options={responsive:true,maintainAspectRatio:false,...cfg.options};CH[id]=new Chart($(id),cfg)}
-function charts(V,s80,s100,ok){
-  const L=[...D.months,"Next (proj.)"],f80=ok.filter(x=>x.fc>=80).length,f100=ok.filter(x=>x.fc>100).length,pad=Array(D.months.length-1).fill(null);
-  mk("c1",{type:"line",data:{labels:L,datasets:[
-    {label:"80%+",data:[...s80,null],borderColor:"#f59e0b",backgroundColor:"#f59e0b22",fill:true,tension:.3},
-    {label:"100%+",data:[...s100,null],borderColor:"#ef4444",tension:.3},
-    {label:"Projection 80%+",data:[...pad,s80[s80.length-1],f80],borderColor:"#f59e0b",borderDash:[5,4],pointStyle:"rectRot"},
-    {label:"Projection 100%+",data:[...pad,s100[s100.length-1],f100],borderColor:"#ef4444",borderDash:[5,4],pointStyle:"rectRot"}]},options:{plugins:{legend:{labels:{boxWidth:10}}}}});
-  const tc=[0,1,2,3].map(t=>V.dts.filter(x=>x.tier===t).length);
-  mk("c2",{type:"doughnut",data:{labels:TIER,datasets:[{data:tc,backgroundColor:TC,borderWidth:0}]},options:{cutout:"66%",plugins:{legend:{position:"right"}}}});
-  const z={};V.cons.forEach(x=>{if(!x.zone)return;const o=z[x.zone]??={i:0,b:0,iF:0,bF:0};o.i+=x.inR||0;o.b+=x.bR||0;o.iF+=x.inF||0;o.bF+=x.bF||0});
-  const zs=Object.entries(z).map(([k,o])=>[k,loss(o.i,o.b),loss(o.iF,o.bF)]).filter(a=>isFinite(a[1])).sort((a,b)=>b[1]-a[1]).slice(0,14);
-  mk("c3",{type:"bar",data:{labels:zs.map(a=>a[0]),datasets:[{label:"Rolling",data:zs.map(a=>a[1]),backgroundColor:"#4c8dff"},{label:"FY-26",data:zs.map(a=>a[2]),backgroundColor:"#8b5cf6"}]},options:{scales:{x:{ticks:{maxRotation:60}}}}})}
-function heat(V){
-  const zs=uniq(D.dt.filter(x=>!V.dv||x.div===V.dv).map(x=>x.zone)).sort().slice(0,24),M=D.months.slice(-6);
-  $("hm").style.gridTemplateColumns=`minmax(110px,1.4fr) repeat(${M.length},1fr)`;
-  $("hm").innerHTML=`<div></div>`+M.map(m=>`<div style="text-align:center">${esc(m)}</div>`).join("")+zs.map(z=>`<div style="align-self:center">${esc(z)}</div>`+M.map(m=>{
-    const a=D.dt.filter(x=>x.zone===z&&x.month===m&&isFinite(x.pct)&&(!V.dv||x.div===V.dv)),p=a.length?a.filter(x=>x.pct>=80).length/a.length*100:NaN;
-    return`<i style="background:${isFinite(p)?`hsl(${Math.round(150-cl(p,0,40)/40*150)} 65% ${34-cl(p,0,40)/4}%)`:"#1a2744"}" title="${esc(z)} ${esc(m)}: ${fmt(p)}%">${isFinite(p)?fmt(p)+"%":""}</i>`}).join("")).join("")}
+/* ================= LOADING ================= */
+function ingest(key,text,origin){
+  text=text.replace(/^\uFEFF/,'');
+  if(/^\s*</.test(text)) throw new Error('Received a web page, not CSV – share the sheet as "Anyone with the link: Viewer"');
+  const rows=parseCSV(text).filter(r=>r.some(x=>norm(x)));
+  if(rows.length<2) throw new Error('No data rows found');
+  const D=key==='fpsp'?buildFP(rows):buildDT(rows);
+  S.data[key]=D;
+  S.src[key]={s:'ok',n:D.rows.length,ts:new Date(),origin,manual:origin!=='live',extra:D.note};
+}
+async function loadLive(key,force){
+  if(!AK_CFG[key]) return;
+  if(S.src[key].manual&&!force) return;
+  S.src[key]=Object.assign({},S.src[key],{s:'loading'});renderStatus();
+  try{
+    const r=await fetch(AK_CFG[key],{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    ingest(key,await r.text(),'live');
+  }catch(e){
+    const m=/Failed to fetch|NetworkError|Load failed/i.test(e.message)?'Live fetch blocked/offline – use Load CSV (or host this file on GitHub Pages)':e.message;
+    S.src[key]={s:'err',msg:m,manual:false};
+  }
+  render();
+}
+function loadAll(force){loadLive('fpsp',force);loadLive('dt',force);}
 
-function rows(V){const f=focus.toLowerCase();return V.dts.filter(x=>!f||(x.name+" "+x.code+" "+x.zone+" "+(x.f?.name||"")).toLowerCase().includes(f)).sort((a,b)=>b.risk-a.risk)}
-function table(V){
-  const R=rows(V);$("atitle").textContent=focus?`Action list: ${focus}`:"Action list";
-  $("tb").innerHTML=`<tr><th>Risk</th><th>DT</th><th>Zone / feeder</th><th class="n">kVA</th><th class="n">Peak load</th><th class="n">Trend</th><th class="n">Next month</th><th class="n">Loss</th><th>Suggested action</th></tr>`+
-  R.slice(0,25).map(x=>`<tr><td><span class="t t${x.tier}">${TIER[x.tier]} ${x.risk}</span></td><td>${esc(x.name||x.code)}<small>${esc(x.code)}</small></td><td>${esc(x.zone)}<small>${esc(x.f?.name||"No feeder match")}</small></td><td class="n">${fmt(x.kva)}</td><td class="n"><i class="bar" style="width:${cl(x.pct,0,130)*.5}px;background:${x.pct>100?"#ef4444":x.pct>=80?"#f59e0b":"#4c8dff"}"></i>${fmt(x.pct)}%</td><td class="n ${x.slope>1?"up":x.slope<-1?"dn":""}">${x.slope>=0?"▲":"▼"} ${fmt(Math.abs(x.slope),1)}</td><td class="n">${fmt(x.fc)}%</td><td class="n">${x.c&&isFinite(x.c.lossR)&&Math.abs(x.c.lossR)<=100?fmt(x.c.lossR,1)+"%":"–"}</td><td>${esc(advise(x,V.dts))}</td></tr>`).join("")||`<tr><td>No DTs match.</td></tr>`}
-function feeders(V){
-  const m=new Map();V.dts.forEach(x=>{if(!x.f)return;const o=m.get(x.f)??{f:x.f,n:0,c:0,h:0,s:0};o.n++;if(x.tier===0)o.c++;if(x.tier===1)o.h++;o.s+=x.risk;m.set(x.f,o)});
-  $("tf").innerHTML=`<tr><th>Feeder</th><th>Grid</th><th class="n">DTs</th><th class="n">Critical</th><th class="n">High</th><th class="n">Avg risk</th></tr>`+[...m.values()].sort((a,b)=>b.c-a.c||b.h-a.h||b.s/b.n-a.s/a.n).slice(0,12).map(o=>`<tr><td>${esc(o.f.name)}</td><td>${esc(o.f.grid)}</td><td class="n">${o.n}</td><td class="n">${o.c}</td><td class="n">${o.h}</td><td class="n">${fmt(o.s/o.n)}</td></tr>`).join("")}
-function quality(V){
-  const c=V.cons,d=V.dts,dtKeys=new Set(d.map(x=>x.key)),ckeys=new Set(c.map(x=>x.key));
-  const Q=[["Loss figure is an error (#DIV/0!, #N/A)",c.filter(x=>!isFinite(x.lossR)).length],["Bills more than received (loss below −5%)",c.filter(x=>x.lossR<-5&&x.lossR>=-100).length],
-    ["Loss outside −100% to 100%",c.filter(x=>Math.abs(x.lossR)>100).length],["Marked “Need to Verification” at service centre level",c.filter(x=>/verif/i.test(x.band)).length],
-    ["Locations with no DT Loading meter data",c.filter(x=>!d.some(()=>false)&&!dtKeys.has(x.key)).length],["DTs not tagged to any HT feeder",d.filter(x=>!x.f).length],
-    ["DTs with no matching energy record",d.filter(x=>!x.c).length],["DTs with missing or zero rating",d.filter(x=>!(x.kva>0)).length]];
-  $("tq").innerHTML=`<tr><th>Check</th><th class="n">Count</th></tr>`+Q.map(q=>`<tr><td>${q[0]}</td><td class="n">${fmt(q[1])}</td></tr>`).join("")}
+/* ================= RENDER HELPERS ================= */
+const chips=defs=>defs.map(d=>'<span class="chip '+(d.t==='remark'?'w':'r')+'">'+esc(d.label)+'</span>').join('');
+const fixBadge=r=>!r.defs.length?'':r.fix==='rect'?'<span class="chip g">Rectified</span>':r.fix==='unclear'?'<span class="chip n">Fix: '+esc(r.fixRaw)+' ?</span>':'<span class="chip n">Open</span>';
+const bar=(p,red)=>'<div class="bar'+(red?' red':'')+'"><i style="width:'+Math.min(100,p)+'%"></i></div>';
+const empty=m=>'<div class="card empty">'+m+'</div>';
+const stat=(l,val,cls)=>'<div class="stat"><b class="'+(cls||'')+'">'+val+'</b><span>'+l+'</span></div>';
+function groupList(title,gs){
+  gs.sort((a,b)=>(b.t-b.d)-(a.t-a.d)||a.k.localeCompare(b.k));
+  return '<section class="card"><h3>'+title+'</h3>'+gs.map((g,i)=>'<div class="row'+(i?'':' first')+'"><div class="rn">'+esc(g.k)+'</div><div>'+bar(pct(g.d,g.t))+'</div><div class="rv"><b>'+g.d+'</b>/'+g.t+'<small>'+(g.t-g.d)+' pending</small></div></div>').join('')+'</section>';
+}
+function groupBy(rows,fn){
+  const m=new Map();
+  rows.forEach(r=>{const k=fn(r)||'—';let g=m.get(k);if(!g){g={k,t:0,d:0};m.set(k,g);}g.t++;if(r.done)g.d++;});
+  return [...m.values()];
+}
+const defRows=rows=>rows.filter(r=>r.done&&r.defs.length);
 
-/* ---- Ask ---- */
-function ask(){
-  const t=$("q").value.trim().toLowerCase();if(!t)return;const V=view();
-  const ents=uniq([...V.dts.map(x=>x.zone),...Object.values(D.fd).map(f=>f.name),...Object.values(D.dn)]);
-  const hit=ents.filter(e=>{const w=e.toLowerCase();return t.includes(w)||w.split(/\s+/).some(p=>p.length>=4&&t.includes(p))}).sort((a,b)=>b.length-a.length)[0];
-  focus=hit||"";
-  const pool=V.dts.filter(x=>!focus||(x.name+" "+x.zone+" "+(x.f?.name||"")+" "+x.div).toLowerCase().includes(focus.toLowerCase())),ok=pool.filter(x=>isFinite(x.pct));
-  let a;
-  if(/loss/.test(t)){const z={};V.cons.filter(x=>!focus||(x.zone+x.dname).toLowerCase().includes(focus.toLowerCase())).forEach(x=>{if(x.zone&&x.inR>0){const o=z[x.zone]??={i:0,b:0};o.i+=x.inR;o.b+=x.bR||0}});
-    const L=Object.entries(z).map(([k,o])=>[k,loss(o.i,o.b)]).filter(a=>isFinite(a[1])).sort((a,b)=>b[1]-a[1]).slice(0,3);a=L.length?`Highest rolling loss${focus?" in "+focus:""}: `+L.map(l=>`${l[0]} (${fmt(l[1],1)}%)`).join(", ")+".":"No loss data for that selection."}
-  else if(/rising|grow|trend|forecast|fast/.test(t)){const r=ok.filter(x=>x.slope>0).sort((a,b)=>b.slope-a.slope).slice(0,3);a=r.length?"Fastest rising: "+r.map(x=>`${x.name||x.code} (+${fmt(x.slope,1)} pts a month, now ${fmt(x.pct)}%)`).join("; ")+".":"No rising loads found."}
-  else if(/under|idle|spare|capacity|low/.test(t)){const u=ok.filter(x=>x.kva>=400).sort((a,b)=>a.pct-b.pct).slice(0,3);a=u.length?"Most under-used: "+u.map(x=>`${x.name||x.code} (${fmt(x.pct)}% of ${fmt(x.kva)} kVA)`).join("; ")+".":"None found."}
-  else{const r=[...ok].sort((a,b)=>b.risk-a.risk).slice(0,3);a=`${focus?focus+": ":""}${ok.length} DTs, ${ok.filter(x=>x.tier===0).length} critical, ${ok.filter(x=>x.pct>100).length} above 100%. Top risks: `+r.map(x=>`${x.name||x.code} (${x.risk})`).join("; ")+"."}
-  $("ans").textContent=a;table(V)}
-load();
+/* ================= VIEWS ================= */
+function viewProgress(D){
+  const rows=D.rows,tot=rows.length,done=rows.filter(r=>r.done),dn=done.length;
+  const dfc=defRows(rows).length;
+  let h='<section class="card"><div class="hero"><div class="big">'+pct(dn,tot)+'%</div><div style="flex:1"><div class="note" style="margin:0 0 6px">'+num(dn)+' of '+num(tot)+' inspected</div>'+bar(pct(dn,tot))+'</div></div></section>';
+  h+='<div class="grid">'+stat('Total',num(tot))+stat('Done',num(dn),'g')+stat('Pending',num(tot-dn),tot-dn?'w':'')+stat('With deficiency',num(dfc),dfc?'r':'')+'</div>';
+  h+=groupList(S.main==='dt'?'Asset type':'Pole / Pillar',groupBy(rows,r=>r.grp));
+  const dm=new Map();
+  done.forEach(r=>{const k=r.dk||'zz';let g=dm.get(k);if(!g){g={l:r.dl||'No date',n:0,lm:{}};dm.set(k,g);}g.n++;const q=r.lm||'—';g.lm[q]=(g.lm[q]||0)+1;});
+  const keys=[...dm.keys()].sort((a,b)=>a==='zz'?1:b==='zz'?-1:b.localeCompare(a)).slice(0,30);
+  h+='<section class="card"><h3>Date-wise inspections done</h3>';
+  if(!keys.length) h+='<p class="note">Nothing inspected yet.</p>';
+  keys.forEach((k,i)=>{const g=dm.get(k);
+    h+='<div class="row'+(i?'':' first')+'" style="grid-template-columns:minmax(0,1fr) auto"><div class="rn"><b>'+esc(g.l)+'</b><div class="note" style="margin:2px 0 0">'+Object.keys(g.lm).map(n=>esc(n)+' '+g.lm[n]).join(' · ')+'</div></div><div class="rv"><b>'+g.n+'</b></div></div>';});
+  if(dm.has('zz')) h+='<p class="note">"No date": Date of Visit is blank on those rows – ask the team to fill it in.</p>';
+  h+='</section>';
+  h+=groupList('Substation-wise (done / total)',groupBy(rows,r=>r.sub));
+  return h;
+}
+
+function viewLineman(D){
+  const done=D.rows.filter(r=>r.done);
+  if(!done.length) return empty('No inspections recorded yet.');
+  const m=new Map();
+  done.forEach(r=>{const k=(r.lm||'').toLowerCase()||'—';let g=m.get(k);if(!g){g={k:r.lm||'Not recorded',list:[]};m.set(k,g);}g.list.push(r);});
+  const arr=[...m.values()].sort((a,b)=>b.list.length-a.list.length);
+  let h='<div class="grid">'+stat('Linemen',arr.length)+stat('Inspections',num(done.length),'g')+stat('Assets with deficiency',defRows(done).length,'r')+stat('Deficiency items',done.reduce((s,r)=>s+r.defs.length,0),'w')+'</div>';
+  arr.forEach(g=>{
+    const dfl=g.list.filter(r=>r.defs.length),items=g.list.reduce((s,r)=>s+r.defs.length,0);
+    const split={};g.list.forEach(r=>split[r.grp]=(split[r.grp]||0)+1);
+    const last=g.list.map(r=>r.dk).filter(Boolean).sort().pop();
+    const lastL=last?(g.list.find(r=>r.dk===last).dl):'—';
+    const list=g.list.slice().sort((a,b)=>(b.dk||'').localeCompare(a.dk||'')||a.name.localeCompare(b.name));
+    h+='<details class="card"><summary><div class="lmh"><div><b>'+esc(g.k)+'</b><div class="note" style="margin:2px 0 0">'+Object.keys(split).map(k=>k+' '+split[k]).join(' · ')+' · last visit: '+esc(lastL)+'</div></div><div style="text-align:right"><b class="n">'+g.list.length+'</b><div class="note" style="margin:0">'+dfl.length+' deficient / '+items+' items</div></div></div>'+bar(pct(dfl.length,g.list.length),true)+'</summary>';
+    h+='<div style="margin-top:8px">'+list.map(r=>'<div class="item"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.dl||'No date')+'</small></div><div class="im">'+esc(r.sub)+(r.kva?' · '+esc(r.kva):'')+'</div>'+(r.defs.length?'<div>'+chips(r.defs)+fixBadge(r)+'</div>':'<div><span class="chip g">All OK</span></div>')+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'</div>').join('')+'</div></details>';
+  });
+  return h;
+}
+
+function viewDef(D){
+  const done=D.rows.filter(r=>r.done),wd=defRows(done);
+  if(!done.length) return empty('No inspections recorded yet, so there are no deficiencies to show.');
+  const items=wd.reduce((s,r)=>s+r.defs.length,0),rem=wd.filter(r=>r.remark).length;
+  const open=wd.filter(r=>r.fix!=='rect').length;
+  const tc={};wd.forEach(r=>r.defs.forEach(d=>{const k=d.t==='remark'?'Team remark':d.label.replace(/ \(\d+\)$/,'');tc[k]=(tc[k]||0)+1;}));
+  const tk=Object.keys(tc).sort((a,b)=>tc[b]-tc[a]);
+  const lms=[...new Set(wd.map(r=>r.lm||'—'))].sort();
+  let h='<div class="grid">'+stat('Assets with deficiency',wd.length,'r')+stat('Deficiency items',items,'w')+stat('From team remark',rem,'w')+stat('Not yet rectified',open,open?'r':'g')+'</div>';
+  h+='<section class="card"><h3>Deficiency summary</h3>'+(tk.length?tk.map((k,i)=>'<div class="row'+(i?'':' first')+'"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],wd.length),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
+  h+='<section class="card"><h3>Deficiency detail</h3><div class="filters"><input type="search" id="fq" placeholder="Search asset / substation / remark" value="'+esc(S.q)+'"><select id="flm"><option value="">All linemen</option>'+lms.map(n=>'<option'+(S.lm===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fst"><option value="">All status</option><option value="open"'+(S.st==='open'?' selected':'')+'>Not rectified</option><option value="rect"'+(S.st==='rect'?' selected':'')+'>Rectified</option></select></div><div id="deflist"></div></section>';
+  return h;
+}
+function renderDefList(){
+  const D=S.data[S.main],el=$('#deflist'); if(!D||!el) return;
+  const q=S.q.toLowerCase();
+  let list=defRows(D.rows).filter(r=>{
+    if(S.lm&&(r.lm||'—')!==S.lm) return false;
+    if(S.st==='rect'&&r.fix!=='rect') return false;
+    if(S.st==='open'&&r.fix==='rect') return false;
+    if(q){const t=[r.name,r.eq,r.sub,r.fdr,r.lm,r.remark].concat(r.defs.map(d=>d.label)).join(' ').toLowerCase();if(t.indexOf(q)<0) return false;}
+    return true;
+  }).sort((a,b)=>(b.dk||'').localeCompare(a.dk||'')||b.defs.length-a.defs.length);
+  const cap=150;
+  el.innerHTML=list.length?list.slice(0,cap).map(r=>'<div class="item"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.grp)+(r.kva?' · '+esc(r.kva):'')+'</small></div><div class="im">'+esc(r.sub)+(r.fdr?' · '+esc(r.fdr):'')+' · '+esc(r.lm||'—')+' · '+esc(r.dl||'No date')+'</div><div>'+chips(r.defs)+fixBadge(r)+'</div>'+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'</div>').join('')+(list.length>cap?'<p class="note">Showing first '+cap+' of '+list.length+' – narrow with the filters.</p>':''):'<p class="note">No matching deficiencies.</p>';
+}
+
+/* ================= MAIN RENDER ================= */
+function renderStatus(){
+  const nm={fpsp:'FP SP',dt:'DT'};
+  $('#status').innerHTML=['fpsp','dt'].map(k=>{
+    const s=S.src[k];
+    if(s.s==='loading') return '<span class="sp">'+nm[k]+': loading…</span>';
+    if(s.s==='ok') return '<span class="sp ok">'+nm[k]+': '+num(s.n)+' rows · '+(s.origin==='live'?'live':'file')+' · '+hm(s.ts)+'</span>'+(s.extra?'<span class="sp">'+esc(s.extra)+'</span>':'');
+    if(s.s==='err') return '<span class="sp err">'+nm[k]+': '+esc(s.msg)+(S.data[k]?' (showing last data)':'')+'</span>';
+    return '<span class="sp">'+nm[k]+': no data loaded</span>';
+  }).join('');
+}
+function render(){
+  document.querySelectorAll('[data-main]').forEach(b=>b.classList.toggle('on',b.dataset.main===S.main));
+  document.querySelectorAll('[data-sub]').forEach(b=>b.classList.toggle('on',b.dataset.sub===S.sub));
+  renderStatus();
+  const D=S.data[S.main],el=$('#view');
+  if(!D){
+    const s=S.src[S.main];
+    el.innerHTML=empty(s.s==='loading'?'Loading from Google Sheet…':'No data loaded for this tab yet.<br>Use <b>Load '+(S.main==='dt'?'DT':'FP SP')+' CSV</b> below, or tap ⟳ to retry the live fetch.');
+    return;
+  }
+  el.innerHTML=S.sub==='progress'?viewProgress(D):S.sub==='lineman'?viewLineman(D):viewDef(D);
+  if(S.sub==='def'){
+    renderDefList();
+    const q=$('#fq'),l=$('#flm'),s=$('#fst');
+    if(q) q.oninput=e=>{S.q=e.target.value;renderDefList();};
+    if(l) l.onchange=e=>{S.lm=e.target.value;renderDefList();};
+    if(s) s.onchange=e=>{S.st=e.target.value;renderDefList();};
+  }
+}
+
+/* ================= EVENTS ================= */
+document.querySelectorAll('[data-main]').forEach(b=>b.onclick=()=>{S.main=b.dataset.main;S.q='';S.lm='';S.st='';render();});
+document.querySelectorAll('[data-sub]').forEach(b=>b.onclick=()=>{S.sub=b.dataset.sub;render();window.scrollTo(0,0);});
+$('#rf').onclick=()=>loadAll(true);
+document.querySelectorAll('[data-file]').forEach(inp=>inp.onchange=async e=>{
+  const f=e.target.files[0],key=inp.dataset.file; if(!f) return;
+  try{ingest(key,await f.text(),'file');}catch(err){S.src[key]={s:'err',msg:err.message,manual:true};}
+  e.target.value='';render();
+});
+
+document.querySelectorAll('[data-xlsx]').forEach(inp=>inp.onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try{
+    if(!window.XLSX) throw new Error('Excel reader could not load (offline?) – use the CSV buttons');
+    const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:true});
+    const find=re=>wb.SheetNames.find(n=>re.test(n.trim()));
+    const sheets={fpsp:find(/^fp sp inspection$/i),dt:find(/^dt inspection$/i)};
+    ['fpsp','dt'].forEach(k=>{
+      try{
+        if(!sheets[k]) throw new Error('Sheet "'+(k==='dt'?'DT Inspection':'FP SP Inspection')+'" not found in this file');
+        ingest(k,XLSX.utils.sheet_to_csv(wb.Sheets[sheets[k]],{blankrows:false,dateNF:'yyyy-mm-dd'}),'file');
+      }catch(err){S.src[k]={s:'err',msg:err.message,manual:true};}
+    });
+  }catch(err){['fpsp','dt'].forEach(k=>{S.src[k]={s:'err',msg:err.message,manual:true};});}
+  e.target.value='';render();
+});
+
+render();
+loadAll();
+setInterval(()=>loadAll(false),REFRESH_MS);
+})();
 </script>
 </body>
 </html>
