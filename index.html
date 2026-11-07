@@ -60,6 +60,67 @@ details.card summary::-webkit-details-marker{display:none}
 .lmh b.n{font-size:20px}
 .btn{display:inline-block;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);cursor:pointer;font-size:13px;margin:4px 6px 4px 0}
 a{color:var(--pri)}
+
+/* ===== Analytics refresh: modern responsive presentation ===== */
+:root{--radius:18px;--shadow:0 8px 28px rgba(24,39,75,.07)}
+body{font-size:14px;line-height:1.5}
+header{box-shadow:0 3px 18px rgba(20,35,65,.05);padding:14px 18px 0}
+.top,.hd{max-width:1180px}
+h1{font-size:20px;letter-spacing:-.35px}
+.top p{font-size:12px;letter-spacing:.2px}
+main{max-width:1180px;padding:20px 18px 64px}
+.card,.stat{border-radius:var(--radius);box-shadow:var(--shadow)}
+.card{padding:16px 18px;margin-bottom:14px}
+.card h3{font-size:14px;letter-spacing:.1px}
+.stat{padding:14px 15px;min-height:82px}
+.stat b{font-size:25px;letter-spacing:-.6px}
+.stat span{font-size:12px}
+.tabs button,.subs button{transition:background .18s ease,color .18s ease,border-color .18s ease}
+.subs button{padding:8px 12px;font-weight:600}
+.subs button.on{box-shadow:0 4px 12px rgba(31,94,255,.2)}
+.hero .big{font-size:42px;letter-spacing:-1.5px}
+.bar{height:9px}
+.row{padding:10px 0}
+.item{padding:12px 0}
+.filters{margin:12px 0}
+.analytics-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.analytics-panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:15px;min-width:0;box-shadow:var(--shadow)}
+.analytics-panel h3{margin:0 0 4px;font-size:14px}
+.analytics-panel .note{margin:0 0 12px}
+.metric-line{display:grid;grid-template-columns:minmax(0,1fr) minmax(65px,1.3fr) auto;gap:9px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.metric-line:first-of-type{border-top:0}
+.metric-label{font-size:12px;overflow-wrap:anywhere}
+.metric-value{font-size:12px;font-weight:700;text-align:right;white-space:nowrap}
+.metric-track{height:9px;border-radius:20px;background:var(--line);overflow:hidden}
+.metric-track i{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,var(--pri),#69a2ff)}
+.metric-track.red i{background:linear-gradient(90deg,var(--bad),#ff9b83)}
+.analytics-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.analytics-kpi{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:13px;box-shadow:var(--shadow)}
+.analytics-kpi strong{display:block;font-size:23px;letter-spacing:-.5px}
+.analytics-kpi span{font-size:11px;color:var(--mut)}
+.analytics-table{width:100%;border-collapse:collapse;font-size:12px}
+.analytics-table th,.analytics-table td{text-align:left;padding:9px 7px;border-top:1px solid var(--line)}
+.analytics-table th{color:var(--mut);font-weight:600}
+.analytics-table td:last-child,.analytics-table th:last-child{text-align:right}
+.trend-bars{height:145px;display:flex;align-items:flex-end;gap:7px;padding:10px 2px 0;border-bottom:1px solid var(--line)}
+.trend-col{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px}
+.trend-col i{display:block;width:min(100%,30px);min-height:3px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#78a8ff,var(--pri))}
+.trend-col b{font-size:10px;color:var(--mut);font-weight:600}
+.trend-col small{font-size:9px;color:var(--mut);white-space:nowrap}
+.analytics-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;color:var(--mut);font-size:11px}
+@media(max-width:650px){
+ header{padding:10px 12px 0}.top,.hd{max-width:none}h1{font-size:17px}
+ main{padding:13px 11px 52px}
+ .card{padding:13px 14px}
+ .analytics-grid{grid-template-columns:1fr}
+ .analytics-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .analytics-kpi{padding:11px}
+ .analytics-kpi strong{font-size:21px}
+ .metric-line{grid-template-columns:minmax(0,1fr) minmax(48px,1fr) auto;gap:7px}
+ .trend-bars{gap:4px}
+}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -78,7 +139,7 @@ a{color:var(--pri)}
     <div class="subs">
       <button data-sub="progress">Progress</button>
       <button data-sub="lineman">Lineman</button>
-      <button data-sub="def">Deficiency</button>
+      <button data-sub="def">Deficiency</button><button data-sub="analytics">Analytics</button>
     </div>
   </div>
 </header>
@@ -343,6 +404,48 @@ function viewLineman(D){
   return h;
 }
 
+
+function viewAnalytics(D){
+  const rows=D.rows, done=rows.filter(r=>r.done), deficient=defRows(rows);
+  const open=deficient.filter(r=>r.fix!=='rect'), rect=deficient.filter(r=>r.fix==='rect');
+  const rate=pct(done.length,rows.length);
+  const monthly=new Map();
+  done.forEach(r=>{
+    const k=r.dk&&/^\d{4}-\d{2}/.test(r.dk)?r.dk.slice(0,7):'';
+    if(!k)return;
+    monthly.set(k,(monthly.get(k)||0)+1);
+  });
+  const months=[...monthly.entries()].sort((a,b)=>a[0].localeCompare(b[0])).slice(-8);
+  const maxMonth=Math.max(1,...months.map(x=>x[1]));
+  const trend=months.length?'<div class="trend-bars">'+months.map(([k,n])=>'<div class="trend-col"><small>'+n+'</small><i style="height:'+Math.max(3,n/maxMonth*100)+'%"></i><b>'+esc(k.slice(5))+'</b></div>').join('')+'</div>':'<p class="note">Date-wise monthly trend will appear when inspection dates are available.</p>';
+  const subs=groupBy(rows,r=>r.sub).map(g=>{
+    const list=rows.filter(r=>(r.sub||'—')===g.k),d=list.filter(r=>r.done).length;
+    return {name:g.k,total:list.length,done:d,rate:pct(d,list.length),def:list.filter(r=>r.done&&r.defs.length).length};
+  }).sort((a,b)=>b.rate-a.rate||b.total-a.total).slice(0,8);
+  const subHtml=subs.length?subs.map(s=>'<div class="metric-line"><div class="metric-label">'+esc(s.name)+'</div><div class="metric-track"><i style="width:'+s.rate+'%"></i></div><div class="metric-value">'+s.rate+'% <span style="color:var(--mut);font-weight:400">('+s.done+'/'+s.total+')</span></div></div>').join(''):'<p class="note">No substation records available.</p>';
+  const lmMap=new Map();
+  done.forEach(r=>{const k=r.lm||'Not recorded';let x=lmMap.get(k);if(!x){x={name:k,total:0,def:0,items:0};lmMap.set(k,x);}x.total++;if(r.defs.length){x.def++;x.items+=r.defs.length;}});
+  const lms=[...lmMap.values()].sort((a,b)=>b.total-a.total).slice(0,8);
+  const lmHtml=lms.length?'<table class="analytics-table"><thead><tr><th>Lineman</th><th>Inspected</th><th>Deficient assets</th></tr></thead><tbody>'+lms.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+x.total+'</td><td>'+x.def+'</td></tr>').join('')+'</tbody></table>':'<p class="note">Lineman data not available.</p>';
+  const cat=new Map();
+  deficient.forEach(r=>r.defs.forEach(d=>{const k=d.label.replace(/ \(\d+\)$/,'');cat.set(k,(cat.get(k)||0)+1);}));
+  const cats=[...cat.entries()].sort((a,b)=>b[1]-a[1]).slice(0,7),maxCat=Math.max(1,...cats.map(x=>x[1]));
+  const catHtml=cats.length?cats.map(([k,n])=>'<div class="metric-line"><div class="metric-label">'+esc(k)+'</div><div class="metric-track red"><i style="width:'+(n/maxCat*100)+'%"></i></div><div class="metric-value">'+n+'</div></div>').join(''):'<p class="note">No recorded deficiencies.</p>';
+  return '<div class="analytics-kpis">'+
+    '<div class="analytics-kpi"><strong>'+rate+'%</strong><span>Inspection coverage</span></div>'+
+    '<div class="analytics-kpi"><strong>'+num(rows.length-done.length)+'</strong><span>Pending assets</span></div>'+
+    '<div class="analytics-kpi"><strong>'+num(deficient.length)+'</strong><span>Assets with deficiency</span></div>'+
+    '<div class="analytics-kpi"><strong>'+num(rect.length)+'</strong><span>Assets marked rectified</span></div>'+
+    '</div>'+
+    '<div class="analytics-grid">'+
+    '<section class="analytics-panel"><h3>Monthly inspection trend</h3><p class="note">Completed inspections · latest 8 available months</p>'+trend+'<div class="analytics-foot"><span>Total inspected: '+num(done.length)+'</span><span>Open / unclear: '+num(open.length)+'</span></div></section>'+
+    '<section class="analytics-panel"><h3>Substation performance</h3><p class="note">Top 8 by inspection coverage</p>'+subHtml+'</section>'+
+    '<section class="analytics-panel"><h3>Lineman activity</h3><p class="note">Completed assets and deficient assets</p>'+lmHtml+'</section>'+
+    '<section class="analytics-panel"><h3>Frequent deficiency categories</h3><p class="note">Counts across inspected assets; based on existing rules</p>'+catHtml+'</section>'+
+    '</div>'+
+    '<section class="card" style="margin-top:14px"><h3>Analytics definitions</h3><p class="note">Coverage = completed unique assets ÷ total unique assets. Deficiency and rectification counts use the existing FP/SP and DT rules and the current rectified-column interpretation. Monthly trend excludes records without a recognised date. These are descriptive operational metrics, not a safety-risk score.</p></section>';
+}
+
 function viewDef(D){
   const done=D.rows.filter(r=>r.done),wd=defRows(done);
   if(!done.length) return empty('No inspections recorded yet, so there are no deficiencies to show.');
@@ -391,7 +494,7 @@ function render(){
     el.innerHTML=empty(s.s==='loading'?'Loading from Google Sheet…':'No data loaded for this tab yet.<br>Use <b>Load '+(S.main==='dt'?'DT':'FP SP')+' CSV</b> below, or tap ⟳ to retry the live fetch.');
     return;
   }
-  el.innerHTML=S.sub==='progress'?viewProgress(D):S.sub==='lineman'?viewLineman(D):viewDef(D);
+  el.innerHTML=S.sub==='progress'?viewProgress(D):S.sub==='lineman'?viewLineman(D):S.sub==='analytics'?viewAnalytics(D):viewDef(D);
   if(S.sub==='def'){
     renderDefList();
     const q=$('#fq'),l=$('#flm'),s=$('#fst');
