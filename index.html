@@ -3,25 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1f5eff">
+<meta name="description" content="Alaknanda Division GK-2 inspection progress, lineman and deficiency dashboard">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5eff'/%3E%3Cpath d='M17 5 9 18h6l-1 9 9-14h-6z' fill='%23fff'/%3E%3C/svg%3E">
 <title>Alaknanda Division – Inspection Dashboard</title>
 <style>
 :root{--bg:#f3f5fa;--card:#fff;--ink:#16202e;--mut:#6b778a;--line:#e3e8f0;--pri:#1f5eff;--pri2:#e8eeff;--ok:#12a150;--bad:#d93025;--warn:#b26f00;--warnbg:#fff4d6;--badbg:#fde8e6;--okbg:#e3f6ec}
 @media(prefers-color-scheme:dark){:root{--bg:#0f1520;--card:#18202e;--ink:#e8edf6;--mut:#93a0b5;--line:#2a3547;--pri:#6b9bff;--pri2:#1f2d4d;--ok:#3ccf7e;--bad:#ff6b5e;--warn:#f0b43c;--warnbg:#3a2f12;--badbg:#3d1a17;--okbg:#12301f}}
 *{box-sizing:border-box}
-body{margin:0;font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Devanagari",sans-serif;background:var(--bg);color:var(--ink)}
+body{margin:0;font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Devanagari",sans-serif;background:var(--bg);color:var(--ink);-webkit-text-size-adjust:100%}
 header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);padding:10px 14px 0}
 .top{display:flex;justify-content:space-between;align-items:center;gap:8px;max-width:900px;margin:auto}
 h1{font-size:17px;margin:0}.top p{margin:0;color:var(--mut);font-size:12px}
-.icon{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;width:36px;height:36px;font-size:18px;cursor:pointer}
+.icon{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;width:40px;height:40px;font-size:18px;cursor:pointer}
+.icon.spin{animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
 .hd{max-width:900px;margin:auto}
 #status{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;font-size:11.5px}
 .sp{padding:2px 8px;border-radius:99px;background:var(--pri2)}
 .sp.err{background:var(--badbg);color:var(--bad)}.sp.ok{background:var(--okbg);color:var(--ok)}
 .tabs{display:flex;gap:6px}
-.tabs button{flex:1;padding:9px 6px;border:0;background:none;color:var(--mut);font-weight:600;font-size:14px;border-bottom:3px solid transparent;cursor:pointer}
+.tabs button{flex:1;padding:10px 6px;border:0;background:none;color:var(--mut);font-weight:600;font-size:14px;border-bottom:3px solid transparent;cursor:pointer}
 .tabs button.on{color:var(--pri);border-color:var(--pri)}
 .subs{display:flex;gap:6px;padding:8px 0}
-.subs button{flex:1;padding:7px;border:1px solid var(--line);border-radius:99px;background:var(--card);color:var(--ink);font-size:13px;cursor:pointer}
+.subs button{flex:1;padding:8px;border:1px solid var(--line);border-radius:99px;background:var(--card);color:var(--ink);font-size:13px;cursor:pointer}
 .subs button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
 main{padding:12px 14px 60px;max-width:900px;margin:auto}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px}
@@ -29,7 +34,6 @@ main{padding:12px 14px 60px;max-width:900px;margin:auto}
 .note{color:var(--mut);font-size:12px;margin:6px 0 0}
 .hero{display:flex;align-items:center;gap:14px}
 .hero .big{font-size:34px;font-weight:700;color:var(--pri);min-width:100px}
-.hero .bar{flex:1}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
 @media(min-width:600px){.grid{grid-template-columns:repeat(4,1fr)}}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
@@ -47,8 +51,8 @@ b.g{color:var(--ok)}b.r{color:var(--bad)}b.w{color:var(--warn)}
 .chip.g{background:var(--okbg);color:var(--ok)}.chip.n{background:var(--pri2);color:var(--pri)}
 .filters{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:10px}
 @media(min-width:600px){.filters{grid-template-columns:2fr 1fr 1fr}}
-input[type=search],select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:14px}
-.item{border-top:1px solid var(--line);padding:9px 0}
+input[type=search],select{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:14px}
+.item{border-top:1px solid var(--line);padding:9px 0;content-visibility:auto;contain-intrinsic-size:auto 70px}
 .item:first-child{border-top:0}
 .it{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
 .it small,.im{color:var(--mut);font-size:12px}
@@ -56,90 +60,30 @@ input[type=search],select{width:100%;padding:9px 10px;border:1px solid var(--lin
 .empty{text-align:center;padding:28px 12px;color:var(--mut)}
 details.card summary{cursor:pointer;list-style:none}
 details.card summary::-webkit-details-marker{display:none}
+details.card .body{margin-top:8px}
 .lmh{display:flex;justify-content:space-between;align-items:center;gap:10px}
 .lmh b.n{font-size:20px}
-.btn{display:inline-block;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);cursor:pointer;font-size:13px;margin:4px 6px 4px 0}
+.btn{display:inline-block;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);cursor:pointer;font-size:13px;margin:4px 6px 4px 0}
 a{color:var(--pri)}
-
-/* ===== Analytics refresh: modern responsive presentation ===== */
-:root{--radius:18px;--shadow:0 8px 28px rgba(24,39,75,.07)}
-body{font-size:14px;line-height:1.5}
-header{box-shadow:0 3px 18px rgba(20,35,65,.05);padding:14px 18px 0}
-.top,.hd{max-width:1180px}
-h1{font-size:20px;letter-spacing:-.35px}
-.top p{font-size:12px;letter-spacing:.2px}
-main{max-width:1180px;padding:20px 18px 64px}
-.card,.stat{border-radius:var(--radius);box-shadow:var(--shadow)}
-.card{padding:16px 18px;margin-bottom:14px}
-.card h3{font-size:14px;letter-spacing:.1px}
-.stat{padding:14px 15px;min-height:82px}
-.stat b{font-size:25px;letter-spacing:-.6px}
-.stat span{font-size:12px}
-.tabs button,.subs button{transition:background .18s ease,color .18s ease,border-color .18s ease}
-.subs button{padding:8px 12px;font-weight:600}
-.subs button.on{box-shadow:0 4px 12px rgba(31,94,255,.2)}
-.hero .big{font-size:42px;letter-spacing:-1.5px}
-.bar{height:9px}
-.row{padding:10px 0}
-.item{padding:12px 0}
-.filters{margin:12px 0}
-.analytics-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.analytics-panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:15px;min-width:0;box-shadow:var(--shadow)}
-.analytics-panel h3{margin:0 0 4px;font-size:14px}
-.analytics-panel .note{margin:0 0 12px}
-.metric-line{display:grid;grid-template-columns:minmax(0,1fr) minmax(65px,1.3fr) auto;gap:9px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
-.metric-line:first-of-type{border-top:0}
-.metric-label{font-size:12px;overflow-wrap:anywhere}
-.metric-value{font-size:12px;font-weight:700;text-align:right;white-space:nowrap}
-.metric-track{height:9px;border-radius:20px;background:var(--line);overflow:hidden}
-.metric-track i{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,var(--pri),#69a2ff)}
-.metric-track.red i{background:linear-gradient(90deg,var(--bad),#ff9b83)}
-.analytics-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
-.analytics-kpi{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:13px;box-shadow:var(--shadow)}
-.analytics-kpi strong{display:block;font-size:23px;letter-spacing:-.5px}
-.analytics-kpi span{font-size:11px;color:var(--mut)}
-.analytics-table{width:100%;border-collapse:collapse;font-size:12px}
-.analytics-table th,.analytics-table td{text-align:left;padding:9px 7px;border-top:1px solid var(--line)}
-.analytics-table th{color:var(--mut);font-weight:600}
-.analytics-table td:last-child,.analytics-table th:last-child{text-align:right}
-.trend-bars{height:145px;display:flex;align-items:flex-end;gap:7px;padding:10px 2px 0;border-bottom:1px solid var(--line)}
-.trend-col{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px}
-.trend-col i{display:block;width:min(100%,30px);min-height:3px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#78a8ff,var(--pri))}
-.trend-col b{font-size:10px;color:var(--mut);font-weight:600}
-.trend-col small{font-size:9px;color:var(--mut);white-space:nowrap}
-.analytics-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:10px;color:var(--mut);font-size:11px}
-@media(max-width:650px){
- header{padding:10px 12px 0}.top,.hd{max-width:none}h1{font-size:17px}
- main{padding:13px 11px 52px}
- .card{padding:13px 14px}
- .analytics-grid{grid-template-columns:1fr}
- .analytics-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
- .analytics-kpi{padding:11px}
- .analytics-kpi strong{font-size:21px}
- .metric-line{grid-template-columns:minmax(0,1fr) minmax(48px,1fr) auto;gap:7px}
- .trend-bars{gap:4px}
-}
-@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
-
+button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible,.btn:focus-within{outline:2px solid var(--pri);outline-offset:2px}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 <header>
   <div class="top">
     <div><h1>Alaknanda Division</h1><p>GK-2 · Inspection Dashboard</p></div>
-    <button class="icon" id="rf" title="Refresh from Google Sheet">⟳</button>
+    <button type="button" class="icon" id="rf" title="Refresh from Google Sheet" aria-label="Refresh from Google Sheet">⟳</button>
   </div>
   <div class="hd">
-    <div id="status"></div>
+    <div id="status" role="status" aria-live="polite"></div>
     <div class="tabs">
-      <button data-main="fpsp">FP SP Inspection</button>
-      <button data-main="dt">DT Inspection</button>
+      <button type="button" data-main="fpsp">FP SP Inspection</button>
+      <button type="button" data-main="dt">DT Inspection</button>
     </div>
     <div class="subs">
-      <button data-sub="progress">Progress</button>
-      <button data-sub="lineman">Lineman</button>
-      <button data-sub="def">Deficiency</button><button data-sub="analytics">Analytics</button>
+      <button type="button" data-sub="progress">Progress</button>
+      <button type="button" data-sub="lineman">Lineman</button>
+      <button type="button" data-sub="def">Deficiency</button>
     </div>
   </div>
 </header>
@@ -147,7 +91,7 @@ main{max-width:1180px;padding:20px 18px 64px}
   <div id="view"></div>
   <section class="card">
     <h3>Data source</h3>
-    <p class="note" style="margin-top:0">Reads your Google Sheet live and refreshes automatically every 5 minutes, so new inspection-form entries appear without any upload.</p>
+    <p class="note" style="margin-top:0">Reads your Google Sheet live and refreshes automatically every 5 minutes while this page is open, so new inspection-form entries appear without any upload.</p>
     <details style="margin-bottom:6px"><summary class="note">Manual fallback (only if the live fetch is blocked)</summary>
     <label class="btn">Load Excel file (.xlsx)<input type="file" accept=".xlsx,.xlsm,.xls" data-xlsx="1" hidden></label>
     <label class="btn">Load FP SP CSV<input type="file" accept=".csv,text/csv" data-file="fpsp" hidden></label>
@@ -163,6 +107,7 @@ main{max-width:1180px;padding:20px 18px 64px}
     </details>
   </section>
 </main>
+<noscript><p style="padding:20px">This dashboard needs JavaScript.</p></noscript>
 
 <script>
 (function(){
@@ -172,7 +117,8 @@ main{max-width:1180px;padding:20px 18px 64px}
 const SHEET='1mmvLq7GbnX935I4-EzTnZXA-K2nccotRJYS8PppVqOc';
 const gv=n=>'https://docs.google.com/spreadsheets/d/'+SHEET+'/gviz/tq?tqx=out:csv&headers=1&sheet='+encodeURIComponent(n);
 const AK_CFG={fpsp:gv('FP SP Inspection'),dt:gv('DT Inspection')};
-const REFRESH_MS=5*60*1000;
+const REFRESH_MS=5*60*1000, FETCH_TIMEOUT=25000;
+const XLSX_URL='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 /* ================= RULES ================= */
@@ -207,7 +153,10 @@ const FIX_YES=/^(ok|okay|0k|yes|y|done|हाँ|हां|ठीक|fixed|recti
 const FIX_NO=/^(no|n|nahi|nhi|नहीं|नही)$/i;
 
 /* ================= STATE ================= */
-const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',data:{fpsp:null,dt:null},src:{fpsp:{s:'none'},dt:{s:'none'}}};
+const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',open:new Set(),lmMap:new Map(),
+  data:{fpsp:null,dt:null},src:{fpsp:{s:'none'},dt:{s:'none'}}};
+const RAW={fpsp:'',dt:''};
+let lastLoad=0,qTimer=0,busy=0;
 
 /* ================= UTILS ================= */
 const $=s=>document.querySelector(s);
@@ -286,18 +235,18 @@ function buildFP(rows){
     cat:c(/^asset-final$/i),dt:c(/^dt_code$/i),date:c(/^date of visit$/i),lm:c(/लाइनमैन/),rem:c(/आई कमी/),fix:c(/दूर की/)};
   if(ci.pole<0) throw new Error('Columns not recognised – expected the FP SP Inspection tab');
   const rules=prep(FP_RULES,H),map=new Map();
-  rows.slice(1).forEach(row=>{
-    const pole=v(row,ci.pole); if(!pole) return;
+  for(let i=1;i<rows.length;i++){
+    const row=rows[i],pole=v(row,ci.pole); if(!pole) continue;
     const st=v(row,ci.st),d=pd(v(row,ci.date)),lm=v(row,ci.lm);
     const done=!!(d||lm||(st&&!/pending/i.test(st)));
-    const f=finish(row,ci,evalRules(row,H,rules),done);
+    const f=done?finish(row,ci,evalRules(row,H,rules),done):{defs:[],remark:'',fix:'',fixRaw:''};
     const cat=v(row,ci.cat)||'Pole';
     const o={name:pole,sub:v(row,ci.sub)||'—',fdr:v(row,ci.fdr),dt:v(row,ci.dt),cat,
       grp:/pole/i.test(cat)?'Pole':'Pillar',lm,dk:d&&d.key,dl:d&&d.label,done,
       defs:f.defs,remark:f.remark,fix:f.fix,fixRaw:f.fixRaw};
-    const key=[o.dt,o.fdr,o.name].join('|'),old=map.get(key);
+    const key=o.dt+'|'+o.fdr+'|'+o.name,old=map.get(key);
     if(!old||(!old.done&&o.done)||(old.done&&o.done&&o.defs.length>old.defs.length)) map.set(key,o);
-  });
+  }
   return {rows:[...map.values()],note:''};
 }
 function buildDT(rows){
@@ -307,18 +256,18 @@ function buildDT(rows){
   if(ci.eq<0) throw new Error('Columns not recognised – expected the DT Inspection tab');
   const rules=prep(DT_RULES,H),checkCols=[...new Set(rules.reduce((a,r)=>a.concat(r.cols),[]))];
   const map=new Map();let orphan=0;
-  rows.slice(1).forEach(row=>{
-    const eq=v(row,ci.eq),code=v(row,ci.code);
-    if(!eq&&!code){orphan++;return;}
+  for(let i=1;i<rows.length;i++){
+    const row=rows[i],eq=v(row,ci.eq),code=v(row,ci.code);
+    if(!eq&&!code){orphan++;continue;}
     const d=pd(v(row,ci.date)),lm=v(row,ci.lm);
-    const done=!!(d||lm||checkCols.some(i=>v(row,i)));
-    const f=finish(row,ci,evalRules(row,H,rules),done);
+    const done=!!(d||lm||checkCols.some(k=>v(row,k)));
+    const f=done?finish(row,ci,evalRules(row,H,rules),done):{defs:[],remark:'',fix:'',fixRaw:''};
     const typ=v(row,ci.typ)||'Asset';
     const o={name:code||eq,eq,sub:v(row,ci.sub)||'—',fl:v(row,ci.fl),typ,grp:/rmu/i.test(typ)?'RMU':'Transformer',
       kva:v(row,ci.kva),lm,dk:d&&d.key,dl:d&&d.label,done,defs:f.defs,remark:f.remark,fix:f.fix,fixRaw:f.fixRaw};
     const key=eq||code,old=map.get(key);
     if(!old||(!old.done&&o.done)) map.set(key,o);
-  });
+  }
   return {rows:[...map.values()],note:orphan?orphan+' row(s) without asset ID ignored':''};
 }
 
@@ -332,21 +281,51 @@ function ingest(key,text,origin){
   S.data[key]=D;
   S.src[key]={s:'ok',n:D.rows.length,ts:new Date(),origin,manual:origin!=='live',extra:D.note};
 }
+async function fetchText(url){
+  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),FETCH_TIMEOUT);
+  try{
+    const r=await fetch(url,{cache:'no-store',signal:ctl.signal});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return await r.text();
+  }catch(e){
+    if(e.name==='AbortError') throw new Error('Timed out – Google Sheet did not respond');
+    throw e;
+  }finally{clearTimeout(t);}
+}
 async function loadLive(key,force){
   if(!AK_CFG[key]) return;
   if(S.src[key].manual&&!force) return;
-  S.src[key]=Object.assign({},S.src[key],{s:'loading'});renderStatus();
+  if(!S.data[key]){S.src[key]={s:'loading'};renderStatus();}
+  let changed=false;
   try{
-    const r=await fetch(AK_CFG[key],{cache:'no-store'});
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    ingest(key,await r.text(),'live');
+    let text;
+    try{text=await fetchText(AK_CFG[key]);}
+    catch(e){ if(/Failed to fetch|NetworkError|Load failed|HTTP 5/i.test(e.message)){await new Promise(r=>setTimeout(r,1500));text=await fetchText(AK_CFG[key]);} else throw e; }
+    if(text===RAW[key]&&S.data[key]){
+      S.src[key]=Object.assign({},S.src[key],{s:'ok',ts:new Date(),manual:false});
+    }else{
+      ingest(key,text,'live');RAW[key]=text;changed=true;
+    }
   }catch(e){
     const m=/Failed to fetch|NetworkError|Load failed/i.test(e.message)?'Live fetch blocked/offline – use Load CSV (or host this file on GitHub Pages)':e.message;
-    S.src[key]={s:'err',msg:m,manual:false};
+    S.src[key]={s:'err',msg:m,manual:false};changed=true;
   }
-  render();
+  if(changed) render(true); else renderStatus();
 }
-function loadAll(force){loadLive('fpsp',force);loadLive('dt',force);}
+async function loadAll(force){
+  lastLoad=Date.now();
+  const b=$('#rf');b.classList.add('spin');
+  await Promise.all([loadLive('fpsp',force),loadLive('dt',force)]);
+  b.classList.remove('spin');
+}
+function loadXLSX(){
+  if(window.XLSX) return Promise.resolve();
+  return new Promise((res,rej)=>{
+    const s=document.createElement('script');s.src=XLSX_URL;s.onload=res;
+    s.onerror=()=>rej(new Error('Excel reader could not load (offline?) – use the CSV buttons'));
+    document.head.appendChild(s);
+  });
+}
 
 /* ================= RENDER HELPERS ================= */
 const chips=defs=>defs.map(d=>'<span class="chip '+(d.t==='remark'?'w':'r')+'">'+esc(d.label)+'</span>').join('');
@@ -364,6 +343,7 @@ function groupBy(rows,fn){
   return [...m.values()];
 }
 const defRows=rows=>rows.filter(r=>r.done&&r.defs.length);
+const byDateDesc=(a,b)=>(b.dk||'').localeCompare(a.dk||'')||a.name.localeCompare(b.name);
 
 /* ================= VIEWS ================= */
 function viewProgress(D){
@@ -385,11 +365,15 @@ function viewProgress(D){
   return h;
 }
 
+function lmBody(key){
+  return (S.lmMap.get(key)||[]).map(r=>'<div class="item"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.dl||'No date')+'</small></div><div class="im">'+esc(r.sub)+(r.kva?' · '+esc(r.kva):'')+'</div>'+(r.defs.length?'<div>'+chips(r.defs)+fixBadge(r)+'</div>':'<div><span class="chip g">All OK</span></div>')+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'</div>').join('');
+}
 function viewLineman(D){
   const done=D.rows.filter(r=>r.done);
+  S.lmMap=new Map();
   if(!done.length) return empty('No inspections recorded yet.');
   const m=new Map();
-  done.forEach(r=>{const k=(r.lm||'').toLowerCase()||'—';let g=m.get(k);if(!g){g={k:r.lm||'Not recorded',list:[]};m.set(k,g);}g.list.push(r);});
+  done.forEach(r=>{const k=(r.lm||'').toLowerCase()||'—';let g=m.get(k);if(!g){g={key:k,k:r.lm||'Not recorded',list:[]};m.set(k,g);}g.list.push(r);});
   const arr=[...m.values()].sort((a,b)=>b.list.length-a.list.length);
   let h='<div class="grid">'+stat('Linemen',arr.length)+stat('Inspections',num(done.length),'g')+stat('Assets with deficiency',defRows(done).length,'r')+stat('Deficiency items',done.reduce((s,r)=>s+r.defs.length,0),'w')+'</div>';
   arr.forEach(g=>{
@@ -397,71 +381,29 @@ function viewLineman(D){
     const split={};g.list.forEach(r=>split[r.grp]=(split[r.grp]||0)+1);
     const last=g.list.map(r=>r.dk).filter(Boolean).sort().pop();
     const lastL=last?(g.list.find(r=>r.dk===last).dl):'—';
-    const list=g.list.slice().sort((a,b)=>(b.dk||'').localeCompare(a.dk||'')||a.name.localeCompare(b.name));
-    h+='<details class="card"><summary><div class="lmh"><div><b>'+esc(g.k)+'</b><div class="note" style="margin:2px 0 0">'+Object.keys(split).map(k=>k+' '+split[k]).join(' · ')+' · last visit: '+esc(lastL)+'</div></div><div style="text-align:right"><b class="n">'+g.list.length+'</b><div class="note" style="margin:0">'+dfl.length+' deficient / '+items+' items</div></div></div>'+bar(pct(dfl.length,g.list.length),true)+'</summary>';
-    h+='<div style="margin-top:8px">'+list.map(r=>'<div class="item"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.dl||'No date')+'</small></div><div class="im">'+esc(r.sub)+(r.kva?' · '+esc(r.kva):'')+'</div>'+(r.defs.length?'<div>'+chips(r.defs)+fixBadge(r)+'</div>':'<div><span class="chip g">All OK</span></div>')+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'</div>').join('')+'</div></details>';
+    S.lmMap.set(g.key,g.list.slice().sort(byDateDesc));
+    h+='<details class="card" data-k="'+esc(g.key)+'"'+(S.open.has(g.key)?' open':'')+'><summary><div class="lmh"><div><b>'+esc(g.k)+'</b><div class="note" style="margin:2px 0 0">'+Object.keys(split).map(k=>k+' '+split[k]).join(' · ')+' · last visit: '+esc(lastL)+'</div></div><div style="text-align:right"><b class="n">'+g.list.length+'</b><div class="note" style="margin:0">'+dfl.length+' deficient / '+items+' items</div></div></div>'+bar(pct(dfl.length,g.list.length),true)+'</summary><div class="body"></div></details>';
   });
   return h;
 }
 
-
-function viewAnalytics(D){
-  const rows=D.rows, done=rows.filter(r=>r.done), deficient=defRows(rows);
-  const open=deficient.filter(r=>r.fix!=='rect'), rect=deficient.filter(r=>r.fix==='rect');
-  const rate=pct(done.length,rows.length);
-  const monthly=new Map();
-  done.forEach(r=>{
-    const k=r.dk&&/^\d{4}-\d{2}/.test(r.dk)?r.dk.slice(0,7):'';
-    if(!k)return;
-    monthly.set(k,(monthly.get(k)||0)+1);
-  });
-  const months=[...monthly.entries()].sort((a,b)=>a[0].localeCompare(b[0])).slice(-8);
-  const maxMonth=Math.max(1,...months.map(x=>x[1]));
-  const trend=months.length?'<div class="trend-bars">'+months.map(([k,n])=>'<div class="trend-col"><small>'+n+'</small><i style="height:'+Math.max(3,n/maxMonth*100)+'%"></i><b>'+esc(k.slice(5))+'</b></div>').join('')+'</div>':'<p class="note">Date-wise monthly trend will appear when inspection dates are available.</p>';
-  const subs=groupBy(rows,r=>r.sub).map(g=>{
-    const list=rows.filter(r=>(r.sub||'—')===g.k),d=list.filter(r=>r.done).length;
-    return {name:g.k,total:list.length,done:d,rate:pct(d,list.length),def:list.filter(r=>r.done&&r.defs.length).length};
-  }).sort((a,b)=>b.rate-a.rate||b.total-a.total).slice(0,8);
-  const subHtml=subs.length?subs.map(s=>'<div class="metric-line"><div class="metric-label">'+esc(s.name)+'</div><div class="metric-track"><i style="width:'+s.rate+'%"></i></div><div class="metric-value">'+s.rate+'% <span style="color:var(--mut);font-weight:400">('+s.done+'/'+s.total+')</span></div></div>').join(''):'<p class="note">No substation records available.</p>';
-  const lmMap=new Map();
-  done.forEach(r=>{const k=r.lm||'Not recorded';let x=lmMap.get(k);if(!x){x={name:k,total:0,def:0,items:0};lmMap.set(k,x);}x.total++;if(r.defs.length){x.def++;x.items+=r.defs.length;}});
-  const lms=[...lmMap.values()].sort((a,b)=>b.total-a.total).slice(0,8);
-  const lmHtml=lms.length?'<table class="analytics-table"><thead><tr><th>Lineman</th><th>Inspected</th><th>Deficient assets</th></tr></thead><tbody>'+lms.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+x.total+'</td><td>'+x.def+'</td></tr>').join('')+'</tbody></table>':'<p class="note">Lineman data not available.</p>';
-  const cat=new Map();
-  deficient.forEach(r=>r.defs.forEach(d=>{const k=d.label.replace(/ \(\d+\)$/,'');cat.set(k,(cat.get(k)||0)+1);}));
-  const cats=[...cat.entries()].sort((a,b)=>b[1]-a[1]).slice(0,7),maxCat=Math.max(1,...cats.map(x=>x[1]));
-  const catHtml=cats.length?cats.map(([k,n])=>'<div class="metric-line"><div class="metric-label">'+esc(k)+'</div><div class="metric-track red"><i style="width:'+(n/maxCat*100)+'%"></i></div><div class="metric-value">'+n+'</div></div>').join(''):'<p class="note">No recorded deficiencies.</p>';
-  return '<div class="analytics-kpis">'+
-    '<div class="analytics-kpi"><strong>'+rate+'%</strong><span>Inspection coverage</span></div>'+
-    '<div class="analytics-kpi"><strong>'+num(rows.length-done.length)+'</strong><span>Pending assets</span></div>'+
-    '<div class="analytics-kpi"><strong>'+num(deficient.length)+'</strong><span>Assets with deficiency</span></div>'+
-    '<div class="analytics-kpi"><strong>'+num(rect.length)+'</strong><span>Assets marked rectified</span></div>'+
-    '</div>'+
-    '<div class="analytics-grid">'+
-    '<section class="analytics-panel"><h3>Monthly inspection trend</h3><p class="note">Completed inspections · latest 8 available months</p>'+trend+'<div class="analytics-foot"><span>Total inspected: '+num(done.length)+'</span><span>Open / unclear: '+num(open.length)+'</span></div></section>'+
-    '<section class="analytics-panel"><h3>Substation performance</h3><p class="note">Top 8 by inspection coverage</p>'+subHtml+'</section>'+
-    '<section class="analytics-panel"><h3>Lineman activity</h3><p class="note">Completed assets and deficient assets</p>'+lmHtml+'</section>'+
-    '<section class="analytics-panel"><h3>Frequent deficiency categories</h3><p class="note">Counts across inspected assets; based on existing rules</p>'+catHtml+'</section>'+
-    '</div>'+
-    '<section class="card" style="margin-top:14px"><h3>Analytics definitions</h3><p class="note">Coverage = completed unique assets ÷ total unique assets. Deficiency and rectification counts use the existing FP/SP and DT rules and the current rectified-column interpretation. Monthly trend excludes records without a recognised date. These are descriptive operational metrics, not a safety-risk score.</p></section>';
-}
-
 function viewDef(D){
-  const done=D.rows.filter(r=>r.done),wd=defRows(done),pending=D.rows.filter(r=>!r.done);
+  const done=D.rows.filter(r=>r.done),wd=defRows(done);
+  if(!done.length) return empty('No inspections recorded yet, so there are no deficiencies to show.');
   const items=wd.reduce((s,r)=>s+r.defs.length,0),rem=wd.filter(r=>r.remark).length;
   const open=wd.filter(r=>r.fix!=='rect').length;
   const tc={};wd.forEach(r=>r.defs.forEach(d=>{const k=d.t==='remark'?'Team remark':d.label.replace(/ \(\d+\)$/,'');tc[k]=(tc[k]||0)+1;}));
   const tk=Object.keys(tc).sort((a,b)=>tc[b]-tc[a]);
-  const lms=[...new Set(D.rows.map(r=>r.lm||'—'))].sort();
-  let h='<div class="grid">'+stat('Assets with deficiency',wd.length,'r')+stat('Deficiency items',items,'w')+stat('From team remark',rem,'w')+stat('Not yet rectified',open,open?'r':'g')+stat('Pending / not checked',num(pending.length),pending.length?'w':'g')+'</div>';
+  const lms=[...new Set(wd.map(r=>r.lm||'—'))].sort();
+  let h='<div class="grid">'+stat('Assets with deficiency',wd.length,'r')+stat('Deficiency items',items,'w')+stat('From team remark',rem,'w')+stat('Not yet rectified',open,open?'r':'g')+'</div>';
   h+='<section class="card"><h3>Deficiency summary</h3>'+(tk.length?tk.map((k,i)=>'<div class="row'+(i?'':' first')+'"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],wd.length),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
-  h+='<section class="card"><h3>Deficiency detail</h3><div class="filters"><input type="search" id="fq" placeholder="Search asset / substation / remark" value="'+esc(S.q)+'"><select id="flm"><option value="">All linemen</option>'+lms.map(n=>'<option'+(S.lm===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fst"><option value="">All status</option><option value="open"'+(S.st==='open'?' selected':'')+'>Not rectified</option><option value="rect"'+(S.st==='rect'?' selected':'')+'>Rectified</option><option value="pending"'+(S.st==='pending'?' selected':'')+'>Pending / not checked</option></select></div><div id="deflist"></div></section>';
+  h+='<section class="card"><h3>Deficiency detail</h3><div class="filters"><input type="search" id="fq" placeholder="Search asset / substation / remark" aria-label="Search deficiencies" value="'+esc(S.q)+'"><select id="flm" aria-label="Filter by lineman"><option value="">All linemen</option>'+lms.map(n=>'<option'+(S.lm===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fst" aria-label="Filter by status"><option value="">All status</option><option value="open"'+(S.st==='open'?' selected':'')+'>Not rectified</option><option value="rect"'+(S.st==='rect'?' selected':'')+'>Rectified</option></select></div><div id="deflist"></div></section>';
   return h;
 }
 function renderDefList(){
   const D=S.data[S.main],el=$('#deflist'); if(!D||!el) return;
   const q=S.q.toLowerCase();
-  let list=(S.st==='pending'?D.rows.filter(r=>!r.done):defRows(D.rows)).filter(r=>{
+  const list=defRows(D.rows).filter(r=>{
     if(S.lm&&(r.lm||'—')!==S.lm) return false;
     if(S.st==='rect'&&r.fix!=='rect') return false;
     if(S.st==='open'&&r.fix==='rect') return false;
@@ -469,7 +411,7 @@ function renderDefList(){
     return true;
   }).sort((a,b)=>(b.dk||'').localeCompare(a.dk||'')||b.defs.length-a.defs.length);
   const cap=150;
-  el.innerHTML=list.length?list.slice(0,cap).map(r=>'<div class="item"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.grp)+(r.kva?' · '+esc(r.kva):'')+'</small></div><div class="im">'+esc(r.sub)+(r.fdr?' · '+esc(r.fdr):'')+' · '+esc(r.lm||'—')+' · '+esc(r.dl||'No date')+'</div><div>'+(r.done?chips(r.defs)+fixBadge(r):'<span class="chip w">Pending / not checked</span>')+'</div>'+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'</div>').join('')+(list.length>cap?'<p class="note">Showing first '+cap+' of '+list.length+' – narrow with the filters.</p>':''):'<p class="note">'+(S.st==='pending'?'No pending or unchecked assets.':'No matching deficiencies.')+'</p>';
+  el.innerHTML=list.length?list.slice(0,cap).map(r=>'<div class="item"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.grp)+(r.kva?' · '+esc(r.kva):'')+'</small></div><div class="im">'+esc(r.sub)+(r.fdr?' · '+esc(r.fdr):'')+' · '+esc(r.lm||'—')+' · '+esc(r.dl||'No date')+'</div><div>'+chips(r.defs)+fixBadge(r)+'</div>'+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'</div>').join('')+(list.length>cap?'<p class="note">Showing first '+cap+' of '+list.length+' – narrow with the filters.</p>':''):'<p class="note">No matching deficiencies.</p>';
 }
 
 /* ================= MAIN RENDER ================= */
@@ -483,56 +425,64 @@ function renderStatus(){
     return '<span class="sp">'+nm[k]+': no data loaded</span>';
   }).join('');
 }
-function render(){
+function render(keepScroll){
+  const y=keepScroll?window.scrollY:0;
   document.querySelectorAll('[data-main]').forEach(b=>b.classList.toggle('on',b.dataset.main===S.main));
   document.querySelectorAll('[data-sub]').forEach(b=>b.classList.toggle('on',b.dataset.sub===S.sub));
   renderStatus();
   const D=S.data[S.main],el=$('#view');
   if(!D){
     const s=S.src[S.main];
-    el.innerHTML=empty(s.s==='loading'?'Loading from Google Sheet…':'No data loaded for this tab yet.<br>Use <b>Load '+(S.main==='dt'?'DT':'FP SP')+' CSV</b> below, or tap ⟳ to retry the live fetch.');
+    el.innerHTML=empty(s.s==='loading'?'Loading from Google Sheet…':'No data loaded for this tab yet.<br>Tap ⟳ to retry the live fetch, or use the manual fallback below.');
     return;
   }
-  el.innerHTML=S.sub==='progress'?viewProgress(D):S.sub==='lineman'?viewLineman(D):S.sub==='analytics'?viewAnalytics(D):viewDef(D);
+  el.innerHTML=S.sub==='progress'?viewProgress(D):S.sub==='lineman'?viewLineman(D):viewDef(D);
   if(S.sub==='def'){
     renderDefList();
     const q=$('#fq'),l=$('#flm'),s=$('#fst');
-    if(q) q.oninput=e=>{S.q=e.target.value;renderDefList();};
+    if(q) q.oninput=e=>{S.q=e.target.value;clearTimeout(qTimer);qTimer=setTimeout(renderDefList,150);};
     if(l) l.onchange=e=>{S.lm=e.target.value;renderDefList();};
     if(s) s.onchange=e=>{S.st=e.target.value;renderDefList();};
   }
+  if(keepScroll) window.scrollTo(0,y);
 }
 
 /* ================= EVENTS ================= */
-document.querySelectorAll('[data-main]').forEach(b=>b.onclick=()=>{S.main=b.dataset.main;S.q='';S.lm='';S.st='';render();});
+$('#view').addEventListener('toggle',e=>{
+  const d=e.target; if(!d||!d.dataset||!d.dataset.k) return;
+  if(d.open){S.open.add(d.dataset.k);const b=d.querySelector('.body');if(b&&!b.firstChild)b.innerHTML=lmBody(d.dataset.k);}
+  else S.open.delete(d.dataset.k);
+},true);
+document.querySelectorAll('[data-main]').forEach(b=>b.onclick=()=>{S.main=b.dataset.main;S.q='';S.lm='';S.st='';S.open.clear();render();window.scrollTo(0,0);});
 document.querySelectorAll('[data-sub]').forEach(b=>b.onclick=()=>{S.sub=b.dataset.sub;render();window.scrollTo(0,0);});
 $('#rf').onclick=()=>loadAll(true);
 document.querySelectorAll('[data-file]').forEach(inp=>inp.onchange=async e=>{
   const f=e.target.files[0],key=inp.dataset.file; if(!f) return;
-  try{ingest(key,await f.text(),'file');}catch(err){S.src[key]={s:'err',msg:err.message,manual:true};}
+  try{ingest(key,await f.text(),'file');RAW[key]='';}catch(err){S.src[key]={s:'err',msg:err.message,manual:true};}
   e.target.value='';render();
 });
-
 document.querySelectorAll('[data-xlsx]').forEach(inp=>inp.onchange=async e=>{
   const f=e.target.files[0]; if(!f) return;
   try{
-    if(!window.XLSX) throw new Error('Excel reader could not load (offline?) – use the CSV buttons');
+    await loadXLSX();
     const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:true});
     const find=re=>wb.SheetNames.find(n=>re.test(n.trim()));
     const sheets={fpsp:find(/^fp sp inspection$/i),dt:find(/^dt inspection$/i)};
     ['fpsp','dt'].forEach(k=>{
       try{
         if(!sheets[k]) throw new Error('Sheet "'+(k==='dt'?'DT Inspection':'FP SP Inspection')+'" not found in this file');
-        ingest(k,XLSX.utils.sheet_to_csv(wb.Sheets[sheets[k]],{blankrows:false,dateNF:'yyyy-mm-dd'}),'file');
+        ingest(k,XLSX.utils.sheet_to_csv(wb.Sheets[sheets[k]],{blankrows:false,dateNF:'yyyy-mm-dd'}),'file');RAW[k]='';
       }catch(err){S.src[k]={s:'err',msg:err.message,manual:true};}
     });
   }catch(err){['fpsp','dt'].forEach(k=>{S.src[k]={s:'err',msg:err.message,manual:true};});}
   e.target.value='';render();
 });
+/* auto-refresh only while the page is visible; catch up when returning to it */
+setInterval(()=>{if(!document.hidden) loadAll(false);},REFRESH_MS);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Date.now()-lastLoad>REFRESH_MS) loadAll(false);});
 
 render();
 loadAll();
-setInterval(()=>loadAll(false),REFRESH_MS);
 })();
 </script>
 </body>
