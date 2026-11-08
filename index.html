@@ -127,7 +127,7 @@ const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','De
 const FP_RULES=[
  {l:'Door damaged',re:/^Pillar.*दरवा.*ठीक है/,t:'bool'},
  {l:'Door not locked',re:/^Pillar.*(बंद|lock)/i,t:'bool'},
- {l:'Pillar earthing = 0',re:/^Pillar.*अर्थिंग की संख्या/,t:'zero'},
+ {l:'Pillar earthing less than 2',re:/^Pillar.*अर्थिंग की संख्या/,t:'lt2'},
  {l:'Plinth poor',re:/Plinth|प्लिंथ/i,t:'bool'},
  {l:'HRC fuse poor',re:/एचआरसी फ्यूज स्थिति/,t:'bool'},
  {l:'HRC base needed',re:/HRC बेस/,t:'need'},
@@ -207,6 +207,7 @@ function evalRules(row,H,rules){
     const val=norm(row[ci]); if(!val) return;
     const n=parseFloat(val); let bad=false;
     if(r.t==='zero') bad=isNaN(n)?isBad(val):n===0;
+    else if(r.t==='lt2') bad=isNaN(n)?isBad(val):n<2;
     else if(r.t==='need') bad=!isNaN(n)&&n>0;
     else if(r.t==='no') bad=FIX_NO.test(val);
     else bad=isBad(val);
@@ -237,6 +238,8 @@ function buildFP(rows){
     cat:c(/^asset-final$/i),dt:c(/^dt_code$/i),date:c(/^date of visit$/i),lm:c(/लाइनमैन/),rem:c(/आई कमी/),fix:c(/दूर की/)};
   if(ci.pole<0) throw new Error('Columns not recognised – expected the FP SP Inspection tab');
   const rules=prep(FP_RULES,H),map=new Map();
+  const fpFields=[];
+  rules.forEach(r=>r.cols.forEach(ci2=>{const label=H[ci2];if(!fpFields.some(x=>x.key===label))fpFields.push({key:label,label,group:/^Pole/i.test(label)?'Pole':'Pillar',ruleType:r.t});}));
   for(let i=1;i<rows.length;i++){
     const row=rows[i],pole=v(row,ci.pole); if(!pole) continue;
     const st=v(row,ci.st),d=pd(v(row,ci.date)),lm=v(row,ci.lm);
@@ -245,11 +248,19 @@ function buildFP(rows){
     const cat=v(row,ci.cat)||'Pole';
     const o={name:pole,sub:v(row,ci.sub)||'—',fdr:v(row,ci.fdr),dt:v(row,ci.dt),cat,
       grp:/pole/i.test(cat)?'Pole':'Pillar',lm,dk:d&&d.key,dl:d&&d.label,done,
-      defs:f.defs,remark:f.remark,fix:f.fix,fixRaw:f.fixRaw};
+      defs:f.defs,remark:f.remark,fix:f.fix,fixRaw:f.fixRaw,fpAnomalies:{}};
+    rules.forEach(r=>r.cols.forEach(ci2=>{const val=norm(row[ci2]);if(!val)return;const n=parseFloat(val);let bad=false;
+      if(r.t==='zero')bad=isNaN(n)?isBad(val):n===0;
+      else if(r.t==='lt2')bad=isNaN(n)?isBad(val):n<2;
+      else if(r.t==='need')bad=!isNaN(n)&&n>0;
+      else if(r.t==='no')bad=FIX_NO.test(val);
+      else bad=isBad(val);
+      if(bad)o.fpAnomalies[H[ci2]]=1;
+    }));
     const key=o.dt+'|'+o.fdr+'|'+o.name,old=map.get(key);
     if(!old||(!old.done&&o.done)||(old.done&&o.done&&o.defs.length>old.defs.length)) map.set(key,o);
   }
-  return {rows:[...map.values()],note:''};
+  return {rows:[...map.values()],fpFields:fpFields,note:''};
 }
 function buildDT(rows){
   const H=rows[0].map(norm),c=re=>H.findIndex(h=>re.test(h));
@@ -393,6 +404,7 @@ function viewLineman(D){
 
 function viewAnalytics(D){const rows=D.rows,done=rows.filter(r=>r.done),deficient=defRows(rows),pending=rows.filter(r=>!r.done),rect=deficient.filter(r=>r.fix==='rect'),open=deficient.filter(r=>r.fix!=='rect'),rate=pct(done.length,rows.length);const monthly=new Map();done.forEach(r=>{const k=r.dk&&/^\d{4}-\d{2}/.test(r.dk)?r.dk.slice(0,7):'';if(k)monthly.set(k,(monthly.get(k)||0)+1);});const months=[...monthly.entries()].sort((a,b)=>a[0].localeCompare(b[0])).slice(-8),mx=Math.max(1,...months.map(x=>x[1]));const trend=months.length?'<div class="trend-bars">'+months.map(([k,n])=>'<div class="trend-col"><small>'+n+'</small><i style="height:'+Math.max(3,n/mx*100)+'%"></i><b>'+esc(k.slice(5))+'</b></div>').join('')+'</div>':'<p class="note">Date-wise monthly trend will appear when inspection dates are available.</p>';const subs=groupBy(rows,r=>r.sub).map(g=>{const a=rows.filter(r=>(r.sub||'—')===g.k),d=a.filter(r=>r.done).length;return{name:g.k,total:a.length,done:d,rate:pct(d,a.length)};}).sort((a,b)=>b.rate-a.rate||b.total-a.total).slice(0,8);const sh=subs.map(s=>'<div class="metric-line"><div class="metric-label">'+esc(s.name)+'</div><div class="metric-track"><i style="width:'+s.rate+'%"></i></div><div class="metric-value">'+s.rate+'% ('+s.done+'/'+s.total+')</div></div>').join('');const lm=new Map();done.forEach(r=>{const k=r.lm||'Not recorded';let x=lm.get(k);if(!x){x={n:0,d:0};lm.set(k,x);}x.n++;if(r.defs.length)x.d++;});const la=[...lm.entries()].sort((a,b)=>b[1].n-a[1].n).slice(0,8);const cats=new Map();deficient.forEach(r=>r.defs.forEach(d=>{const k=d.label.replace(/ \(\d+\)$/,'');cats.set(k,(cats.get(k)||0)+1);}));const ca=[...cats.entries()].sort((a,b)=>b[1]-a[1]).slice(0,7),cm=Math.max(1,...ca.map(x=>x[1]));return '<div class="analytics-kpis"><div class="analytics-kpi"><strong>'+rate+'%</strong><span>Inspection coverage</span></div><div class="analytics-kpi"><strong>'+num(pending.length)+'</strong><span>Pending assets</span></div><div class="analytics-kpi"><strong>'+num(deficient.length)+'</strong><span>Assets with deficiency</span></div><div class="analytics-kpi"><strong>'+num(rect.length)+'</strong><span>Assets marked rectified</span></div></div><div class="analytics-grid"><section class="analytics-panel"><h3>Monthly inspection trend</h3><p class="note">Completed inspections · latest 8 available months</p>'+trend+'<p class="note">Open / unclear deficiencies: '+num(open.length)+'</p></section><section class="analytics-panel"><h3>Substation performance</h3><p class="note">Top 8 by inspection coverage</p>'+sh+'</section><section class="analytics-panel"><h3>Lineman activity</h3><table class="analytics-table"><thead><tr><th>Lineman</th><th>Inspected</th><th>Deficient</th></tr></thead><tbody>'+la.map(([k,x])=>'<tr><td>'+esc(k)+'</td><td>'+x.n+'</td><td>'+x.d+'</td></tr>').join('')+'</tbody></table></section><section class="analytics-panel"><h3>Frequent deficiency categories</h3>'+ca.map(([k,n])=>'<div class="metric-line"><div class="metric-label">'+esc(k)+'</div><div class="metric-track red"><i style="width:'+(n/cm*100)+'%"></i></div><div class="metric-value">'+n+'</div></div>').join('')+'</section></div>';}
 function viewDTDeficiencySummary(D){const fields=D.dtFields||[];const make=(title,group,label)=>{const cols=fields.filter(f=>f.group===group),groups=new Map();D.rows.filter(r=>r.grp===(group==='RMU'?'RMU':'Transformer')).forEach(r=>{const key=[r.sub||'—',r.fl||'—',r.typ||'Asset'].join('||');let g=groups.get(key);if(!g){g={sub:r.sub||'—',fl:r.fl||'—',typ:r.typ||'Asset',assets:0,counts:{}};groups.set(key,g);}g.assets++;if(r.done)cols.forEach(c=>{g.counts[c.key]=(g.counts[c.key]||0)+(r.dtAnomalies&&r.dtAnomalies[c.key]?1:0);});});const list=[...groups.values()].sort((a,b)=>a.sub.localeCompare(b.sub)||a.fl.localeCompare(b.fl)||a.typ.localeCompare(b.typ));const th='<th>Substation_NAME</th><th>FL Code</th><th>Asset Type</th><th>'+label+' Count</th>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('');const body=list.map(g=>'<tr><td>'+esc(g.sub)+'</td><td>'+esc(g.fl)+'</td><td>'+esc(g.typ)+'</td><td class="dt-total">'+g.assets+'</td>'+cols.map(c=>'<td class="dt-count">'+(g.counts[c.key]||0)+'</td>').join('')+'</tr>').join('');return '<section class="card dt-summary"><h3>'+title+'</h3><div class="dt-table-wrap"><table class="dt-table"><thead><tr>'+th+'</tr></thead><tbody>'+(body||'<tr><td colspan="'+(4+cols.length)+'">No '+group+' records found.</td></tr>')+'</tbody></table></div></section>';};return '<div class="dt-summary-note">Substation-wise anomaly counts · only completed inspections are included in green count cells; pending / not checked assets are excluded.</div>'+make('Deficiency in DT (Substation wise)','DT','DT')+make('Deficiency in RMU (Substation wise)','RMU','RMU');}
+function viewFPDeficiencySummary(D){const fields=D.fpFields||[];const make=(title,group)=>{const cols=fields.filter(f=>f.group===group),groups=new Map();D.rows.filter(r=>group==='Pole'?r.grp==='Pole':r.grp!=='Pole').forEach(r=>{const key=[r.sub||'—',r.cat||'Asset'].join('||');let g=groups.get(key);if(!g){g={sub:r.sub||'—',cat:r.cat||'Asset',counts:{}};groups.set(key,g);}if(r.done)cols.forEach(c=>{g.counts[c.key]=(g.counts[c.key]||0)+(r.fpAnomalies&&r.fpAnomalies[c.key]?1:0);});});const list=[...groups.values()].sort((a,b)=>a.sub.localeCompare(b.sub)||a.cat.localeCompare(b.cat));const th='<th>Substation_NAME</th><th>Asset-Final</th>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('');const body=list.map(g=>'<tr><td>'+esc(g.sub)+'</td><td>'+esc(g.cat)+'</td>'+cols.map(c=>'<td class="dt-count">'+(g.counts[c.key]||0)+'</td>').join('')+'</tr>').join('');return '<section class="card dt-summary"><h3>'+title+'</h3><div class="dt-table-wrap"><table class="dt-table"><thead><tr>'+th+'</tr></thead><tbody>'+(body||'<tr><td colspan="'+(2+cols.length)+'">No '+group+' assets found.</td></tr>')+'</tbody></table></div></section>';};return '<div class="dt-summary-note">Substation-wise deficiency counts · green cells count completed assets meeting each field condition. Yellow source fields use their numeric threshold (earthing below 2; HRC quantities above 0).</div>'+make('Deficiency : Feeder Pillar / Service Pillar','Pillar')+make('Deficiency : Pole','Pole');}
 function viewDef(D){
   if(S.main==='dt') D={...D,rows:D.rows.filter(r=>String(r.lm||'').trim()!=='')};
   const done=D.rows.filter(r=>r.done),wd=defRows(done),pending=D.rows.filter(r=>!r.done);
@@ -405,6 +417,7 @@ function viewDef(D){
   let h='<div class="grid">'+stat('Assets with deficiency',wd.length,'r')+stat('Deficiency items',items,'w')+stat('From team remark',rem,'w')+stat('Not yet rectified',open,open?'r':'g')+stat('Pending / not checked',num(pending.length),pending.length?'w':'g')+'</div>';
   h+='<section class="card"><h3>Deficiency summary</h3>'+(tk.length?tk.map((k,i)=>'<div class="row'+(i?'':' first')+'"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],wd.length),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
   if(S.main==='dt') h+=viewDTDeficiencySummary(D);
+  if(S.main==='fpsp') h+=viewFPDeficiencySummary(D);
   h+='<section class="card"><h3>Deficiency detail</h3><div class="filters"><input type="search" id="fq" placeholder="Search asset / substation / remark" aria-label="Search deficiencies" value="'+esc(S.q)+'"><select id="flm" aria-label="Filter by lineman"><option value="">All linemen</option>'+lms.map(n=>'<option'+(S.lm===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fst" aria-label="Filter by status"><option value="">All status</option><option value="open"'+(S.st==='open'?' selected':'')+'>Not rectified</option><option value="rect"'+(S.st==='rect'?' selected':'')+'>Rectified</option><option value="pending"'+(S.st==='pending'?' selected':'')+'>Pending / not checked</option></select></div><div id="deflist"></div></section>';
   return h;
 }
