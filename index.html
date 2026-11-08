@@ -411,7 +411,7 @@ function viewDTDeficiencySummary(D){
    let g=groups.get(key);if(!g){g={sub:r.sub||'—',fl:r.fl||'—',typ:r.typ||'Asset',assets:0,counts:{}};groups.set(key,g);}
    g.assets++;if(r.done)cols.forEach(c=>{g.counts[c.key]=(g.counts[c.key]||0)+(r.dtAnomalies&&r.dtAnomalies[c.key]?1:0);});
   });
-  const list=[...groups.values()].sort((a,b)=>(net?0:a.sub.localeCompare(b.sub))||a.fl.localeCompare(b.fl)||a.typ.localeCompare(b.typ));
+  const list=[...groups.values()].filter(g=>!net||Object.values(g.counts).reduce((s,n)=>s+n,0)>0).sort((a,b)=>(net?0:a.sub.localeCompare(b.sub))||a.fl.localeCompare(b.fl)||a.typ.localeCompare(b.typ));
   const th=(net?'':'<th>Substation_NAME</th>')+'<th>FL Code</th><th>Asset Type</th><th>'+label+' Count</th>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('');
   const body=list.map(g=>'<tr>'+(net?'':'<td>'+esc(g.sub)+'</td>')+'<td>'+esc(g.fl)+'</td><td>'+esc(g.typ)+'</td><td class="dt-total">'+g.assets+'</td>'+cols.map(c=>'<td class="dt-count">'+(g.counts[c.key]||0)+'</td>').join('')+'</tr>').join('');
   return '<section class="card dt-summary"><h3>'+title+'</h3><div class="dt-table-wrap"><table class="dt-table"><thead><tr>'+th+'</tr></thead><tbody>'+(body||'<tr><td colspan="'+(3+(net?0:1)+cols.length)+'">No '+group+' records found.</td></tr>')+'</tbody></table></div></section>';
@@ -422,7 +422,7 @@ function viewFPDeficiencySummary(D){
  const fields=D.fpFields||[];
  const make=(title,group,net)=>{const cols=fields.filter(f=>f.group===group),groups=new Map();
   D.rows.filter(r=>group==='Pole'?r.grp==='Pole':r.grp!=='Pole').forEach(r=>{const key=net?(group==='Pole'?'Pole':r.cat||'Asset'):[r.sub||'—',r.cat||'Asset'].join('||');let g=groups.get(key);if(!g){g=net?{cat:key,counts:{}}:{sub:r.sub||'—',cat:r.cat||'Asset',counts:{}};groups.set(key,g);}if(r.done)cols.forEach(c=>{g.counts[c.key]=(g.counts[c.key]||0)+(r.fpAnomalies&&r.fpAnomalies[c.key]?1:0);});});
-  const list=[...groups.values()].sort((a,b)=>net?a.cat.localeCompare(b.cat):a.sub.localeCompare(b.sub)||a.cat.localeCompare(b.cat));
+  const list=[...groups.values()].filter(g=>!net||Object.values(g.counts).reduce((s,n)=>s+n,0)>0).sort((a,b)=>net?a.cat.localeCompare(b.cat):a.sub.localeCompare(b.sub)||a.cat.localeCompare(b.cat));
   const th=(net?'':'<th>Substation_NAME</th>')+'<th>Asset-Final</th>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('');
   const body=list.map(g=>'<tr>'+(net?'':'<td>'+esc(g.sub)+'</td>')+'<td>'+esc(g.cat)+'</td>'+cols.map(c=>'<td class="dt-count">'+(g.counts[c.key]||0)+'</td>').join('')+'</tr>').join('');
   return '<section class="card dt-summary"><h3>'+title+'</h3><div class="dt-table-wrap"><table class="dt-table"><thead><tr>'+th+'</tr></thead><tbody>'+(body||'<tr><td colspan="'+(cols.length+(net?1:2))+'">No '+group+' assets found.</td></tr>')+'</tbody></table></div></section>';};
