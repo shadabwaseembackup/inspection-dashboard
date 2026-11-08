@@ -414,7 +414,7 @@ function viewDTDeficiencySummary(D){
   const list=[...groups.values()].filter(g=>!net||Object.values(g.counts).reduce((s,n)=>s+n,0)>0).sort((a,b)=>(net?0:a.sub.localeCompare(b.sub))||a.fl.localeCompare(b.fl)||a.typ.localeCompare(b.typ));
   const th=(net?'':'<th>Substation_NAME</th>')+'<th>FL Code</th><th>Asset Type</th><th>'+label+' Count</th>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('');
   const body=list.map(g=>'<tr>'+(net?'':'<td>'+esc(g.sub)+'</td>')+'<td>'+esc(g.fl)+'</td><td>'+esc(g.typ)+'</td><td class="dt-total">'+g.assets+'</td>'+cols.map(c=>'<td class="dt-count">'+(g.counts[c.key]||0)+'</td>').join('')+'</tr>').join('');
-  return '<section class="card dt-summary"><h3>'+title+'</h3><div class="dt-table-wrap"><table class="dt-table"><thead><tr>'+th+'</tr></thead><tbody>'+(body||'<tr><td colspan="'+(3+(net?0:1)+cols.length)+'">No '+group+' records found.</td></tr>')+'</tbody></table></div></section>';
+  return '<section class="card dt-summary"><h3>'+title+'</h3><div class="dt-table-wrap"><table class="dt-table"><thead><tr>'+th+'</tr></thead><tbody>'+(body||'<tr><td colspan="'+(3+(net?0:1)+cols.length)+'">'+(net?'No deficiencies found.':'No '+group+' records found.')+'</td></tr>')+'</tbody></table></div></section>';
  };
  return '<div class="dt-summary-note">Net deficiency counts aggregate all substations by FL Code and Asset Type; detailed tables below retain substation-wise grouping. Count cells show completed inspections meeting each parameter condition. Pending / not checked assets are excluded from parameter deficiency counts.</div>'+make('Deficiency in DT','DT','DT',true)+make('Deficiency in RMU','RMU','RMU',true)+make('Deficiency in DT (Substation wise)','DT','DT',false)+make('Deficiency in RMU (Substation wise)','RMU','RMU',false);
 }
@@ -425,7 +425,7 @@ function viewFPDeficiencySummary(D){
   const list=[...groups.values()].filter(g=>!net||Object.values(g.counts).reduce((s,n)=>s+n,0)>0).sort((a,b)=>net?a.cat.localeCompare(b.cat):a.sub.localeCompare(b.sub)||a.cat.localeCompare(b.cat));
   const th=(net?'':'<th>Substation_NAME</th>')+'<th>Asset-Final</th>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('');
   const body=list.map(g=>'<tr>'+(net?'':'<td>'+esc(g.sub)+'</td>')+'<td>'+esc(g.cat)+'</td>'+cols.map(c=>'<td class="dt-count">'+(g.counts[c.key]||0)+'</td>').join('')+'</tr>').join('');
-  return '<section class="card dt-summary"><h3>'+title+'</h3><div class="dt-table-wrap"><table class="dt-table"><thead><tr>'+th+'</tr></thead><tbody>'+(body||'<tr><td colspan="'+(cols.length+(net?1:2))+'">No '+group+' assets found.</td></tr>')+'</tbody></table></div></section>';};
+  return '<section class="card dt-summary"><h3>'+title+'</h3><div class="dt-table-wrap"><table class="dt-table"><thead><tr>'+th+'</tr></thead><tbody>'+(body||'<tr><td colspan="'+(cols.length+(net?1:2))+'">'+(net?'No deficiencies found.':'No '+group+' assets found.')+'</td></tr>')+'</tbody></table></div></section>';};
  return '<div class="dt-summary-note">Net deficiency counts aggregate all substations; detailed tables below retain substation-wise grouping. Count cells show completed assets meeting each parameter condition. Yellow source fields use numeric thresholds (earthing below 2; HRC quantities above 0).</div>'+make('Deficiency : Feeder Pillar / Service Pillar','Pillar',true)+make('Deficiency : Pole','Pole',true)+make('Deficiency : Feeder Pillar / Service Pillar (Substation wise)','Pillar',false)+make('Deficiency : Pole (Substation wise)','Pole',false);
 }
 function viewDef(D){
