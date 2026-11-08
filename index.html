@@ -121,6 +121,20 @@ main{max-width:1180px;padding:20px 18px 64px}
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 
+
+/* DT/RMU substation-wise anomaly matrices */
+.dt-summary{padding:14px 12px}
+.dt-summary h3{text-align:center;font-size:17px;font-weight:750;margin:0 0 10px;color:var(--ink)}
+.dt-summary-note{font-size:11px;color:var(--mut);margin:0 2px 9px}
+.dt-table-wrap{overflow-x:auto;max-width:100%;border:1px solid var(--line);border-radius:8px}
+.dt-table{border-collapse:collapse;width:max-content;min-width:100%;font-size:12px}
+.dt-table th{background:var(--pri2);color:var(--ink);font-weight:650;white-space:normal;min-width:76px;max-width:130px;padding:9px 8px;text-align:center;border:1px solid var(--line)}
+.dt-table td{padding:9px 8px;border:1px solid var(--line);text-align:center;white-space:nowrap}
+.dt-table td:first-child,.dt-table td:nth-child(2),.dt-table td:nth-child(3){text-align:left}
+.dt-table td.dt-count{background:#8bcf4d;color:#10200b;font-weight:750;min-width:58px;font-size:13px}
+.dt-table td.dt-total{font-weight:750}
+@media(prefers-color-scheme:dark){.dt-table td.dt-count{background:#6eaa38;color:#071204}}
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -319,7 +333,24 @@ function buildDT(rows){
     const key=eq||code,old=map.get(key);
     if(!old||(!old.done&&o.done)) map.set(key,o);
   });
-  return {rows:[...map.values()],note:orphan?orphan+' row(s) without asset ID ignored':''};
+  const fields=[];
+  rules.forEach(r=>r.cols.forEach(ci=>{
+    const label=H[ci]||r.l,group=r.hdr?'RMU':'DT';
+    if(!fields.some(x=>x.key===label)) fields.push({key:label,label,group});
+  }));
+  map.forEach(o=>{
+    o.dtAnomalies={};
+    const raw=rows.find(row=>v(row,ci.eq)===o.eq||v(row,ci.code)===o.name);
+    if(!raw)return;
+    rules.forEach(r=>r.cols.forEach(ci2=>{
+      const val=norm(raw[ci2]);if(!val)return;
+      let bad=false;
+      if(r.t==='no') bad=FIX_NO.test(val);
+      else bad=isBad(val);
+      if(bad)o.dtAnomalies[H[ci2]||r.l]=1;
+    }));
+  });
+  return {rows:[...map.values()],dtFields:fields,note:orphan?orphan+' row(s) without asset ID ignored':''};
 }
 
 /* ================= LOADING ================= */
@@ -446,6 +477,29 @@ function viewAnalytics(D){
     '<section class="card" style="margin-top:14px"><h3>Analytics definitions</h3><p class="note">Coverage = completed unique assets ÷ total unique assets. Deficiency and rectification counts use the existing FP/SP and DT rules and the current rectified-column interpretation. Monthly trend excludes records without a recognised date. These are descriptive operational metrics, not a safety-risk score.</p></section>';
 }
 
+
+function viewDTDeficiencySummary(D){
+  const fields=D.dtFields||[];
+  const makeTable=(title,group,assetLabel)=>{
+    const cols=fields.filter(f=>f.group===group);
+    const groups=new Map();
+    D.rows.filter(r=>r.grp===(group==='RMU'?'RMU':'Transformer')).forEach(r=>{
+      const key=[r.sub||'—',r.fl||'—',r.typ||'Asset'].join('||');
+      let g=groups.get(key);
+      if(!g){g={sub:r.sub||'—',fl:r.fl||'—',typ:r.typ||'Asset',assets:0,done:0,counts:{}};groups.set(key,g);}
+      g.assets++;if(r.done)g.done++;
+      if(r.done)cols.forEach(c=>{g.counts[c.key]=(g.counts[c.key]||0)+(r.dtAnomalies&&r.dtAnomalies[c.key]?1:0);});
+    });
+    const list=[...groups.values()].sort((a,b)=>a.sub.localeCompare(b.sub)||a.fl.localeCompare(b.fl)||a.typ.localeCompare(b.typ));
+    const th='<th>Substation_NAME</th><th>FL Code</th><th>Asset Type</th><th>'+assetLabel+' Count</th>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('');
+    const body=list.map(g=>'<tr><td>'+esc(g.sub)+'</td><td>'+esc(g.fl)+'</td><td>'+esc(g.typ)+'</td><td class="dt-total">'+g.assets+'</td>'+cols.map(c=>'<td class="dt-count">'+(g.counts[c.key]||0)+'</td>').join('')+'</tr>').join('');
+    return '<section class="card dt-summary"><h3>'+title+'</h3><div class="dt-table-wrap"><table class="dt-table"><thead><tr>'+th+'</tr></thead><tbody>'+(body||'<tr><td colspan="'+(4+cols.length)+'">No '+group+' records found.</td></tr>')+'</tbody></table></div></section>';
+  };
+  return '<div class="dt-summary-note">Substation-wise anomaly counts · only completed inspections are included in green count cells; pending / not checked assets are excluded.</div>'+
+    makeTable('Deficiency in DT (Substation wise)','DT','DT')+
+    makeTable('Deficiency in RMU (Substation wise)','RMU','RMU');
+}
+
 function viewDef(D){
   const done=D.rows.filter(r=>r.done),wd=defRows(done),pending=D.rows.filter(r=>!r.done);
   const items=wd.reduce((s,r)=>s+r.defs.length,0),rem=wd.filter(r=>r.remark).length;
@@ -455,6 +509,7 @@ function viewDef(D){
   const lms=[...new Set(D.rows.map(r=>r.lm||'—'))].sort();
   let h='<div class="grid">'+stat('Assets with deficiency',wd.length,'r')+stat('Deficiency items',items,'w')+stat('From team remark',rem,'w')+stat('Not yet rectified',open,open?'r':'g')+stat('Pending / not checked',num(pending.length),pending.length?'w':'g')+'</div>';
   h+='<section class="card"><h3>Deficiency summary</h3>'+(tk.length?tk.map((k,i)=>'<div class="row'+(i?'':' first')+'"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],wd.length),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
+  if(S.main==='dt') h+=viewDTDeficiencySummary(D);
   h+='<section class="card"><h3>Deficiency detail</h3><div class="filters"><input type="search" id="fq" placeholder="Search asset / substation / remark" value="'+esc(S.q)+'"><select id="flm"><option value="">All linemen</option>'+lms.map(n=>'<option'+(S.lm===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fst"><option value="">All status</option><option value="open"'+(S.st==='open'?' selected':'')+'>Not rectified</option><option value="rect"'+(S.st==='rect'?' selected':'')+'>Rectified</option><option value="pending"'+(S.st==='pending'?' selected':'')+'>Pending / not checked</option></select></div><div id="deflist"></div></section>';
   return h;
 }
