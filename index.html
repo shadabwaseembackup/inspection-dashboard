@@ -501,6 +501,7 @@ function viewDTDeficiencySummary(D){
 }
 
 function viewDef(D){
+  if(S.main==='dt') D={...D,rows:D.rows.filter(r=>String(r.lm||'').trim()!=='')};
   const done=D.rows.filter(r=>r.done),wd=defRows(done),pending=D.rows.filter(r=>!r.done);
   const items=wd.reduce((s,r)=>s+r.defs.length,0),rem=wd.filter(r=>r.remark).length;
   const open=wd.filter(r=>r.fix!=='rect').length;
@@ -516,7 +517,8 @@ function viewDef(D){
 function renderDefList(){
   const D=S.data[S.main],el=$('#deflist'); if(!D||!el) return;
   const q=S.q.toLowerCase();
-  let list=(S.st==='pending'?D.rows.filter(r=>!r.done):defRows(D.rows)).filter(r=>{
+  const sourceRows=S.main==='dt'?D.rows.filter(r=>String(r.lm||'').trim()!==''):D.rows;
+  let list=(S.st==='pending'?sourceRows.filter(r=>!r.done):defRows(sourceRows)).filter(r=>{
     if(S.lm&&(r.lm||'—')!==S.lm) return false;
     if(S.st==='rect'&&r.fix!=='rect') return false;
     if(S.st==='open'&&r.fix==='rect') return false;
