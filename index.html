@@ -66,6 +66,7 @@ details.card .body{margin-top:8px}
 .btn{display:inline-block;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);cursor:pointer;font-size:13px;margin:4px 6px 4px 0}
 a{color:var(--pri)}
 button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible,.btn:focus-within{outline:2px solid var(--pri);outline-offset:2px}
+:root{--radius:18px;--shadow:0 8px 28px rgba(24,39,75,.07)}body{font-size:14px;line-height:1.5}header{box-shadow:0 3px 18px rgba(20,35,65,.05);padding:14px 18px 0}main{max-width:1180px;padding:20px 18px 64px}.card,.stat{border-radius:var(--radius);box-shadow:var(--shadow)}.card{padding:16px 18px;margin-bottom:14px}.stat{padding:14px 15px;min-height:82px}.analytics-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.analytics-panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:15px;min-width:0}.analytics-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.analytics-kpi{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:13px}.analytics-kpi strong{display:block;font-size:23px}.analytics-kpi span{font-size:11px;color:var(--mut)}.metric-line{display:grid;grid-template-columns:minmax(0,1fr) minmax(65px,1.3fr) auto;gap:9px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}.metric-label{font-size:12px;overflow-wrap:anywhere}.metric-value{font-size:12px;font-weight:700;text-align:right}.metric-track{height:9px;border-radius:20px;background:var(--line);overflow:hidden}.metric-track i{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,var(--pri),#69a2ff)}.metric-track.red i{background:linear-gradient(90deg,var(--bad),#ff9b83)}.analytics-table{width:100%;border-collapse:collapse;font-size:12px}.analytics-table th,.analytics-table td{text-align:left;padding:9px 7px;border-top:1px solid var(--line)}.trend-bars{height:145px;display:flex;align-items:flex-end;gap:7px;padding:10px 2px 0;border-bottom:1px solid var(--line)}.trend-col{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px}.trend-col i{display:block;width:min(100%,30px);min-height:3px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#78a8ff,var(--pri))}.trend-col b,.trend-col small{font-size:10px;color:var(--mut)}.dt-summary{padding:14px 12px}.dt-summary h3{text-align:center;font-size:17px;font-weight:750;margin:0 0 10px;color:var(--ink)}.dt-summary-note{font-size:11px;color:var(--mut);margin:0 2px 9px}.dt-table-wrap{overflow-x:auto;max-width:100%;border:1px solid var(--line);border-radius:8px}.dt-table{border-collapse:collapse;width:max-content;min-width:100%;font-size:12px}.dt-table th{background:var(--pri2);color:var(--ink);font-weight:650;white-space:normal;min-width:76px;max-width:130px;padding:9px 8px;text-align:center;border:1px solid var(--line)}.dt-table td{padding:9px 8px;border:1px solid var(--line);text-align:center;white-space:nowrap}.dt-table td:first-child,.dt-table td:nth-child(2),.dt-table td:nth-child(3){text-align:left}.dt-table td.dt-count{background:#8bcf4d;color:#10200b;font-weight:750;min-width:58px;font-size:13px}.dt-table td.dt-total{font-weight:750}@media(max-width:650px){main{padding:13px 11px 52px}.card{padding:13px 14px}.analytics-grid{grid-template-columns:1fr}.analytics-kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.metric-line{grid-template-columns:minmax(0,1fr) minmax(48px,1fr) auto;gap:7px}.trend-bars{gap:4px}}@media(prefers-color-scheme:dark){.dt-table td.dt-count{background:#6eaa38;color:#071204}}
 </style>
 </head>
 <body>
@@ -84,6 +85,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
       <button type="button" data-sub="progress">Progress</button>
       <button type="button" data-sub="lineman">Lineman</button>
       <button type="button" data-sub="def">Deficiency</button>
+      <button type="button" data-sub="analytics">Analytics</button>
     </div>
   </div>
 </header>
@@ -268,7 +270,9 @@ function buildDT(rows){
     const key=eq||code,old=map.get(key);
     if(!old||(!old.done&&o.done)) map.set(key,o);
   }
-  return {rows:[...map.values()],note:orphan?orphan+' row(s) without asset ID ignored':''};
+  const fields=[];rules.forEach(r=>r.cols.forEach(ci2=>{const label=H[ci2]||r.l,group=r.hdr?'RMU':'DT';if(!fields.some(x=>x.key===label))fields.push({key:label,label,group});}));
+  map.forEach(o=>{o.dtAnomalies={};const raw=rows.find(row=>v(row,ci.eq)===o.eq||v(row,ci.code)===o.name);if(!raw)return;rules.forEach(r=>r.cols.forEach(ci2=>{const val=norm(raw[ci2]);if(!val)return;const bad=r.t==='no'?FIX_NO.test(val):isBad(val);if(bad)o.dtAnomalies[H[ci2]||r.l]=1;}));});
+  return {rows:[...map.values()],dtFields:fields,note:orphan?orphan+' row(s) without asset ID ignored':''};
 }
 
 /* ================= LOADING ================= */
@@ -366,7 +370,7 @@ function viewProgress(D){
 }
 
 function lmBody(key){
-  return (S.lmMap.get(key)||[]).map(r=>'<div class="item"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.dl||'No date')+'</small></div><div class="im">'+esc(r.sub)+(r.kva?' · '+esc(r.kva):'')+'</div>'+(r.defs.length?'<div>'+chips(r.defs)+fixBadge(r)+'</div>':'<div><span class="chip g">All OK</span></div>')+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'</div>').join('');
+  return (S.lmMap.get(key)||[]).map(r=>'<div class="item"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.dl||'No date')+'</small></div><div class="im">'+esc(r.sub)+(r.kva?' · '+esc(r.kva):'')+'</div>'+(r.defs.length?'<div>'+(r.done?chips(r.defs)+fixBadge(r):'<span class="chip w">Pending / not checked</span>')+'</div>':'<div><span class="chip g">All OK</span></div>')+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'</div>').join('');
 }
 function viewLineman(D){
   const done=D.rows.filter(r=>r.done);
@@ -387,23 +391,28 @@ function viewLineman(D){
   return h;
 }
 
+function viewAnalytics(D){const rows=D.rows,done=rows.filter(r=>r.done),deficient=defRows(rows),pending=rows.filter(r=>!r.done),rect=deficient.filter(r=>r.fix==='rect'),open=deficient.filter(r=>r.fix!=='rect'),rate=pct(done.length,rows.length);const monthly=new Map();done.forEach(r=>{const k=r.dk&&/^\d{4}-\d{2}/.test(r.dk)?r.dk.slice(0,7):'';if(k)monthly.set(k,(monthly.get(k)||0)+1);});const months=[...monthly.entries()].sort((a,b)=>a[0].localeCompare(b[0])).slice(-8),mx=Math.max(1,...months.map(x=>x[1]));const trend=months.length?'<div class="trend-bars">'+months.map(([k,n])=>'<div class="trend-col"><small>'+n+'</small><i style="height:'+Math.max(3,n/mx*100)+'%"></i><b>'+esc(k.slice(5))+'</b></div>').join('')+'</div>':'<p class="note">Date-wise monthly trend will appear when inspection dates are available.</p>';const subs=groupBy(rows,r=>r.sub).map(g=>{const a=rows.filter(r=>(r.sub||'—')===g.k),d=a.filter(r=>r.done).length;return{name:g.k,total:a.length,done:d,rate:pct(d,a.length)};}).sort((a,b)=>b.rate-a.rate||b.total-a.total).slice(0,8);const sh=subs.map(s=>'<div class="metric-line"><div class="metric-label">'+esc(s.name)+'</div><div class="metric-track"><i style="width:'+s.rate+'%"></i></div><div class="metric-value">'+s.rate+'% ('+s.done+'/'+s.total+')</div></div>').join('');const lm=new Map();done.forEach(r=>{const k=r.lm||'Not recorded';let x=lm.get(k);if(!x){x={n:0,d:0};lm.set(k,x);}x.n++;if(r.defs.length)x.d++;});const la=[...lm.entries()].sort((a,b)=>b[1].n-a[1].n).slice(0,8);const cats=new Map();deficient.forEach(r=>r.defs.forEach(d=>{const k=d.label.replace(/ \(\d+\)$/,'');cats.set(k,(cats.get(k)||0)+1);}));const ca=[...cats.entries()].sort((a,b)=>b[1]-a[1]).slice(0,7),cm=Math.max(1,...ca.map(x=>x[1]));return '<div class="analytics-kpis"><div class="analytics-kpi"><strong>'+rate+'%</strong><span>Inspection coverage</span></div><div class="analytics-kpi"><strong>'+num(pending.length)+'</strong><span>Pending assets</span></div><div class="analytics-kpi"><strong>'+num(deficient.length)+'</strong><span>Assets with deficiency</span></div><div class="analytics-kpi"><strong>'+num(rect.length)+'</strong><span>Assets marked rectified</span></div></div><div class="analytics-grid"><section class="analytics-panel"><h3>Monthly inspection trend</h3><p class="note">Completed inspections · latest 8 available months</p>'+trend+'<p class="note">Open / unclear deficiencies: '+num(open.length)+'</p></section><section class="analytics-panel"><h3>Substation performance</h3><p class="note">Top 8 by inspection coverage</p>'+sh+'</section><section class="analytics-panel"><h3>Lineman activity</h3><table class="analytics-table"><thead><tr><th>Lineman</th><th>Inspected</th><th>Deficient</th></tr></thead><tbody>'+la.map(([k,x])=>'<tr><td>'+esc(k)+'</td><td>'+x.n+'</td><td>'+x.d+'</td></tr>').join('')+'</tbody></table></section><section class="analytics-panel"><h3>Frequent deficiency categories</h3>'+ca.map(([k,n])=>'<div class="metric-line"><div class="metric-label">'+esc(k)+'</div><div class="metric-track red"><i style="width:'+(n/cm*100)+'%"></i></div><div class="metric-value">'+n+'</div></div>').join('')+'</section></div>';}
+function viewDTDeficiencySummary(D){const fields=D.dtFields||[];const make=(title,group,label)=>{const cols=fields.filter(f=>f.group===group),groups=new Map();D.rows.filter(r=>r.grp===(group==='RMU'?'RMU':'Transformer')).forEach(r=>{const key=[r.sub||'—',r.fl||'—',r.typ||'Asset'].join('||');let g=groups.get(key);if(!g){g={sub:r.sub||'—',fl:r.fl||'—',typ:r.typ||'Asset',assets:0,counts:{}};groups.set(key,g);}g.assets++;if(r.done)cols.forEach(c=>{g.counts[c.key]=(g.counts[c.key]||0)+(r.dtAnomalies&&r.dtAnomalies[c.key]?1:0);});});const list=[...groups.values()].sort((a,b)=>a.sub.localeCompare(b.sub)||a.fl.localeCompare(b.fl)||a.typ.localeCompare(b.typ));const th='<th>Substation_NAME</th><th>FL Code</th><th>Asset Type</th><th>'+label+' Count</th>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('');const body=list.map(g=>'<tr><td>'+esc(g.sub)+'</td><td>'+esc(g.fl)+'</td><td>'+esc(g.typ)+'</td><td class="dt-total">'+g.assets+'</td>'+cols.map(c=>'<td class="dt-count">'+(g.counts[c.key]||0)+'</td>').join('')+'</tr>').join('');return '<section class="card dt-summary"><h3>'+title+'</h3><div class="dt-table-wrap"><table class="dt-table"><thead><tr>'+th+'</tr></thead><tbody>'+(body||'<tr><td colspan="'+(4+cols.length)+'">No '+group+' records found.</td></tr>')+'</tbody></table></div></section>';};return '<div class="dt-summary-note">Substation-wise anomaly counts · only completed inspections are included in green count cells; pending / not checked assets are excluded.</div>'+make('Deficiency in DT (Substation wise)','DT','DT')+make('Deficiency in RMU (Substation wise)','RMU','RMU');}
 function viewDef(D){
-  const done=D.rows.filter(r=>r.done),wd=defRows(done);
+  if(S.main==='dt') D={...D,rows:D.rows.filter(r=>String(r.lm||'').trim()!=='')};
+  const done=D.rows.filter(r=>r.done),wd=defRows(done),pending=D.rows.filter(r=>!r.done);
   if(!done.length) return empty('No inspections recorded yet, so there are no deficiencies to show.');
   const items=wd.reduce((s,r)=>s+r.defs.length,0),rem=wd.filter(r=>r.remark).length;
   const open=wd.filter(r=>r.fix!=='rect').length;
   const tc={};wd.forEach(r=>r.defs.forEach(d=>{const k=d.t==='remark'?'Team remark':d.label.replace(/ \(\d+\)$/,'');tc[k]=(tc[k]||0)+1;}));
   const tk=Object.keys(tc).sort((a,b)=>tc[b]-tc[a]);
-  const lms=[...new Set(wd.map(r=>r.lm||'—'))].sort();
-  let h='<div class="grid">'+stat('Assets with deficiency',wd.length,'r')+stat('Deficiency items',items,'w')+stat('From team remark',rem,'w')+stat('Not yet rectified',open,open?'r':'g')+'</div>';
+  const lms=[...new Set(D.rows.map(r=>r.lm||'—'))].sort();
+  let h='<div class="grid">'+stat('Assets with deficiency',wd.length,'r')+stat('Deficiency items',items,'w')+stat('From team remark',rem,'w')+stat('Not yet rectified',open,open?'r':'g')+stat('Pending / not checked',num(pending.length),pending.length?'w':'g')+'</div>';
   h+='<section class="card"><h3>Deficiency summary</h3>'+(tk.length?tk.map((k,i)=>'<div class="row'+(i?'':' first')+'"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],wd.length),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
-  h+='<section class="card"><h3>Deficiency detail</h3><div class="filters"><input type="search" id="fq" placeholder="Search asset / substation / remark" aria-label="Search deficiencies" value="'+esc(S.q)+'"><select id="flm" aria-label="Filter by lineman"><option value="">All linemen</option>'+lms.map(n=>'<option'+(S.lm===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fst" aria-label="Filter by status"><option value="">All status</option><option value="open"'+(S.st==='open'?' selected':'')+'>Not rectified</option><option value="rect"'+(S.st==='rect'?' selected':'')+'>Rectified</option></select></div><div id="deflist"></div></section>';
+  if(S.main==='dt') h+=viewDTDeficiencySummary(D);
+  h+='<section class="card"><h3>Deficiency detail</h3><div class="filters"><input type="search" id="fq" placeholder="Search asset / substation / remark" aria-label="Search deficiencies" value="'+esc(S.q)+'"><select id="flm" aria-label="Filter by lineman"><option value="">All linemen</option>'+lms.map(n=>'<option'+(S.lm===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fst" aria-label="Filter by status"><option value="">All status</option><option value="open"'+(S.st==='open'?' selected':'')+'>Not rectified</option><option value="rect"'+(S.st==='rect'?' selected':'')+'>Rectified</option><option value="pending"'+(S.st==='pending'?' selected':'')+'>Pending / not checked</option></select></div><div id="deflist"></div></section>';
   return h;
 }
 function renderDefList(){
   const D=S.data[S.main],el=$('#deflist'); if(!D||!el) return;
   const q=S.q.toLowerCase();
-  const list=defRows(D.rows).filter(r=>{
+  const sourceRows=S.main==='dt'?D.rows.filter(r=>String(r.lm||'').trim()!==''):D.rows;
+  const list=(S.st==='pending'?sourceRows.filter(r=>!r.done):defRows(sourceRows)).filter(r=>{
     if(S.lm&&(r.lm||'—')!==S.lm) return false;
     if(S.st==='rect'&&r.fix!=='rect') return false;
     if(S.st==='open'&&r.fix==='rect') return false;
@@ -411,7 +420,7 @@ function renderDefList(){
     return true;
   }).sort((a,b)=>(b.dk||'').localeCompare(a.dk||'')||b.defs.length-a.defs.length);
   const cap=150;
-  el.innerHTML=list.length?list.slice(0,cap).map(r=>'<div class="item"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.grp)+(r.kva?' · '+esc(r.kva):'')+'</small></div><div class="im">'+esc(r.sub)+(r.fdr?' · '+esc(r.fdr):'')+' · '+esc(r.lm||'—')+' · '+esc(r.dl||'No date')+'</div><div>'+chips(r.defs)+fixBadge(r)+'</div>'+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'</div>').join('')+(list.length>cap?'<p class="note">Showing first '+cap+' of '+list.length+' – narrow with the filters.</p>':''):'<p class="note">No matching deficiencies.</p>';
+  el.innerHTML=list.length?list.slice(0,cap).map(r=>'<div class="item"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.grp)+(r.kva?' · '+esc(r.kva):'')+'</small></div><div class="im">'+esc(r.sub)+(r.fdr?' · '+esc(r.fdr):'')+' · '+esc(r.lm||'—')+' · '+esc(r.dl||'No date')+'</div><div>'+chips(r.defs)+fixBadge(r)+'</div>'+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'</div>').join('')+(list.length>cap?'<p class="note">Showing first '+cap+' of '+list.length+' – narrow with the filters.</p>':'') :'<p class="note">'+(S.st==='pending'?'No pending or unchecked assets.':'No matching deficiencies.')+'</p>';
 }
 
 /* ================= MAIN RENDER ================= */
@@ -436,7 +445,7 @@ function render(keepScroll){
     el.innerHTML=empty(s.s==='loading'?'Loading from Google Sheet…':'No data loaded for this tab yet.<br>Tap ⟳ to retry the live fetch, or use the manual fallback below.');
     return;
   }
-  el.innerHTML=S.sub==='progress'?viewProgress(D):S.sub==='lineman'?viewLineman(D):viewDef(D);
+  el.innerHTML=S.sub==='progress'?viewProgress(D):S.sub==='lineman'?viewLineman(D):S.sub==='analytics'?viewAnalytics(D):viewDef(D);
   if(S.sub==='def'){
     renderDefList();
     const q=$('#fq'),l=$('#flm'),s=$('#fst');
