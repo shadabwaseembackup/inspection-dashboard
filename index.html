@@ -434,7 +434,7 @@ function viewDef(D){
   D={...D,rows:filterDefRows(D.rows)};
   if(S.main==='dt') D={...D,rows:D.rows.filter(r=>String(r.lm||'').trim()!=='')};
   const done=D.rows.filter(r=>r.done),wd=defRows(done),pending=D.rows.filter(r=>!r.done);
-  if(!done.length) return empty('No inspections recorded yet, so there are no deficiencies to show.');
+
   const items=wd.reduce((s,r)=>s+r.defs.length,0),rem=wd.filter(r=>r.remark).length;
   const open=wd.filter(r=>r.fix!=='rect').length;
   const tc={};wd.forEach(r=>r.defs.forEach(d=>{const k=d.t==='remark'?'Team remark':d.label.replace(/ \(\d+\)$/,'');tc[k]=(tc[k]||0)+1;}));
