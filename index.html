@@ -50,7 +50,8 @@ b.g{color:var(--ok)}b.r{color:var(--bad)}b.w{color:var(--warn)}
 .chip.r{background:var(--badbg);color:var(--bad)}.chip.w{background:var(--warnbg);color:var(--warn)}
 .chip.g{background:var(--okbg);color:var(--ok)}.chip.n{background:var(--pri2);color:var(--pri)}
 .filters{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:10px}
-@media(min-width:600px){.filters{grid-template-columns:2fr 1fr 1fr}}
+.filters label input[type=date]{display:block;margin-top:4px}
+@media(min-width:600px){.filters{grid-template-columns:repeat(3,minmax(0,1fr))}}
 input[type=search],select{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:14px}
 .item{border-top:1px solid var(--line);padding:9px 0;content-visibility:auto;contain-intrinsic-size:auto 70px}
 .item:first-child{border-top:0}
@@ -155,7 +156,7 @@ const FIX_YES=/^(ok|okay|0k|yes|y|done|हाँ|हां|ठीक|fixed|recti
 const FIX_NO=/^(no|n|nahi|nhi|नहीं|नही)$/i;
 
 /* ================= STATE ================= */
-const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',open:new Set(),lmMap:new Map(),
+const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',dateFrom:'',dateTo:'',substation:'',open:new Set(),lmMap:new Map(),
   data:{fpsp:null,dt:null},src:{fpsp:{s:'none'},dt:{s:'none'}}};
 const RAW={fpsp:'',dt:''};
 let lastLoad=0,qTimer=0,busy=0;
@@ -428,10 +429,12 @@ function viewFPDeficiencySummary(D){
   return '<section class="card dt-summary"><h3>'+title+'</h3><div class="dt-table-wrap"><table class="dt-table"><thead><tr>'+th+'</tr></thead><tbody>'+(body||'<tr><td colspan="'+(cols.length+(net?1:2))+'">'+(net?'No deficiencies found.':'No '+group+' assets found.')+'</td></tr>')+'</tbody></table></div></section>';};
  return '<div class="dt-summary-note">Net deficiency counts aggregate all substations; detailed tables below retain substation-wise grouping. Count cells show completed assets meeting each parameter condition. Yellow source fields use numeric thresholds (earthing below 2; HRC quantities above 0).</div>'+make('Deficiency : Feeder Pillar / Service Pillar','Pillar',true)+make('Deficiency : Pole','Pole',true)+make('Deficiency : Feeder Pillar / Service Pillar (Substation wise)','Pillar',false)+make('Deficiency : Pole (Substation wise)','Pole',false);
 }
+function filterDefRows(rows){return rows.filter(r=>{if(S.dateFrom&&(!r.dk||r.dk<S.dateFrom))return false;if(S.dateTo&&(!r.dk||r.dk>S.dateTo))return false;if(S.substation&&(r.sub||'—')!==S.substation)return false;return true;});}
 function viewDef(D){
+  D={...D,rows:filterDefRows(D.rows)};
   if(S.main==='dt') D={...D,rows:D.rows.filter(r=>String(r.lm||'').trim()!=='')};
   const done=D.rows.filter(r=>r.done),wd=defRows(done),pending=D.rows.filter(r=>!r.done);
-  if(!done.length) return empty('No inspections recorded yet, so there are no deficiencies to show.');
+
   const items=wd.reduce((s,r)=>s+r.defs.length,0),rem=wd.filter(r=>r.remark).length;
   const open=wd.filter(r=>r.fix!=='rect').length;
   const tc={};wd.forEach(r=>r.defs.forEach(d=>{const k=d.t==='remark'?'Team remark':d.label.replace(/ \(\d+\)$/,'');tc[k]=(tc[k]||0)+1;}));
@@ -441,13 +444,15 @@ function viewDef(D){
   h+='<section class="card"><h3>Deficiency summary</h3>'+(tk.length?tk.map((k,i)=>'<div class="row'+(i?'':' first')+'"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],wd.length),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
   if(S.main==='dt') h+=viewDTDeficiencySummary(D);
   if(S.main==='fpsp') h+=viewFPDeficiencySummary(D);
-  h+='<section class="card"><h3>Deficiency detail</h3><div class="filters"><input type="search" id="fq" placeholder="Search asset / substation / remark" aria-label="Search deficiencies" value="'+esc(S.q)+'"><select id="flm" aria-label="Filter by lineman"><option value="">All linemen</option>'+lms.map(n=>'<option'+(S.lm===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fst" aria-label="Filter by status"><option value="">All status</option><option value="open"'+(S.st==='open'?' selected':'')+'>Not rectified</option><option value="rect"'+(S.st==='rect'?' selected':'')+'>Rectified</option><option value="pending"'+(S.st==='pending'?' selected':'')+'>Pending / not checked</option></select></div><div id="deflist"></div></section>';
+  const subs=[...new Set(D.rows.map(r=>r.sub||'—'))].sort();
+  h+='<section class="card"><h3>Deficiency filters</h3><div class="filters"><label class="note">From<input type="date" id="dfFrom" value="'+esc(S.dateFrom)+'"></label><label class="note">To<input type="date" id="dfTo" value="'+esc(S.dateTo)+'"></label><select id="fsub" aria-label="Filter by substation"><option value="">All substations</option>'+subs.map(n=>'<option'+(S.substation===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select></div><h3>Deficiency detail</h3><div class="filters"><input type="search" id="fq" placeholder="Search asset / substation / remark" aria-label="Search deficiencies" value="'+esc(S.q)+'"><select id="flm" aria-label="Filter by lineman"><option value="">All linemen</option>'+lms.map(n=>'<option'+(S.lm===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fst" aria-label="Filter by status"><option value="">All status</option><option value="open"'+(S.st==='open'?' selected':'')+'>Not rectified</option><option value="rect"'+(S.st==='rect'?' selected':'')+'>Rectified</option><option value="pending"'+(S.st==='pending'?' selected':'')+'>Pending / not checked</option></select></div><div id="deflist"></div></section>';
   return h;
 }
 function renderDefList(){
   const D=S.data[S.main],el=$('#deflist'); if(!D||!el) return;
   const q=S.q.toLowerCase();
-  const sourceRows=S.main==='dt'?D.rows.filter(r=>String(r.lm||'').trim()!==''):D.rows;
+  const filteredRows=filterDefRows(D.rows);
+  const sourceRows=S.main==='dt'?filteredRows.filter(r=>String(r.lm||'').trim()!==''):filteredRows;
   const list=(S.st==='pending'?sourceRows.filter(r=>!r.done):defRows(sourceRows)).filter(r=>{
     if(S.lm&&(r.lm||'—')!==S.lm) return false;
     if(S.st==='rect'&&r.fix!=='rect') return false;
@@ -484,10 +489,13 @@ function render(keepScroll){
   el.innerHTML=S.sub==='progress'?viewProgress(D):S.sub==='lineman'?viewLineman(D):S.sub==='analytics'?viewAnalytics(D):viewDef(D);
   if(S.sub==='def'){
     renderDefList();
-    const q=$('#fq'),l=$('#flm'),s=$('#fst');
+    const q=$('#fq'),l=$('#flm'),s=$('#fst'),df=$('#dfFrom'),dt=$('#dfTo'),sub=$('#fsub');
     if(q) q.oninput=e=>{S.q=e.target.value;clearTimeout(qTimer);qTimer=setTimeout(renderDefList,150);};
     if(l) l.onchange=e=>{S.lm=e.target.value;renderDefList();};
     if(s) s.onchange=e=>{S.st=e.target.value;renderDefList();};
+    if(df) df.onchange=e=>{S.dateFrom=e.target.value;render();};
+    if(dt) dt.onchange=e=>{S.dateTo=e.target.value;render();};
+    if(sub) sub.onchange=e=>{S.substation=e.target.value;render();};
   }
   if(keepScroll) window.scrollTo(0,y);
 }
@@ -498,7 +506,7 @@ $('#view').addEventListener('toggle',e=>{
   if(d.open){S.open.add(d.dataset.k);const b=d.querySelector('.body');if(b&&!b.firstChild)b.innerHTML=lmBody(d.dataset.k);}
   else S.open.delete(d.dataset.k);
 },true);
-document.querySelectorAll('[data-main]').forEach(b=>b.onclick=()=>{S.main=b.dataset.main;S.q='';S.lm='';S.st='';S.open.clear();render();window.scrollTo(0,0);});
+document.querySelectorAll('[data-main]').forEach(b=>b.onclick=()=>{S.main=b.dataset.main;S.q='';S.lm='';S.st='';S.dateFrom='';S.dateTo='';S.substation='';S.open.clear();render();window.scrollTo(0,0);});
 document.querySelectorAll('[data-sub]').forEach(b=>b.onclick=()=>{S.sub=b.dataset.sub;render();window.scrollTo(0,0);});
 $('#rf').onclick=()=>loadAll(true);
 document.querySelectorAll('[data-file]').forEach(inp=>inp.onchange=async e=>{
