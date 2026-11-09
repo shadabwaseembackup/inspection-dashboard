@@ -36,8 +36,8 @@ main{padding:12px 14px 60px;max-width:900px;margin:auto}
 .hero .big{font-size:34px;font-weight:700;color:var(--pri);min-width:100px}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
 @media(min-width:600px){.grid{grid-template-columns:repeat(4,1fr)}}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
-.stat b{display:block;font-size:22px}.stat span{color:var(--mut);font-size:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.stat b{display:inline-block;font-size:22px;white-space:nowrap}.stat span{color:var(--mut);font-size:12px;order:-1;min-width:0;overflow-wrap:anywhere}
 b.g{color:var(--ok)}b.r{color:var(--bad)}b.w{color:var(--warn)}
 .bar{height:8px;border-radius:9px;background:var(--line);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--pri);border-radius:9px}
