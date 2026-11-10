@@ -941,11 +941,12 @@ function exportDatasetCSV(){
   const cols=[['Asset / Equipment','name'],['Equipment ID','eq'],['Substation','sub'],['Feeder','fdr'],['Function Location','fl'],['Asset Type','typ'],['Group','grp'],['Capacity','kva'],['Lineman','lm'],['Date of Visit','dl'],['Visit Date (ISO)','dk'],['Inspection Status','done'],['Rectification Status','fix'],['Deficiency Items','defs'],['Team Remark','remark']];
   const q=v=>{if(Array.isArray(v))v=v.map(x=>typeof x==='string'?x:(x.label||x.t||JSON.stringify(x))).join('; ');else if(v&&typeof v==='object')v=JSON.stringify(v);if(typeof v==='boolean')v=v?'Inspected':'Pending';return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';};
   const lines=[cols.map(c=>q(c[0])).join(',')].concat(D.rows.map(r=>cols.map(c=>q(r[c[1]])).join(',')));
-  const blob=new Blob(['\\ufeff'+lines.join('\\r\\n')],{type:'text/csv;charset=utf-8;'});
+  const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob),a=document.createElement('a'),stamp=new Date().toISOString().slice(0,10);
   a.href=url;a.download=(S.main==='dt'?'DT':'FP_SP')+'_Inspection_'+stamp+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
 }
-\n/* ================= MAIN RENDER ================= */
+
+/* ================= MAIN RENDER ================= */
 function renderStatus(){
   const nm={fpsp:'FP SP',dt:'DT'};
   $('#status').innerHTML=['fpsp','dt'].map(k=>{
