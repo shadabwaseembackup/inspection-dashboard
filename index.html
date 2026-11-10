@@ -437,7 +437,22 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
 
-.ageing-bands{display:grid;gap:10px;margin-top:12px}.ageing-row{display:grid;grid-template-columns:100px minmax(0,1fr) 30px;gap:9px;align-items:center;font-size:13px}.ageing-track{height:9px;border-radius:99px;background:var(--line);overflow:hidden}.ageing-track i{display:block;height:100%;border-radius:99px;background:var(--pri)}.ageing-track i.g{background:var(--ok)}.ageing-track i.w{background:var(--warn)}.ageing-track i.r{background:var(--bad)}.ageing-track i.n{background:var(--pri)}</style>
+.ageing-bands{display:grid;gap:10px;margin-top:12px}.ageing-row{display:grid;grid-template-columns:100px minmax(0,1fr) 30px;gap:9px;align-items:center;font-size:13px}.ageing-track{height:9px;border-radius:99px;background:var(--line);overflow:hidden}.ageing-track i{display:block;height:100%;border-radius:99px;background:var(--pri)}.ageing-track i.g{background:var(--ok)}.ageing-track i.w{background:var(--warn)}.ageing-track i.r{background:var(--bad)}.ageing-track i.n{background:var(--pri)}
+/* Interactive analytics drill-down */
+.analytics-drill-target{cursor:pointer}
+.analytics-drill-target:hover,.analytics-drill-target:focus{background:var(--pri2);outline:none;border-radius:8px}
+.analytics-table tr.analytics-drill-target:hover,.analytics-table tr.analytics-drill-target:focus{background:var(--pri2)}
+.analytics-drilldown{scroll-margin-top:150px}
+.drilldown-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.drilldown-head h3{margin:0}
+.drilldown-list{max-height:620px;overflow:auto}
+.drilldown-record{padding:10px 0;border-top:1px solid var(--line)}
+.drilldown-record-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.drilldown-record-top b{overflow-wrap:anywhere}
+.drilldown-defs{margin-top:5px}
+@media(max-width:520px){.drilldown-head{align-items:center}.drilldown-head .btn{flex:0 0 auto}}
+
+</style>
 </head>
 <body>
 <header>
@@ -790,19 +805,37 @@ function viewAnalytics(D){
  deficient.forEach(r=>{const g=bySub.get(r.sub||'—');if(g){g.affected++;if(r.fix==='rect')g.rectified++;else g.open++;}});
  const subs=[...bySub.values()].map(g=>({...g,rate:pct(g.done,g.total)}));
  const coverage=subs.slice().sort((a,b)=>b.rate-a.rate||b.total-a.total).slice(0,8);
- const sh=coverage.map(x=>'<div class="metric-line"><div class="metric-label">'+esc(x.name)+'</div><div class="metric-track"><i style="width:'+x.rate+'%"></i></div><div class="metric-value">'+x.rate+'% ('+x.done+'/'+x.total+')</div></div>').join('');
+ const sh=coverage.map(x=>'<div class="metric-line analytics-drill-target" role="button" tabindex="0" data-drill-kind="substation" data-drill-key="'+esc(x.name)+'" title="View inspection records"><div class="metric-label">'+esc(x.name)+'</div><div class="metric-track"><i style="width:'+x.rate+'%"></i></div><div class="metric-value">'+x.rate+'% ('+x.done+'/'+x.total+')</div></div>').join('');
  const risk=subs.slice().sort((a,b)=>b.open-a.open||b.pending-a.pending||b.affected-a.affected).slice(0,8);
- const rh=risk.map(x=>'<div class="risk-row"><div class="risk-main"><b>'+esc(x.name)+'</b><span>'+x.open+' open · '+x.pending+' pending</span></div><div class="risk-meta"><span>'+x.rate+'% inspected</span><span>'+x.affected+' affected assets</span></div><div class="metric-track red"><i style="width:'+pct(x.open,Math.max(1,...risk.map(y=>y.open)))+'%"></i></div></div>').join('');
+ const rh=risk.map(x=>'<div class="risk-row analytics-drill-target" role="button" tabindex="0" data-drill-kind="substation" data-drill-key="'+esc(x.name)+'" title="View inspection records"><div class="risk-main"><b>'+esc(x.name)+'</b><span>'+x.open+' open · '+x.pending+' pending</span></div><div class="risk-meta"><span>'+x.rate+'% inspected</span><span>'+x.affected+' affected assets</span></div><div class="metric-track red"><i style="width:'+pct(x.open,Math.max(1,...risk.map(y=>y.open)))+'%"></i></div></div>').join('');
  const lm=new Map();done.forEach(r=>{const k=r.lm||'Not recorded';let x=lm.get(k);if(!x){x={n:0,d:0,items:0};lm.set(k,x);}x.n++;if(r.defs.length)x.d++;x.items+=r.defs.length;});
  const la=[...lm.entries()].sort((a,b)=>b[1].n-a[1].n).slice(0,8);
- const cats=new Map();deficient.forEach(r=>r.defs.forEach(d=>{const k=d.t==='remark'?'Team remark':d.label.replace(/ \\(\\d+\\)$/,'');cats.set(k,(cats.get(k)||0)+1);}));
+ const cats=new Map();deficient.forEach(r=>r.defs.forEach(d=>{const k=d.t==='remark'?'Team remark':d.label.replace(/ \(\d+\)$/,'');cats.set(k,(cats.get(k)||0)+1);}));
  const ca=[...cats.entries()].sort((a,b)=>b[1]-a[1]).slice(0,7),cm=Math.max(1,...ca.map(x=>x[1]));
  const rectRate=pct(rect.length,deficient.length);
  return '<div class="page-intro"><div><h2>Operational analytics</h2><p>Performance trends, inspection workload and substation risk signals calculated from the selected records.</p></div><span class="page-tag">LIVE DATA VIEW</span></div>'+
  '<div class="analytics-kpis"><div class="analytics-kpi"><strong>'+rate+'%</strong><span>Inspection coverage</span></div><div class="analytics-kpi"><strong>'+num(pending.length)+'</strong><span>Pending assets</span></div><div class="analytics-kpi"><strong>'+num(deficient.length)+'</strong><span>Assets with deficiency</span></div><div class="analytics-kpi"><strong>'+num(rect.length)+'</strong><span>Assets marked rectified</span></div></div>'+
  '<div class="insight-strip"><div class="insight-tile"><b>'+num(open.length)+'</b><span>Open / unclear affected assets</span></div><div class="insight-tile"><b>'+rectRate+'%</b><span>Deficient assets rectified</span></div><div class="insight-tile"><b>'+num(subs.length)+'</b><span>Substations represented</span></div></div>'+
- '<div class="analytics-grid"><section class="analytics-panel"><h3>Monthly inspection trend</h3><p class="note">Completed inspections · latest 8 available months</p>'+trend+'</section><section class="analytics-panel"><h3>Substation inspection coverage</h3><p class="note">Highest coverage first · completed / total</p>'+sh+'</section><section class="analytics-panel"><h3>Substations needing attention</h3><p class="note">Prioritised by open deficiencies, then pending workload. Not a safety-risk score.</p>'+(rh||'<p class="note">No substation records available.</p>')+'</section><section class="analytics-panel"><h3>Lineman activity</h3><table class="analytics-table"><thead><tr><th>Lineman</th><th>Inspected</th><th>Affected</th><th>Deficiency items</th></tr></thead><tbody>'+la.map(([k,x])=>'<tr><td>'+esc(k)+'</td><td>'+x.n+'</td><td>'+x.d+'</td><td>'+x.items+'</td></tr>').join('')+'</tbody></table></section><section class="analytics-panel"><h3>Frequent deficiency categories</h3>'+ca.map(([k,n])=>'<div class="metric-line"><div class="metric-label">'+esc(k)+'</div><div class="metric-track red"><i style="width:'+(n/cm*100)+'%"></i></div><div class="metric-value">'+n+'</div></div>').join('')+'</section></div>';
+ '<div class="analytics-grid"><section class="analytics-panel"><h3>Monthly inspection trend</h3><p class="note">Completed inspections · latest 8 available months</p>'+trend+'</section><section class="analytics-panel"><h3>Substation inspection coverage</h3><p class="note">Highest coverage first · completed / total</p>'+sh+'</section><section class="analytics-panel"><h3>Substations needing attention</h3><p class="note">Prioritised by open deficiencies, then pending workload. Not a safety-risk score.</p>'+(rh||'<p class="note">No substation records available.</p>')+'</section><section class="analytics-panel"><h3>Lineman activity</h3><table class="analytics-table"><thead><tr><th>Lineman</th><th>Inspected</th><th>Affected</th><th>Deficiency items</th></tr></thead><tbody>'+la.map(([k,x])=>'<tr class="analytics-drill-target" role="button" tabindex="0" data-drill-kind="lineman" data-drill-key="'+esc(k)+'" title="View lineman inspection records"><td>'+esc(k)+'</td><td>'+x.n+'</td><td>'+x.d+'</td><td>'+x.items+'</td></tr>').join('')+'</tbody></table></section><section class="analytics-panel"><h3>Frequent deficiency categories</h3>'+ca.map(([k,n])=>'<div class="metric-line analytics-drill-target" role="button" tabindex="0" data-drill-kind="category" data-drill-key="'+esc(k)+'" title="View matching deficiency records"><div class="metric-label">'+esc(k)+'</div><div class="metric-track red"><i style="width:'+(n/cm*100)+'%"></i></div><div class="metric-value">'+n+'</div></div>').join('')+'</section></div><section class="analytics-panel analytics-drilldown" id="analyticsDrilldown" hidden></section>';
 }
+
+function showAnalyticsDrilldown(kind,key,D){
+ const panel=$('#analyticsDrilldown');if(!panel)return;
+ const rows=D.rows.filter(r=>{
+  if(kind==='substation')return (r.sub||'—')===key;
+  if(kind==='lineman')return (r.lm||'Not recorded')===key;
+  if(kind==='category')return r.defs.some(d=>(d.t==='remark'?'Team remark':d.label.replace(/ \(\d+\)$/,''))===key);
+  return false;
+ }).sort((a,b)=>(b.dk||'').localeCompare(a.dk||'')||b.defs.length-a.defs.length);
+ const shown=rows.slice(0,100);
+ panel.hidden=false;
+ panel.innerHTML='<div class="drilldown-head"><div><h3>'+esc(key)+'</h3><p class="note">'+rows.length+' matching inspection record'+(rows.length===1?'':'s')+' · showing '+shown.length+'</p></div><button type="button" class="btn" id="closeAnalyticsDrilldown">Close ×</button></div>'+
+ (shown.length?'<div class="drilldown-list">'+shown.map(r=>'<article class="drilldown-record"><div class="drilldown-record-top"><b>'+esc(r.name||r.eq||'Unnamed asset')+'</b><span class="chip '+(r.done?'g':'w')+'">'+(r.done?'Inspected':'Pending')+'</span></div><div class="note">'+esc(r.eq||'No equipment ID')+' · '+esc(r.sub||'—')+' · '+esc(r.fdr||'No feeder')+'</div><div class="note">Lineman: '+esc(r.lm||'Not recorded')+' · Visit: '+esc(r.dl||'No date')+'</div><div class="note">Rectification: '+esc(r.fix==='rect'?'Rectified':r.fix?'Open / unclear':'Not recorded')+'</div>'+(r.defs.length?'<div class="drilldown-defs">'+chips(r.defs)+'</div>':'')+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'</article>').join('')+'</div>':'<p class="note">No matching records.</p>')+
+ (rows.length>100?'<p class="note">Only the latest 100 matching records are displayed. Export CSV for the complete dataset.</p>':'');
+ $('#closeAnalyticsDrilldown').onclick=()=>{panel.hidden=true;panel.innerHTML='';};
+ panel.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
 function buildAiSummary(D){
  const rows=D.rows,done=rows.filter(r=>r.done),pending=rows.filter(r=>!r.done),deficient=defRows(rows),open=deficient.filter(r=>r.fix!=='rect'),rect=deficient.filter(r=>r.fix==='rect');
  const subs=new Map(),cats=new Map(),months=new Map();
@@ -975,6 +1008,12 @@ function render(keepScroll){
   el.insertBefore(exportBar,el.firstChild);
   $('#exportCsv').onclick=exportDatasetCSV;
   $('#printView').onclick=()=>window.print();
+  if(S.sub==='analytics'){
+    document.querySelectorAll('[data-drill-kind]').forEach(el=>{
+      const open=()=>showAnalyticsDrilldown(el.dataset.drillKind,el.dataset.drillKey,D);
+      el.onclick=open;el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}};
+    });
+  }
   if(S.sub==='intelligence'){
     const form=$('#intelForm'),input=$('#intelQuery');
     if(form)form.onsubmit=e=>{e.preventDefault();const question=input.value.trim();if(question)askCloudflareAI(question,D);};
