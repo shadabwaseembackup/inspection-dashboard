@@ -810,7 +810,7 @@ function viewAnalytics(D){
  const rh=risk.map(x=>'<div class="risk-row analytics-drill-target" role="button" tabindex="0" data-drill-kind="substation" data-drill-key="'+esc(x.name)+'" title="View inspection records"><div class="risk-main"><b>'+esc(x.name)+'</b><span>'+x.open+' open · '+x.pending+' pending</span></div><div class="risk-meta"><span>'+x.rate+'% inspected</span><span>'+x.affected+' affected assets</span></div><div class="metric-track red"><i style="width:'+pct(x.open,Math.max(1,...risk.map(y=>y.open)))+'%"></i></div></div>').join('');
  const lm=new Map();done.forEach(r=>{const k=r.lm||'Not recorded';let x=lm.get(k);if(!x){x={n:0,d:0,items:0};lm.set(k,x);}x.n++;if(r.defs.length)x.d++;x.items+=r.defs.length;});
  const la=[...lm.entries()].sort((a,b)=>b[1].n-a[1].n).slice(0,8);
- const cats=new Map();deficient.forEach(r=>r.defs.forEach(d=>{const k=d.t==='remark'?'Team remark':d.label.replace(/ \\(\\d+\\)$/,'');cats.set(k,(cats.get(k)||0)+1);}));
+ const cats=new Map();deficient.forEach(r=>r.defs.forEach(d=>{const k=d.t==='remark'?'Team remark':d.label.replace(/ \(\d+\)$/,'');cats.set(k,(cats.get(k)||0)+1);}));
  const ca=[...cats.entries()].sort((a,b)=>b[1]-a[1]).slice(0,7),cm=Math.max(1,...ca.map(x=>x[1]));
  const rectRate=pct(rect.length,deficient.length);
  return '<div class="page-intro"><div><h2>Operational analytics</h2><p>Performance trends, inspection workload and substation risk signals calculated from the selected records.</p></div><span class="page-tag">LIVE DATA VIEW</span></div>'+
