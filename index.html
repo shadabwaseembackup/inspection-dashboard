@@ -44,6 +44,12 @@ b.g{color:var(--ok)}b.r{color:var(--bad)}b.w{color:var(--warn)}
 .bar.red i{background:var(--bad)}
 .row{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 0;border-top:1px solid var(--line)}
 .row.first{border-top:0}
+.summary-drill{cursor:pointer;border-radius:9px;padding-left:8px;padding-right:8px}
+.summary-drill:hover,.summary-drill:focus,.summary-drill.active{background:var(--pri2);outline:none}
+.summary-drill.active{box-shadow:inset 3px 0 0 var(--pri)}
+.drill-hint{font-size:11px;color:var(--mut);margin:5px 0 0}
+.drill-active{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 10px;margin:0 0 9px;border-radius:9px;background:var(--pri2);color:var(--pri);font-size:12px}
+.drill-active button{border:0;background:transparent;color:inherit;font-weight:700;cursor:pointer;padding:3px 5px}
 .rn{font-size:13px;overflow-wrap:anywhere}
 .rv{font-size:13px;text-align:right;white-space:nowrap}.rv small{display:block;color:var(--mut);font-size:11px}
 .chip{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11.5px;margin:2px 4px 2px 0}
@@ -223,7 +229,7 @@ const FIX_YES=/^(ok|okay|0k|yes|y|done|हाँ|हां|ठीक|fixed|recti
 const FIX_NO=/^(no|n|nahi|nhi|नहीं|नही)$/i;
 
 /* ================= STATE ================= */
-const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',dateFrom:'',dateTo:'',substation:'',open:new Set(),lmMap:new Map(),
+const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',cat:'',dateFrom:'',dateTo:'',substation:'',open:new Set(),lmMap:new Map(),
   data:{fpsp:null,dt:null},src:{fpsp:{s:'none'},dt:{s:'none'}}};
 const RAW={fpsp:'',dt:''};
 let lastLoad=0,qTimer=0,busy=0;
@@ -508,11 +514,12 @@ function viewDef(D){
   const tk=Object.keys(tc).sort((a,b)=>tc[b]-tc[a]);
   const lms=[...new Set(D.rows.map(r=>r.lm||'—'))].sort();
   let h='<div class="grid">'+stat('Assets with deficiency',wd.length,'r')+stat('Deficiency items',items,'w')+stat('From team remark',rem,'w')+stat('Not yet rectified',open,open?'r':'g')+stat('Pending / not checked',num(pending.length),pending.length?'w':'g')+'</div>';
-  h+='<section class="card"><h3>Deficiency summary</h3>'+(tk.length?tk.map((k,i)=>'<div class="row'+(i?'':' first')+'"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],wd.length),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
+  h+='<section class="card"><h3>Deficiency summary</h3><p class="drill-hint">Select a category to view matching assets below</p>'+(tk.length?tk.map((k,i)=>'<div class="row summary-drill'+(i?'':' first')+(S.cat===k?' active':'')+'" data-defcat="'+esc(k)+'" role="button" tabindex="0"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],wd.length),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
   if(S.main==='dt') h+=viewDTDeficiencySummary(D);
   if(S.main==='fpsp') h+=viewFPDeficiencySummary(D);
   const subs=[...new Set(D.rows.map(r=>r.sub||'—'))].sort();
   h+='<section class="card"><h3>Deficiency filters</h3><div class="filters"><label class="note">From<input type="date" id="dfFrom" value="'+esc(S.dateFrom)+'"></label><label class="note">To<input type="date" id="dfTo" value="'+esc(S.dateTo)+'"></label><select id="fsub" aria-label="Filter by substation"><option value="">All substations</option>'+subs.map(n=>'<option'+(S.substation===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select></div><h3>Deficiency detail</h3><div class="filters"><input type="search" id="fq" placeholder="Search asset / substation" aria-label="Search deficiencies" value="'+esc(S.q)+'"><select id="flm" aria-label="Filter by lineman"><option value="">All linemen</option>'+lms.map(n=>'<option'+(S.lm===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fst" aria-label="Filter by status"><option value="">All status</option><option value="open"'+(S.st==='open'?' selected':'')+'>Not rectified</option><option value="rect"'+(S.st==='rect'?' selected':'')+'>Rectified</option><option value="pending"'+(S.st==='pending'?' selected':'')+'>Pending / not checked</option></select></div><div id="deflist"></div></section>';
+  if(S.cat) h=h.replace('<div id="deflist"></div>','<div class="drill-active"><span>Category: <b>'+esc(S.cat)+'</b></span><button type="button" id="clearcat">Clear ×</button></div><div id="deflist"></div>');
   return h;
 }
 function renderDefList(){
@@ -521,6 +528,7 @@ function renderDefList(){
   const filteredRows=filterDefRows(D.rows);
   const sourceRows=S.main==='dt'?filteredRows.filter(r=>String(r.lm||'').trim()!==''):filteredRows;
   const list=(S.st==='pending'?sourceRows.filter(r=>!r.done):defRows(sourceRows)).filter(r=>{
+    if(S.cat&&!r.defs.some(d=>(d.t==='remark'?'Team remark':d.label.replace(/ \(\d+\)$/,''))===S.cat)) return false;
     if(S.lm&&(r.lm||'—')!==S.lm) return false;
     if(S.st==='rect'&&r.fix!=='rect') return false;
     if(S.st==='open'&&r.fix==='rect') return false;
@@ -556,13 +564,15 @@ function render(keepScroll){
   el.innerHTML=S.sub==='progress'?viewProgress(D):S.sub==='lineman'?viewLineman(D):S.sub==='analytics'?viewAnalytics(D):viewDef(D);
   if(S.sub==='def'){
     renderDefList();
-    const q=$('#fq'),l=$('#flm'),s=$('#fst'),df=$('#dfFrom'),dt=$('#dfTo'),sub=$('#fsub');
+    const q=$('#fq'),l=$('#flm'),s=$('#fst'),df=$('#dfFrom'),dt=$('#dfTo'),sub=$('#fsub'),clear=$('#clearcat');
     if(q) q.oninput=e=>{S.q=e.target.value;clearTimeout(qTimer);qTimer=setTimeout(renderDefList,150);};
     if(l) l.onchange=e=>{S.lm=e.target.value;renderDefList();};
     if(s) s.onchange=e=>{S.st=e.target.value;renderDefList();};
     if(df) df.onchange=e=>{S.dateFrom=e.target.value;render();};
     if(dt) dt.onchange=e=>{S.dateTo=e.target.value;render();};
     if(sub) sub.onchange=e=>{S.substation=e.target.value;render();};
+    if(clear) clear.onclick=()=>{S.cat='';render();};
+    document.querySelectorAll('[data-defcat]').forEach(row=>{const choose=()=>{S.cat=row.dataset.defcat;S.st='';render(true);document.querySelector('#deflist')?.scrollIntoView({behavior:'smooth',block:'start'});};row.onclick=choose;row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose();}};});
   }
   if(keepScroll) window.scrollTo(0,y);
 }
