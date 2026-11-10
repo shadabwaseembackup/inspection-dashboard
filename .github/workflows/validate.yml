@@ -38,8 +38,8 @@ jobs:
               "function buildFP(rows)",
               "function buildDT(rows)",
               "function filterDefRows(rows)",
-              "id=\\"intelForm\\"",
-              "id=\\"fcat\\"",
+              'id="intelForm"',
+              'id="fcat"',
               "substation-heading",
           ]
           missing = [x for x in required if x not in s]
