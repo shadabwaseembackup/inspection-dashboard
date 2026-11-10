@@ -527,7 +527,7 @@ const FIX_YES=/^(ok|okay|0k|yes|y|done|हाँ|हां|ठीक|fixed|recti
 const FIX_NO=/^(no|n|nahi|nhi|नहीं|नही)$/i;
 
 /* ================= STATE ================= */
-const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',cat:'',dateFrom:'',dateTo:'',substation:'',aiQuery:'',open:new Set(),lmMap:new Map(),
+const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',cat:'',dateFrom:'',dateTo:'',substation:'',aiQuery:'',lmSort:'inspections',open:new Set(),lmMap:new Map(),
   data:{fpsp:null,dt:null},src:{fpsp:{s:'none'},dt:{s:'none'}}};
 const RAW={fpsp:'',dt:''};
 let lastLoad=0,qTimer=0,busy=0,turnstileWidget=null;
@@ -764,24 +764,45 @@ function viewLineman(D){
   if(!done.length) return empty('No inspections recorded yet.');
   const m=new Map();
   done.forEach(r=>{const k=(r.lm||'').toLowerCase()||'—';let g=m.get(k);if(!g){g={key:k,k:r.lm||'Not recorded',list:[]};m.set(k,g);}g.list.push(r);});
-  const arr=[...m.values()].sort((a,b)=>b.list.length-a.list.length);
-  let h='<div class="page-intro"><div><h2>Lineman performance</h2><p>Compare completed inspections and deficiency workload by field team member.</p></div><span class="page-tag">FIELD ACTIVITY</span></div>';
+  const arr=[...m.values()];
+  const stats=g=>({inspections:g.list.length,deficient:g.list.filter(r=>r.defs.length).length,items:g.list.reduce((n,r)=>n+r.defs.length,0),rate:pct(g.list.filter(r=>r.defs.length).length,g.list.length)});
+  const sort=(a,b)=>{const x=stats(a),y=stats(b);return S.lmSort==='deficient'?y.deficient-x.deficient||y.inspections-x.inspections:S.lmSort==='rate'?y.rate-x.rate||y.inspections-x.inspections:S.lmSort==='items'?y.items-x.items||y.inspections-x.inspections:y.inspections-x.inspections;};
+  arr.sort(sort);
+  let h='<div class="page-intro"><div><h2>Lineman performance</h2><p>Compare completed inspections, affected assets and recorded deficiency workload by field team member.</p></div><span class="page-tag">FIELD ACTIVITY</span></div>';
   h+='<div class="grid">'+stat('Linemen',arr.length)+stat('Inspections',num(done.length),'g')+stat('Assets with deficiency',defRows(done).length,'r')+stat('Deficiency items',done.reduce((s,r)=>s+r.defs.length,0),'w')+'</div>';
-  h+='<div class="lm-tools"><input type="search" id="lmSearch" placeholder="Search lineman name…" aria-label="Search lineman"><span class="lm-count" id="lmCount">'+arr.length+' teams</span></div><div id="lmCards">';
+  h+='<div class="lm-tools"><input type="search" id="lmSearch" placeholder="Search lineman name…" aria-label="Search lineman"><select id="lmSort" aria-label="Sort lineman performance"><option value="inspections"'+(S.lmSort==='inspections'?' selected':'')+'>Sort: inspections</option><option value="deficient"'+(S.lmSort==='deficient'?' selected':'')+'>Sort: affected assets</option><option value="rate"'+(S.lmSort==='rate'?' selected':'')+'>Sort: deficiency rate</option><option value="items"'+(S.lmSort==='items'?' selected':'')+'>Sort: deficiency items</option></select><span class="lm-count" id="lmCount">'+arr.length+' teams</span></div><div class="note" style="margin:0 0 9px">Deficiency rate = inspected assets with one or more recorded deficiencies ÷ inspections. It is a workload indicator, not an individual performance judgement.</div><div id="lmCards">';
   arr.forEach(g=>{
-    const dfl=g.list.filter(r=>r.defs.length),items=g.list.reduce((s,r)=>s+r.defs.length,0);
-    const split={};g.list.forEach(r=>split[r.grp]=(split[r.grp]||0)+1);
+    const x=stats(g),split={};g.list.forEach(r=>split[r.grp]=(split[r.grp]||0)+1);
     const last=g.list.map(r=>r.dk).filter(Boolean).sort().pop();
     const lastL=last?(g.list.find(r=>r.dk===last).dl):'—';
     S.lmMap.set(g.key,g.list.slice().sort(byDateDesc));
-    h+='<details class="card" data-k="'+esc(g.key)+'"'+(S.open.has(g.key)?' open':'')+'><summary><div class="lmh"><div><b>'+esc(g.k)+'</b><div class="note" style="margin:2px 0 0">'+Object.keys(split).map(k=>k+' '+split[k]).join(' · ')+' · last visit: '+esc(lastL)+'</div></div><div style="text-align:right"><b class="n">'+g.list.length+'</b><div class="note" style="margin:0">'+dfl.length+' deficient / '+items+' items</div></div></div>'+bar(pct(dfl.length,g.list.length),true)+'</summary><div class="body"></div></details>';
+    h+='<details class="card" data-k="'+esc(g.key)+'"><summary><div class="lmh"><div><b>'+esc(g.k)+'</b><div class="note" style="margin:2px 0 0">'+Object.keys(split).map(k=>k+' '+split[k]).join(' · ')+' · last visit: '+esc(lastL)+'</div></div><div style="text-align:right"><b class="n">'+x.inspections+'</b><div class="note" style="margin:0">'+x.deficient+' affected · '+x.items+' items</div></div></div>'+bar(x.rate,true)+'<div class="note">'+x.rate+'% of inspected assets have recorded deficiencies</div></summary><div class="body"></div></details>';
   });
   h+='</div>';
   return h;
 }
-
-function viewAnalytics(D){const rows=D.rows,done=rows.filter(r=>r.done),deficient=defRows(rows),pending=rows.filter(r=>!r.done),rect=deficient.filter(r=>r.fix==='rect'),open=deficient.filter(r=>r.fix!=='rect'),rate=pct(done.length,rows.length);const monthly=new Map();done.forEach(r=>{const k=r.dk&&/^\d{4}-\d{2}/.test(r.dk)?r.dk.slice(0,7):'';if(k)monthly.set(k,(monthly.get(k)||0)+1);});const months=[...monthly.entries()].sort((a,b)=>a[0].localeCompare(b[0])).slice(-8),mx=Math.max(1,...months.map(x=>x[1]));const trend=months.length?'<div class="trend-bars">'+months.map(([k,n])=>'<div class="trend-col"><small>'+n+'</small><i style="height:'+Math.max(3,n/mx*100)+'%"></i><b>'+esc(k.slice(5))+'</b></div>').join('')+'</div>':'<p class="note">Date-wise monthly trend will appear when inspection dates are available.</p>';const subs=groupBy(rows,r=>r.sub).map(g=>{const a=rows.filter(r=>(r.sub||'—')===g.k),d=a.filter(r=>r.done).length;return{name:g.k,total:a.length,done:d,rate:pct(d,a.length)};}).sort((a,b)=>b.rate-a.rate||b.total-a.total).slice(0,8);const sh=subs.map(s=>'<div class="metric-line"><div class="metric-label">'+esc(s.name)+'</div><div class="metric-track"><i style="width:'+s.rate+'%"></i></div><div class="metric-value">'+s.rate+'% ('+s.done+'/'+s.total+')</div></div>').join('');const lm=new Map();done.forEach(r=>{const k=r.lm||'Not recorded';let x=lm.get(k);if(!x){x={n:0,d:0};lm.set(k,x);}x.n++;if(r.defs.length)x.d++;});const la=[...lm.entries()].sort((a,b)=>b[1].n-a[1].n).slice(0,8);const cats=new Map();deficient.forEach(r=>r.defs.forEach(d=>{const k=d.label.replace(/ \(\d+\)$/,'');cats.set(k,(cats.get(k)||0)+1);}));const ca=[...cats.entries()].sort((a,b)=>b[1]-a[1]).slice(0,7),cm=Math.max(1,...ca.map(x=>x[1]));return '<div class="page-intro"><div><h2>Operational analytics</h2><p>Performance trends and risk signals calculated from the selected inspection records.</p></div><span class="page-tag">LIVE DATA VIEW</span></div><div class="analytics-kpis"><div class="analytics-kpi"><strong>'+rate+'%</strong><span>Inspection coverage</span></div><div class="analytics-kpi"><strong>'+num(pending.length)+'</strong><span>Pending assets</span></div><div class="analytics-kpi"><strong>'+num(deficient.length)+'</strong><span>Assets with deficiency</span></div><div class="analytics-kpi"><strong>'+num(rect.length)+'</strong><span>Assets marked rectified</span></div></div><div class="analytics-grid"><section class="analytics-panel"><h3>Monthly inspection trend</h3><p class="note">Completed inspections · latest 8 available months</p>'+trend+'<p class="note">Open / unclear deficiencies: '+num(open.length)+'</p></section><section class="analytics-panel"><h3>Substation performance</h3><p class="note">Top 8 by inspection coverage</p>'+sh+'</section><section class="analytics-panel"><h3>Lineman activity</h3><table class="analytics-table"><thead><tr><th>Lineman</th><th>Inspected</th><th>Deficient</th></tr></thead><tbody>'+la.map(([k,x])=>'<tr><td>'+esc(k)+'</td><td>'+x.n+'</td><td>'+x.d+'</td></tr>').join('')+'</tbody></table></section><section class="analytics-panel"><h3>Frequent deficiency categories</h3>'+ca.map(([k,n])=>'<div class="metric-line"><div class="metric-label">'+esc(k)+'</div><div class="metric-track red"><i style="width:'+(n/cm*100)+'%"></i></div><div class="metric-value">'+n+'</div></div>').join('')+'</section></div>';}
-
+function viewAnalytics(D){
+ const rows=D.rows,done=rows.filter(r=>r.done),deficient=defRows(rows),pending=rows.filter(r=>!r.done),rect=deficient.filter(r=>r.fix==='rect'),open=deficient.filter(r=>r.fix!=='rect'),rate=pct(done.length,rows.length);
+ const monthly=new Map();done.forEach(r=>{const k=r.dk&&/^\\d{4}-\\d{2}/.test(r.dk)?r.dk.slice(0,7):'';if(k)monthly.set(k,(monthly.get(k)||0)+1);});
+ const months=[...monthly.entries()].sort((a,b)=>a[0].localeCompare(b[0])).slice(-8),mx=Math.max(1,...months.map(x=>x[1]));
+ const trend=months.length?'<div class="trend-bars">'+months.map(([k,n])=>'<div class="trend-col"><small>'+n+'</small><i style="height:'+Math.max(3,n/mx*100)+'%"></i><b>'+esc(k.slice(5))+'</b></div>').join('')+'</div>':'<p class="note">Date-wise monthly trend will appear when inspection dates are available.</p>';
+ const bySub=new Map();rows.forEach(r=>{const k=r.sub||'—';let g=bySub.get(k);if(!g){g={name:k,total:0,done:0,pending:0,affected:0,open:0,rectified:0};bySub.set(k,g);}g.total++;if(r.done)g.done++;else g.pending++;});
+ deficient.forEach(r=>{const g=bySub.get(r.sub||'—');if(g){g.affected++;if(r.fix==='rect')g.rectified++;else g.open++;}});
+ const subs=[...bySub.values()].map(g=>({...g,rate:pct(g.done,g.total)}));
+ const coverage=subs.slice().sort((a,b)=>b.rate-a.rate||b.total-a.total).slice(0,8);
+ const sh=coverage.map(x=>'<div class="metric-line"><div class="metric-label">'+esc(x.name)+'</div><div class="metric-track"><i style="width:'+x.rate+'%"></i></div><div class="metric-value">'+x.rate+'% ('+x.done+'/'+x.total+')</div></div>').join('');
+ const risk=subs.slice().sort((a,b)=>b.open-a.open||b.pending-a.pending||b.affected-a.affected).slice(0,8);
+ const rh=risk.map(x=>'<div class="risk-row"><div class="risk-main"><b>'+esc(x.name)+'</b><span>'+x.open+' open · '+x.pending+' pending</span></div><div class="risk-meta"><span>'+x.rate+'% inspected</span><span>'+x.affected+' affected assets</span></div><div class="metric-track red"><i style="width:'+pct(x.open,Math.max(1,...risk.map(y=>y.open)))+'%"></i></div></div>').join('');
+ const lm=new Map();done.forEach(r=>{const k=r.lm||'Not recorded';let x=lm.get(k);if(!x){x={n:0,d:0,items:0};lm.set(k,x);}x.n++;if(r.defs.length)x.d++;x.items+=r.defs.length;});
+ const la=[...lm.entries()].sort((a,b)=>b[1].n-a[1].n).slice(0,8);
+ const cats=new Map();deficient.forEach(r=>r.defs.forEach(d=>{const k=d.t==='remark'?'Team remark':d.label.replace(/ \\(\\d+\\)$/,'');cats.set(k,(cats.get(k)||0)+1);}));
+ const ca=[...cats.entries()].sort((a,b)=>b[1]-a[1]).slice(0,7),cm=Math.max(1,...ca.map(x=>x[1]));
+ const rectRate=pct(rect.length,deficient.length);
+ return '<div class="page-intro"><div><h2>Operational analytics</h2><p>Performance trends, inspection workload and substation risk signals calculated from the selected records.</p></div><span class="page-tag">LIVE DATA VIEW</span></div>'+
+ '<div class="analytics-kpis"><div class="analytics-kpi"><strong>'+rate+'%</strong><span>Inspection coverage</span></div><div class="analytics-kpi"><strong>'+num(pending.length)+'</strong><span>Pending assets</span></div><div class="analytics-kpi"><strong>'+num(deficient.length)+'</strong><span>Assets with deficiency</span></div><div class="analytics-kpi"><strong>'+num(rect.length)+'</strong><span>Assets marked rectified</span></div></div>'+
+ '<div class="insight-strip"><div class="insight-tile"><b>'+num(open.length)+'</b><span>Open / unclear affected assets</span></div><div class="insight-tile"><b>'+rectRate+'%</b><span>Deficient assets rectified</span></div><div class="insight-tile"><b>'+num(subs.length)+'</b><span>Substations represented</span></div></div>'+
+ '<div class="analytics-grid"><section class="analytics-panel"><h3>Monthly inspection trend</h3><p class="note">Completed inspections · latest 8 available months</p>'+trend+'</section><section class="analytics-panel"><h3>Substation inspection coverage</h3><p class="note">Highest coverage first · completed / total</p>'+sh+'</section><section class="analytics-panel"><h3>Substations needing attention</h3><p class="note">Prioritised by open deficiencies, then pending workload. Not a safety-risk score.</p>'+(rh||'<p class="note">No substation records available.</p>')+'</section><section class="analytics-panel"><h3>Lineman activity</h3><table class="analytics-table"><thead><tr><th>Lineman</th><th>Inspected</th><th>Affected</th><th>Deficiency items</th></tr></thead><tbody>'+la.map(([k,x])=>'<tr><td>'+esc(k)+'</td><td>'+x.n+'</td><td>'+x.d+'</td><td>'+x.items+'</td></tr>').join('')+'</tbody></table></section><section class="analytics-panel"><h3>Frequent deficiency categories</h3>'+ca.map(([k,n])=>'<div class="metric-line"><div class="metric-label">'+esc(k)+'</div><div class="metric-track red"><i style="width:'+(n/cm*100)+'%"></i></div><div class="metric-value">'+n+'</div></div>').join('')+'</section></div>';
+}
 function buildAiSummary(D){
  const rows=D.rows,done=rows.filter(r=>r.done),pending=rows.filter(r=>!r.done),deficient=defRows(rows),open=deficient.filter(r=>r.fix!=='rect'),rect=deficient.filter(r=>r.fix==='rect');
  const subs=new Map(),cats=new Map(),months=new Map();
@@ -934,6 +955,7 @@ function render(keepScroll){
   if(S.sub==='lineman'){
     const search=$('#lmSearch'),cards=$('#lmCards'),count=$('#lmCount');
     if(search&&cards)search.oninput=()=>{const q=search.value.trim().toLowerCase();let visible=0;cards.querySelectorAll('details[data-k]').forEach(card=>{const show=card.textContent.toLowerCase().includes(q);card.hidden=!show;if(show)visible++;});if(count)count.textContent=visible+' of '+cards.querySelectorAll('details[data-k]').length+' teams';};
+    const sort=$('#lmSort');if(sort)sort.onchange=e=>{S.lmSort=e.target.value;render(true);};
   }
   if(S.sub==='def'){
     renderDefList();
@@ -991,3 +1013,10 @@ loadAll();
 </script>
 </body>
 </html>
+
+<style>
+/* Operational intelligence v2 */
+.lm-tools select{max-width:190px;flex:0 1 190px}
+.risk-row{padding:9px 0;border-top:1px solid var(--line)}.risk-row:first-of-type{border-top:0}.risk-main,.risk-meta{display:flex;justify-content:space-between;align-items:center;gap:8px}.risk-main b{font-size:12px;overflow-wrap:anywhere}.risk-main span,.risk-meta{font-size:10px;color:var(--mut)}.risk-meta{margin:3px 0 6px}
+@media(max-width:650px){.lm-tools{flex-wrap:wrap}.lm-tools select{max-width:none;flex:1 1 100%}.lm-count{margin-left:auto}.risk-main{align-items:flex-start}.risk-main span{white-space:nowrap}}
+</style>
