@@ -189,6 +189,21 @@ input,select{border-radius:11px!important}
 .intel-foot{font-size:10px;color:var(--mut);margin-top:12px}
 @media(max-width:650px){.card,.analytics-panel{padding:12px}.stat{min-height:48px;padding:8px}.stat b{font-size:17px}.intel-hero{padding:16px;border-radius:16px}.intel-hero h2{font-size:20px}.intel-search{flex-direction:column}.intel-search button{padding:11px}.intel-grid{grid-template-columns:1fr}.subs{overflow-x:auto}.subs button{flex:0 0 auto;white-space:nowrap}}
 .intel-search button:disabled{opacity:.55;cursor:not-allowed}#intelTurnstile{max-width:100%;overflow:hidden}#intelAiResult{white-space:pre-wrap;overflow-wrap:anywhere}
+
+/* Operations dashboard page-level UX */
+.page-intro{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin:2px 0 12px;padding:2px 1px}
+.page-intro h2{font-size:19px;line-height:1.2;margin:0;font-weight:800;letter-spacing:-.035em}
+.page-intro p{font-size:12px;color:var(--mut);margin:4px 0 0;max-width:620px}
+.page-tag{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--mut);border-radius:99px;padding:5px 9px;font-size:10px;font-weight:700}
+.insight-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 12px}
+.insight-tile{background:var(--pri2);border-radius:12px;padding:10px;min-width:0}
+.insight-tile b{display:block;font-size:17px;line-height:1.1;color:var(--pri)}
+.insight-tile span{display:block;font-size:10px;color:var(--mut);margin-top:4px}
+.lm-tools{display:flex;gap:8px;align-items:center;margin:0 0 10px}
+.lm-tools input{flex:1;min-width:0}
+.lm-count{font-size:11px;color:var(--mut);white-space:nowrap}
+.analytics-panel .panel-kicker{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);font-weight:750;margin-bottom:4px}
+@media(max-width:650px){.page-intro h2{font-size:17px}.page-tag{font-size:9px;padding:4px 7px}.insight-strip{gap:5px}.insight-tile{padding:8px}.insight-tile b{font-size:15px}.insight-tile span{font-size:9px}.lm-tools{align-items:stretch}}
 </style>
 </head>
 <body>
@@ -488,9 +503,11 @@ const byDateDesc=(a,b)=>(b.dk||'').localeCompare(a.dk||'')||a.name.localeCompare
 /* ================= VIEWS ================= */
 function viewProgress(D){
   const rows=D.rows,tot=rows.length,done=rows.filter(r=>r.done),dn=done.length;
-  const dfc=defRows(rows).length;
-  let h='<section class="card"><div class="hero"><div class="big">'+pct(dn,tot)+'%</div><div style="flex:1"><div class="note" style="margin:0 0 6px">'+num(dn)+' of '+num(tot)+' inspected</div>'+bar(pct(dn,tot))+'</div></div></section>';
-  h+='<div class="grid">'+stat('Total',num(tot))+stat('Done',num(dn),'g')+stat('Pending',num(tot-dn),tot-dn?'w':'')+stat('With deficiency',num(dfc),dfc?'r':'')+'</div>';
+  const dfc=defRows(rows).length,open=defRows(done).filter(r=>r.fix!=='rect').length,rect=defRows(done).filter(r=>r.fix==='rect').length;
+  let h='<div class="page-intro"><div><h2>Inspection progress</h2><p>Coverage, pending workload and field completion across the currently selected dataset.</p></div><span class="page-tag">'+(S.main==='dt'?'DT INSPECTION':'FP / SP INSPECTION')+'</span></div>';
+  h+='<section class="card"><div class="hero"><div class="big">'+pct(dn,tot)+'%</div><div style="flex:1"><div class="note" style="margin:0 0 6px">'+num(dn)+' of '+num(tot)+' inspected</div>'+bar(pct(dn,tot))+'</div></div></section>';
+  h+='<div class="grid">'+stat('Total assets',num(tot))+stat('Inspected',num(dn),'g')+stat('Pending',num(tot-dn),tot-dn?'w':'')+stat('With deficiency',num(dfc),dfc?'r':'')+'</div>';
+  h+='<div class="insight-strip"><div class="insight-tile"><b>'+num(open)+'</b><span>Open / unclear deficiencies</span></div><div class="insight-tile"><b>'+num(rect)+'</b><span>Marked rectified</span></div><div class="insight-tile"><b>'+num(groupBy(rows,r=>r.sub).length)+'</b><span>Substations represented</span></div></div>';
   h+=groupList(S.main==='dt'?'Asset type':'Pole / Pillar',groupBy(rows,r=>r.grp));
   const dm=new Map();
   done.forEach(r=>{const k=r.dk||'zz';let g=dm.get(k);if(!g){g={l:r.dl||'No date',n:0,lm:{}};dm.set(k,g);}g.n++;const q=r.lm||'—';g.lm[q]=(g.lm[q]||0)+1;});
@@ -515,7 +532,9 @@ function viewLineman(D){
   const m=new Map();
   done.forEach(r=>{const k=(r.lm||'').toLowerCase()||'—';let g=m.get(k);if(!g){g={key:k,k:r.lm||'Not recorded',list:[]};m.set(k,g);}g.list.push(r);});
   const arr=[...m.values()].sort((a,b)=>b.list.length-a.list.length);
-  let h='<div class="grid">'+stat('Linemen',arr.length)+stat('Inspections',num(done.length),'g')+stat('Assets with deficiency',defRows(done).length,'r')+stat('Deficiency items',done.reduce((s,r)=>s+r.defs.length,0),'w')+'</div>';
+  let h='<div class="page-intro"><div><h2>Lineman performance</h2><p>Compare completed inspections and deficiency workload by field team member.</p></div><span class="page-tag">FIELD ACTIVITY</span></div>';
+  h+='<div class="grid">'+stat('Linemen',arr.length)+stat('Inspections',num(done.length),'g')+stat('Assets with deficiency',defRows(done).length,'r')+stat('Deficiency items',done.reduce((s,r)=>s+r.defs.length,0),'w')+'</div>';
+  h+='<div class="lm-tools"><input type="search" id="lmSearch" placeholder="Search lineman name…" aria-label="Search lineman"><span class="lm-count" id="lmCount">'+arr.length+' teams</span></div><div id="lmCards">';
   arr.forEach(g=>{
     const dfl=g.list.filter(r=>r.defs.length),items=g.list.reduce((s,r)=>s+r.defs.length,0);
     const split={};g.list.forEach(r=>split[r.grp]=(split[r.grp]||0)+1);
@@ -524,10 +543,11 @@ function viewLineman(D){
     S.lmMap.set(g.key,g.list.slice().sort(byDateDesc));
     h+='<details class="card" data-k="'+esc(g.key)+'"'+(S.open.has(g.key)?' open':'')+'><summary><div class="lmh"><div><b>'+esc(g.k)+'</b><div class="note" style="margin:2px 0 0">'+Object.keys(split).map(k=>k+' '+split[k]).join(' · ')+' · last visit: '+esc(lastL)+'</div></div><div style="text-align:right"><b class="n">'+g.list.length+'</b><div class="note" style="margin:0">'+dfl.length+' deficient / '+items+' items</div></div></div>'+bar(pct(dfl.length,g.list.length),true)+'</summary><div class="body"></div></details>';
   });
+  h+='</div>';
   return h;
 }
 
-function viewAnalytics(D){const rows=D.rows,done=rows.filter(r=>r.done),deficient=defRows(rows),pending=rows.filter(r=>!r.done),rect=deficient.filter(r=>r.fix==='rect'),open=deficient.filter(r=>r.fix!=='rect'),rate=pct(done.length,rows.length);const monthly=new Map();done.forEach(r=>{const k=r.dk&&/^\d{4}-\d{2}/.test(r.dk)?r.dk.slice(0,7):'';if(k)monthly.set(k,(monthly.get(k)||0)+1);});const months=[...monthly.entries()].sort((a,b)=>a[0].localeCompare(b[0])).slice(-8),mx=Math.max(1,...months.map(x=>x[1]));const trend=months.length?'<div class="trend-bars">'+months.map(([k,n])=>'<div class="trend-col"><small>'+n+'</small><i style="height:'+Math.max(3,n/mx*100)+'%"></i><b>'+esc(k.slice(5))+'</b></div>').join('')+'</div>':'<p class="note">Date-wise monthly trend will appear when inspection dates are available.</p>';const subs=groupBy(rows,r=>r.sub).map(g=>{const a=rows.filter(r=>(r.sub||'—')===g.k),d=a.filter(r=>r.done).length;return{name:g.k,total:a.length,done:d,rate:pct(d,a.length)};}).sort((a,b)=>b.rate-a.rate||b.total-a.total).slice(0,8);const sh=subs.map(s=>'<div class="metric-line"><div class="metric-label">'+esc(s.name)+'</div><div class="metric-track"><i style="width:'+s.rate+'%"></i></div><div class="metric-value">'+s.rate+'% ('+s.done+'/'+s.total+')</div></div>').join('');const lm=new Map();done.forEach(r=>{const k=r.lm||'Not recorded';let x=lm.get(k);if(!x){x={n:0,d:0};lm.set(k,x);}x.n++;if(r.defs.length)x.d++;});const la=[...lm.entries()].sort((a,b)=>b[1].n-a[1].n).slice(0,8);const cats=new Map();deficient.forEach(r=>r.defs.forEach(d=>{const k=d.label.replace(/ \(\d+\)$/,'');cats.set(k,(cats.get(k)||0)+1);}));const ca=[...cats.entries()].sort((a,b)=>b[1]-a[1]).slice(0,7),cm=Math.max(1,...ca.map(x=>x[1]));return '<div class="analytics-kpis"><div class="analytics-kpi"><strong>'+rate+'%</strong><span>Inspection coverage</span></div><div class="analytics-kpi"><strong>'+num(pending.length)+'</strong><span>Pending assets</span></div><div class="analytics-kpi"><strong>'+num(deficient.length)+'</strong><span>Assets with deficiency</span></div><div class="analytics-kpi"><strong>'+num(rect.length)+'</strong><span>Assets marked rectified</span></div></div><div class="analytics-grid"><section class="analytics-panel"><h3>Monthly inspection trend</h3><p class="note">Completed inspections · latest 8 available months</p>'+trend+'<p class="note">Open / unclear deficiencies: '+num(open.length)+'</p></section><section class="analytics-panel"><h3>Substation performance</h3><p class="note">Top 8 by inspection coverage</p>'+sh+'</section><section class="analytics-panel"><h3>Lineman activity</h3><table class="analytics-table"><thead><tr><th>Lineman</th><th>Inspected</th><th>Deficient</th></tr></thead><tbody>'+la.map(([k,x])=>'<tr><td>'+esc(k)+'</td><td>'+x.n+'</td><td>'+x.d+'</td></tr>').join('')+'</tbody></table></section><section class="analytics-panel"><h3>Frequent deficiency categories</h3>'+ca.map(([k,n])=>'<div class="metric-line"><div class="metric-label">'+esc(k)+'</div><div class="metric-track red"><i style="width:'+(n/cm*100)+'%"></i></div><div class="metric-value">'+n+'</div></div>').join('')+'</section></div>';}
+function viewAnalytics(D){const rows=D.rows,done=rows.filter(r=>r.done),deficient=defRows(rows),pending=rows.filter(r=>!r.done),rect=deficient.filter(r=>r.fix==='rect'),open=deficient.filter(r=>r.fix!=='rect'),rate=pct(done.length,rows.length);const monthly=new Map();done.forEach(r=>{const k=r.dk&&/^\d{4}-\d{2}/.test(r.dk)?r.dk.slice(0,7):'';if(k)monthly.set(k,(monthly.get(k)||0)+1);});const months=[...monthly.entries()].sort((a,b)=>a[0].localeCompare(b[0])).slice(-8),mx=Math.max(1,...months.map(x=>x[1]));const trend=months.length?'<div class="trend-bars">'+months.map(([k,n])=>'<div class="trend-col"><small>'+n+'</small><i style="height:'+Math.max(3,n/mx*100)+'%"></i><b>'+esc(k.slice(5))+'</b></div>').join('')+'</div>':'<p class="note">Date-wise monthly trend will appear when inspection dates are available.</p>';const subs=groupBy(rows,r=>r.sub).map(g=>{const a=rows.filter(r=>(r.sub||'—')===g.k),d=a.filter(r=>r.done).length;return{name:g.k,total:a.length,done:d,rate:pct(d,a.length)};}).sort((a,b)=>b.rate-a.rate||b.total-a.total).slice(0,8);const sh=subs.map(s=>'<div class="metric-line"><div class="metric-label">'+esc(s.name)+'</div><div class="metric-track"><i style="width:'+s.rate+'%"></i></div><div class="metric-value">'+s.rate+'% ('+s.done+'/'+s.total+')</div></div>').join('');const lm=new Map();done.forEach(r=>{const k=r.lm||'Not recorded';let x=lm.get(k);if(!x){x={n:0,d:0};lm.set(k,x);}x.n++;if(r.defs.length)x.d++;});const la=[...lm.entries()].sort((a,b)=>b[1].n-a[1].n).slice(0,8);const cats=new Map();deficient.forEach(r=>r.defs.forEach(d=>{const k=d.label.replace(/ \(\d+\)$/,'');cats.set(k,(cats.get(k)||0)+1);}));const ca=[...cats.entries()].sort((a,b)=>b[1]-a[1]).slice(0,7),cm=Math.max(1,...ca.map(x=>x[1]));return '<div class="page-intro"><div><h2>Operational analytics</h2><p>Performance trends and risk signals calculated from the selected inspection records.</p></div><span class="page-tag">LIVE DATA VIEW</span></div><div class="analytics-kpis"><div class="analytics-kpi"><strong>'+rate+'%</strong><span>Inspection coverage</span></div><div class="analytics-kpi"><strong>'+num(pending.length)+'</strong><span>Pending assets</span></div><div class="analytics-kpi"><strong>'+num(deficient.length)+'</strong><span>Assets with deficiency</span></div><div class="analytics-kpi"><strong>'+num(rect.length)+'</strong><span>Assets marked rectified</span></div></div><div class="analytics-grid"><section class="analytics-panel"><h3>Monthly inspection trend</h3><p class="note">Completed inspections · latest 8 available months</p>'+trend+'<p class="note">Open / unclear deficiencies: '+num(open.length)+'</p></section><section class="analytics-panel"><h3>Substation performance</h3><p class="note">Top 8 by inspection coverage</p>'+sh+'</section><section class="analytics-panel"><h3>Lineman activity</h3><table class="analytics-table"><thead><tr><th>Lineman</th><th>Inspected</th><th>Deficient</th></tr></thead><tbody>'+la.map(([k,x])=>'<tr><td>'+esc(k)+'</td><td>'+x.n+'</td><td>'+x.d+'</td></tr>').join('')+'</tbody></table></section><section class="analytics-panel"><h3>Frequent deficiency categories</h3>'+ca.map(([k,n])=>'<div class="metric-line"><div class="metric-label">'+esc(k)+'</div><div class="metric-track red"><i style="width:'+(n/cm*100)+'%"></i></div><div class="metric-value">'+n+'</div></div>').join('')+'</section></div>';}
 
 function buildAiSummary(D){
  const rows=D.rows,done=rows.filter(r=>r.done),pending=rows.filter(r=>!r.done),deficient=defRows(rows),open=deficient.filter(r=>r.fix!=='rect'),rect=deficient.filter(r=>r.fix==='rect');
@@ -677,6 +697,10 @@ function render(keepScroll){
     if(form)form.onsubmit=e=>{e.preventDefault();const question=input.value.trim();if(question)askCloudflareAI(question,D);};
     renderTurnstile();
     document.querySelectorAll('[data-iq]').forEach(b=>b.onclick=()=>{S.aiQuery=b.dataset.iq;render(true);});
+  }
+  if(S.sub==='lineman'){
+    const search=$('#lmSearch'),cards=$('#lmCards'),count=$('#lmCount');
+    if(search&&cards)search.oninput=()=>{const q=search.value.trim().toLowerCase();let visible=0;cards.querySelectorAll('details[data-k]').forEach(card=>{const show=card.textContent.toLowerCase().includes(q);card.hidden=!show;if(show)visible++;});if(count)count.textContent=visible+' of '+cards.querySelectorAll('details[data-k]').length+' teams';};
   }
   if(S.sub==='def'){
     renderDefList();
