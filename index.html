@@ -141,7 +141,54 @@ main{width:100%;min-width:0}
   .dt-table th,.dt-table td{font-size:9px;padding:5px 1px}
 }
 
-.substation-group{border-top:1px solid var(--line);padding-top:7px;margin-top:8px}.substation-group:first-child{border-top:0;margin-top:0}.substation-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;margin:0 0 4px;border-radius:9px;background:var(--pri2);color:var(--ink)}.substation-heading b{font-size:14px;overflow-wrap:anywhere}.substation-heading span{font-size:11px;color:var(--mut);white-space:nowrap}.substation-group .item:first-of-type{border-top:0}</style>
+.substation-group{border-top:1px solid var(--line);padding-top:7px;margin-top:8px}.substation-group:first-child{border-top:0;margin-top:0}.substation-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;margin:0 0 4px;border-radius:9px;background:var(--pri2);color:var(--ink)}.substation-heading b{font-size:14px;overflow-wrap:anywhere}.substation-heading span{font-size:11px;color:var(--mut);white-space:nowrap}.substation-group .item:first-of-type{border-top:0}
+/* Intelligence workspace + modern visual system */
+:root{--radius-xl:20px;--radius-lg:15px;--shadow-soft:0 8px 28px rgba(22,32,46,.06)}
+body{letter-spacing:-.01em}
+header{box-shadow:0 4px 20px rgba(15,23,42,.045);backdrop-filter:blur(16px)}
+.top{padding:3px 0 5px}
+h1{font-size:clamp(17px,2.2vw,21px);font-weight:780;letter-spacing:-.035em}
+.top p{font-size:12px;letter-spacing:.01em}
+.card,.analytics-panel{border-radius:var(--radius-lg);box-shadow:var(--shadow-soft);padding:16px}
+.card h3,.analytics-panel h3{font-size:15px;font-weight:750;letter-spacing:-.02em}
+.stat{border-radius:13px;padding:10px 11px;min-height:58px;box-shadow:var(--shadow-soft);border-color:transparent}
+.stat b{font-size:20px}
+.stat span{font-size:11px}
+.tabs button,.subs button{transition:background .18s ease,color .18s ease,transform .18s ease}
+.tabs button{border-radius:10px 10px 0 0}
+.subs button{border-radius:11px;font-weight:650}
+.subs button.on{box-shadow:0 4px 12px rgba(31,94,255,.2)}
+input,select{border-radius:11px!important}
+.item{padding:12px 0}
+.analytics-kpi{border-radius:14px;box-shadow:var(--shadow-soft)}
+.analytics-panel{border-color:transparent}
+.intel-hero{position:relative;overflow:hidden;padding:20px;background:linear-gradient(130deg,#10264c,#1f5eff 65%,#6e9cff);color:#fff;border-radius:20px;margin-bottom:12px;box-shadow:0 12px 30px rgba(31,94,255,.18)}
+.intel-hero:after{content:"✦";position:absolute;right:18px;top:-20px;font-size:120px;line-height:1;color:rgba(255,255,255,.10)}
+.intel-kicker{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#c7d8ff;font-weight:750}
+.intel-hero h2{font-size:23px;line-height:1.15;margin:8px 0 6px;max-width:620px}
+.intel-hero p{font-size:13px;color:#e0eaff;margin:0;max-width:620px}
+.intel-search{display:flex;gap:8px;margin-top:15px;position:relative;z-index:1}
+.intel-search input{flex:1;min-width:0;border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.96);color:#172033;padding:12px 13px;font:inherit}
+.intel-search button,.intel-chip{border:0;border-radius:11px;padding:10px 14px;background:#fff;color:#1749bd;font-weight:750;cursor:pointer}
+.intel-prompts{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 14px}
+.intel-chip{background:var(--pri2);color:var(--pri);font-size:11px;padding:7px 10px}
+.intel-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.intel-panel{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:14px;min-width:0;box-shadow:var(--shadow-soft)}
+.intel-panel h3{font-size:14px;margin:0 0 5px}
+.intel-panel .note{margin:0 0 10px}
+.intel-answer{background:var(--pri2);border-left:3px solid var(--pri);border-radius:12px;padding:13px;margin:10px 0 14px;font-size:13px;line-height:1.55}
+.intel-rank{display:flex;align-items:center;gap:9px;padding:9px 0;border-top:1px solid var(--line)}
+.intel-rank:first-of-type{border-top:0}
+.intel-rank b{font-size:12px;min-width:0;overflow-wrap:anywhere}
+.intel-rank span{margin-left:auto;white-space:nowrap;font-size:12px;font-weight:750}
+.intel-track{height:6px;background:var(--line);border-radius:9px;overflow:hidden;margin-top:5px}
+.intel-track i{display:block;height:100%;background:var(--pri);border-radius:9px}
+.intel-reco{padding:10px 0;border-top:1px solid var(--line);font-size:12px;line-height:1.45}
+.intel-reco:first-of-type{border-top:0}
+.intel-reco b{display:block;margin-bottom:3px}
+.intel-foot{font-size:10px;color:var(--mut);margin-top:12px}
+@media(max-width:650px){.card,.analytics-panel{padding:12px}.stat{min-height:48px;padding:8px}.stat b{font-size:17px}.intel-hero{padding:16px;border-radius:16px}.intel-hero h2{font-size:20px}.intel-search{flex-direction:column}.intel-search button{padding:11px}.intel-grid{grid-template-columns:1fr}.subs{overflow-x:auto}.subs button{flex:0 0 auto;white-space:nowrap}}
+</style>
 </head>
 <body>
 <header>
@@ -160,6 +207,7 @@ main{width:100%;min-width:0}
       <button type="button" data-sub="lineman">Lineman</button>
       <button type="button" data-sub="def">Deficiency</button>
       <button type="button" data-sub="analytics">Analytics</button>
+      <button type="button" data-sub="intelligence">✦ Intelligence</button>
     </div>
   </div>
 </header>
@@ -229,7 +277,7 @@ const FIX_YES=/^(ok|okay|0k|yes|y|done|हाँ|हां|ठीक|fixed|recti
 const FIX_NO=/^(no|n|nahi|nhi|नहीं|नही)$/i;
 
 /* ================= STATE ================= */
-const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',cat:'',dateFrom:'',dateTo:'',substation:'',open:new Set(),lmMap:new Map(),
+const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',cat:'',dateFrom:'',dateTo:'',substation:'',aiQuery:'',open:new Set(),lmMap:new Map(),
   data:{fpsp:null,dt:null},src:{fpsp:{s:'none'},dt:{s:'none'}}};
 const RAW={fpsp:'',dt:''};
 let lastLoad=0,qTimer=0,busy=0;
@@ -477,6 +525,34 @@ function viewLineman(D){
 }
 
 function viewAnalytics(D){const rows=D.rows,done=rows.filter(r=>r.done),deficient=defRows(rows),pending=rows.filter(r=>!r.done),rect=deficient.filter(r=>r.fix==='rect'),open=deficient.filter(r=>r.fix!=='rect'),rate=pct(done.length,rows.length);const monthly=new Map();done.forEach(r=>{const k=r.dk&&/^\d{4}-\d{2}/.test(r.dk)?r.dk.slice(0,7):'';if(k)monthly.set(k,(monthly.get(k)||0)+1);});const months=[...monthly.entries()].sort((a,b)=>a[0].localeCompare(b[0])).slice(-8),mx=Math.max(1,...months.map(x=>x[1]));const trend=months.length?'<div class="trend-bars">'+months.map(([k,n])=>'<div class="trend-col"><small>'+n+'</small><i style="height:'+Math.max(3,n/mx*100)+'%"></i><b>'+esc(k.slice(5))+'</b></div>').join('')+'</div>':'<p class="note">Date-wise monthly trend will appear when inspection dates are available.</p>';const subs=groupBy(rows,r=>r.sub).map(g=>{const a=rows.filter(r=>(r.sub||'—')===g.k),d=a.filter(r=>r.done).length;return{name:g.k,total:a.length,done:d,rate:pct(d,a.length)};}).sort((a,b)=>b.rate-a.rate||b.total-a.total).slice(0,8);const sh=subs.map(s=>'<div class="metric-line"><div class="metric-label">'+esc(s.name)+'</div><div class="metric-track"><i style="width:'+s.rate+'%"></i></div><div class="metric-value">'+s.rate+'% ('+s.done+'/'+s.total+')</div></div>').join('');const lm=new Map();done.forEach(r=>{const k=r.lm||'Not recorded';let x=lm.get(k);if(!x){x={n:0,d:0};lm.set(k,x);}x.n++;if(r.defs.length)x.d++;});const la=[...lm.entries()].sort((a,b)=>b[1].n-a[1].n).slice(0,8);const cats=new Map();deficient.forEach(r=>r.defs.forEach(d=>{const k=d.label.replace(/ \(\d+\)$/,'');cats.set(k,(cats.get(k)||0)+1);}));const ca=[...cats.entries()].sort((a,b)=>b[1]-a[1]).slice(0,7),cm=Math.max(1,...ca.map(x=>x[1]));return '<div class="analytics-kpis"><div class="analytics-kpi"><strong>'+rate+'%</strong><span>Inspection coverage</span></div><div class="analytics-kpi"><strong>'+num(pending.length)+'</strong><span>Pending assets</span></div><div class="analytics-kpi"><strong>'+num(deficient.length)+'</strong><span>Assets with deficiency</span></div><div class="analytics-kpi"><strong>'+num(rect.length)+'</strong><span>Assets marked rectified</span></div></div><div class="analytics-grid"><section class="analytics-panel"><h3>Monthly inspection trend</h3><p class="note">Completed inspections · latest 8 available months</p>'+trend+'<p class="note">Open / unclear deficiencies: '+num(open.length)+'</p></section><section class="analytics-panel"><h3>Substation performance</h3><p class="note">Top 8 by inspection coverage</p>'+sh+'</section><section class="analytics-panel"><h3>Lineman activity</h3><table class="analytics-table"><thead><tr><th>Lineman</th><th>Inspected</th><th>Deficient</th></tr></thead><tbody>'+la.map(([k,x])=>'<tr><td>'+esc(k)+'</td><td>'+x.n+'</td><td>'+x.d+'</td></tr>').join('')+'</tbody></table></section><section class="analytics-panel"><h3>Frequent deficiency categories</h3>'+ca.map(([k,n])=>'<div class="metric-line"><div class="metric-label">'+esc(k)+'</div><div class="metric-track red"><i style="width:'+(n/cm*100)+'%"></i></div><div class="metric-value">'+n+'</div></div>').join('')+'</section></div>';}
+function viewIntelligence(D){
+ const rows=D.rows,done=rows.filter(r=>r.done),pending=rows.filter(r=>!r.done),deficient=defRows(rows),open=deficient.filter(r=>r.fix!=='rect'),rect=deficient.filter(r=>r.fix==='rect');
+ const subMap=new Map(),catMap=new Map(),lmMap=new Map();
+ open.forEach(r=>{const k=r.sub||'—';subMap.set(k,(subMap.get(k)||0)+1);});
+ deficient.forEach(r=>r.defs.forEach(d=>{const k=d.t==='remark'?'Team remark':d.label.replace(/ \(\d+\)$/,'');catMap.set(k,(catMap.get(k)||0)+1);}));
+ done.forEach(r=>{const k=r.lm||'Not recorded';const x=lmMap.get(k)||{n:0,def:0};x.n++;if(r.defs.length)x.def++;lmMap.set(k,x);});
+ const topSubs=[...subMap].sort((a,b)=>b[1]-a[1]).slice(0,6),topCats=[...catMap].sort((a,b)=>b[1]-a[1]).slice(0,6),maxSub=Math.max(1,...topSubs.map(x=>x[1])),maxCat=Math.max(1,...topCats.map(x=>x[1]));
+ const topSubHtml=topSubs.length?topSubs.map(([k,n])=>'<div class="intel-rank"><div style="flex:1;min-width:0"><b>'+esc(k)+'</b><div class="intel-track"><i style="width:'+(n/maxSub*100)+'%"></i></div></div><span>'+n+' open</span></div>').join(''):'<p class="note">No open deficiency records found.</p>';
+ const topCatHtml=topCats.length?topCats.map(([k,n])=>'<div class="intel-rank"><div style="flex:1;min-width:0"><b>'+esc(k)+'</b><div class="intel-track"><i style="width:'+(n/maxCat*100)+'%"></i></div></div><span>'+n+'</span></div>').join(''):'<p class="note">No deficiency categories available.</p>';
+ const rec=[];
+ if(pending.length)rec.push(['Inspection coverage','Prioritise '+num(pending.length)+' assets not yet marked inspected.','Review pending assets before closing the inspection cycle.']);
+ if(open.length)rec.push(['Rectification follow-up',num(open.length)+' deficient assets remain open or unclear.','Review the oldest open records and update rectification remarks.']);
+ if(topSubs.length)rec.push(['Substation focus',topSubs[0][0]+' has the highest open-deficiency count ('+topSubs[0][1]+').','Consider a focused verification visit; confirm severity in the underlying records.']);
+ if(!rec.length)rec.push(['No immediate flags','No pending assets or open deficiencies were detected in the loaded records.','Continue routine inspections and keep source records current.']);
+ const recHtml=rec.map(x=>'<div class="intel-reco"><b>'+esc(x[0])+'</b>'+esc(x[1])+'<div class="note">'+esc(x[2])+'</div></div>').join('');
+ let answer='Try a question such as “Which substation has the most open deficiencies?”';
+ const query=S.aiQuery.trim().toLowerCase();
+ if(query){
+  if(/pending|not inspected|unchecked/.test(query))answer='There are '+num(pending.length)+' assets not marked inspected out of '+num(rows.length)+' total records ('+pct(pending.length,rows.length)+'%).';
+  else if(/rectif|closed|fixed/.test(query))answer=''+num(rect.length)+' deficient assets are marked rectified; '+num(open.length)+' remain open or unclear.';
+  else if(/coverage|inspection rate|completion/.test(query))answer='Inspection coverage is '+pct(done.length,rows.length)+'% ('+num(done.length)+' of '+num(rows.length)+' assets marked inspected).';
+  else if(/lineman|line man|staff/.test(query)){const a=[...lmMap].sort((x,y)=>y[1].n-x[1].n).slice(0,3);answer=a.length?'Top inspection counts: '+a.map(([k,v])=>k+' ('+v.n+' inspections)').join('; ')+'.':'No lineman inspection records are available.';}
+  else if(/deficien|category|header|problem/.test(query)){const a=topCats.slice(0,3);answer=a.length?'Most frequent recorded deficiency categories: '+a.map(([k,n])=>k+' ('+n+')').join('; ')+'.':'No deficiency categories found.';}
+  else if(/substation|station|area/.test(query)){answer=topSubs.length?'Substations with the most open deficient assets: '+topSubs.slice(0,3).map(([k,n])=>k+' ('+n+')').join('; ')+'.':'No open deficiencies found by substation.';}
+  else answer='I can answer questions about pending inspections, rectification, coverage, lineman activity, deficiency categories and substations. Try one of the suggested questions.';
+ }
+ return '<section class="intel-hero"><div class="intel-kicker">✦ Operational intelligence · Beta</div><h2>Turn inspection records into clear priorities.</h2><p>Ask a question or review automatically calculated signals from the currently loaded '+(S.main==='dt'?'DT':'FP SP')+' inspection data.</p><form class="intel-search" id="intelForm"><input id="intelQuery" value="'+esc(S.aiQuery)+'" placeholder="Ask: Which substation has the most open deficiencies?" aria-label="Ask an inspection question"><button type="submit">Analyse ↗</button></form></section><div class="intel-prompts"><button class="intel-chip" data-iq="Which substation has the most open deficiencies?">Top problem substation</button><button class="intel-chip" data-iq="How many assets are pending inspection?">Pending inspections</button><button class="intel-chip" data-iq="What is the rectification status?">Rectification status</button><button class="intel-chip" data-iq="Which deficiency category is most common?">Top deficiency</button></div><div class="grid">'+stat('Coverage',pct(done.length,rows.length)+'%','g')+stat('Pending',num(pending.length),pending.length?'w':'g')+stat('Open / unclear',num(open.length),open.length?'r':'g')+stat('Rectified',num(rect.length),'g')+'</div><div class="intel-answer"><b>Analysis result</b><br>'+esc(answer)+'</div><div class="intel-grid"><section class="intel-panel"><h3>Substations needing attention</h3><p class="note">Ranked by open deficient assets</p>'+topSubHtml+'</section><section class="intel-panel"><h3>Most frequent deficiencies</h3><p class="note">Count of affected asset-category records</p>'+topCatHtml+'</section><section class="intel-panel"><h3>Recommended next actions</h3><p class="note">Rule-based suggestions from current records</p>'+recHtml+'</section><section class="intel-panel"><h3>Data confidence & scope</h3><div class="intel-reco"><b>Source</b>'+esc(S.src[S.main].origin==='live'?'Live Google Sheets data':'Manually loaded / cached data')+'</div><div class="intel-reco"><b>Records analysed</b>'+num(rows.length)+' assets · '+num(done.length)+' inspected · '+num(deficient.length)+' with deficiencies</div><div class="intel-reco"><b>Method</b>Transparent counts and rule-based prioritisation. No unsupported predictions or generated facts.</div></section></div><p class="intel-foot">Intelligence Beta uses deterministic analysis in your browser. A secure AI model connection can be added later for open-ended conversational analysis; no API key or inspection data is sent to an AI service in this version.</p>';
+}
 function viewDTDeficiencySummary(D){
  const fields=D.dtFields||[];
  const make=(title,group,label,net)=>{const cols=fields.filter(f=>f.group===group),groups=new Map();
@@ -563,7 +639,12 @@ function render(keepScroll){
     el.innerHTML=empty(s.s==='loading'?'Loading from Google Sheet…':'No data loaded for this tab yet.<br>Tap ⟳ to retry the live fetch, or use the manual fallback below.');
     return;
   }
-  el.innerHTML=S.sub==='progress'?viewProgress(D):S.sub==='lineman'?viewLineman(D):S.sub==='analytics'?viewAnalytics(D):viewDef(D);
+  el.innerHTML=S.sub==='progress'?viewProgress(D):S.sub==='lineman'?viewLineman(D):S.sub==='analytics'?viewAnalytics(D):S.sub==='intelligence'?viewIntelligence(D):viewDef(D);
+  if(S.sub==='intelligence'){
+    const form=$('#intelForm'),input=$('#intelQuery');
+    if(form)form.onsubmit=e=>{e.preventDefault();S.aiQuery=input.value;render(true);};
+    document.querySelectorAll('[data-iq]').forEach(b=>b.onclick=()=>{S.aiQuery=b.dataset.iq;render(true);});
+  }
   if(S.sub==='def'){
     renderDefList();
     const q=$('#fq'),l=$('#flm'),s=$('#fst'),df=$('#dfFrom'),dt=$('#dfTo'),sub=$('#fsub'),cat=$('#fcat'),clear=$('#clearcat');
