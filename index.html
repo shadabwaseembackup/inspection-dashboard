@@ -512,6 +512,14 @@ header .hd{min-width:0}
 @media(max-width:480px){.def-asset-head{gap:6px;flex-direction:column;align-items:flex-start}.def-priority-badge{max-width:100%;font-size:10px}}
 @media(prefers-color-scheme:dark){.def-priority-badge.overdue,.def-priority-badge.age-high{background:#48251f;color:#ffb3a0;border-color:#9b5545}.def-priority-badge.due-soon,.def-priority-badge.age-mid,.def-priority-badge.no-due{background:#453719;color:#ffda8a;border-color:#8c6b2a}}
 
+/* Visible, individually removable deficiency filter chips */
+.def-active-filters{margin:0 0 10px;padding:10px 11px;border:1px solid var(--line);border-radius:12px;background:var(--pri2)}
+.def-active-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;font-size:12px}
+.def-active-head button{border:0;background:transparent;color:var(--pri);font:inherit;font-weight:750;cursor:pointer;padding:4px 2px}
+.def-filter-chips{display:flex;flex-wrap:wrap;gap:6px}
+.def-filter-chip{display:inline-flex;align-items:center;gap:8px;max-width:100%;border:1px solid var(--line);border-radius:999px;padding:5px 9px;background:var(--card);color:var(--ink);font:inherit;font-size:11px;cursor:pointer}
+.def-filter-chip span{overflow-wrap:anywhere;text-align:left}.def-filter-chip b{font-size:14px;color:var(--pri);line-height:1}
+.def-filter-chip:focus-visible,.def-active-head button:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
 </style>
 </head>
 <body>
@@ -1098,7 +1106,7 @@ function viewDef(D){
   if(S.main==='dt') h+=viewDTDeficiencySummary(D);
   if(S.main==='fpsp') h+=viewFPDeficiencySummary(D);
   const subs=[...new Set(D.rows.map(r=>r.sub||'—'))].sort();
-  h+='<section class="card"><div class="def-filter-head"><div><h3>Deficiency filters</h3><p class="note">Narrow the list by visit date, substation, category, lineman or status.</p></div><button type="button" class="def-reset-btn" id="clearDefFilters">Reset all</button></div><div class="filters"><label class="note">From<input type="date" id="dfFrom" value="'+esc(S.dateFrom)+'"></label><label class="note">To<input type="date" id="dfTo" value="'+esc(S.dateTo)+'"></label><select id="fsub" aria-label="Filter by substation"><option value="">All substations</option>'+subs.map(n=>'<option'+(S.substation===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fcat" aria-label="Filter by deficiency header"><option value="">All deficiency headers</option>'+tk.map(n=>'<option'+(S.cat===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select></div><div class="def-export-row"><button type="button" class="def-export-btn" id="exportDeficiencies">↓ Export filtered deficiencies (CSV)</button></div><h3>Deficiency detail</h3><div class="filters"><input type="search" id="fq" placeholder="Search asset / equipment ID / feeder" aria-label="Search asset, equipment ID, feeder or substation" value="'+esc(S.q)+'"><select id="fdefSort" aria-label="Sort deficiencies"><option value="oldest"'+(S.defSort==='oldest'?' selected':'')+'>Oldest open first</option><option value="newest"'+(S.defSort==='newest'?' selected':'')+'>Newest visit first</option><option value="count"'+(S.defSort==='count'?' selected':'')+'>Most deficiency items</option><option value="asset"'+(S.defSort==='asset'?' selected':'')+'>Asset name A–Z</option></select><select id="flm" aria-label="Filter by lineman"><option value="">All linemen</option>'+lms.map(n=>'<option'+(S.lm===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fst" aria-label="Filter by status"><option value="">All status</option><option value="open"'+(S.st==='open'?' selected':'')+'>Not rectified</option><option value="rect"'+(S.st==='rect'?' selected':'')+'>Rectified</option><option value="pending"'+(S.st==='pending'?' selected':'')+'>Pending / not checked</option></select></div><div id="deflist"></div></section>';
+  h+='<section class="card"><div class="def-filter-head"><div><h3>Deficiency filters</h3><p class="note">Narrow the list by visit date, substation, category, lineman or status.</p></div><button type="button" class="def-reset-btn" id="clearDefFilters">Reset all</button></div><div class="filters"><label class="note">From<input type="date" id="dfFrom" value="'+esc(S.dateFrom)+'"></label><label class="note">To<input type="date" id="dfTo" value="'+esc(S.dateTo)+'"></label><select id="fsub" aria-label="Filter by substation"><option value="">All substations</option>'+subs.map(n=>'<option'+(S.substation===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fcat" aria-label="Filter by deficiency header"><option value="">All deficiency headers</option>'+tk.map(n=>'<option'+(S.cat===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select></div><div class="def-export-row"><button type="button" class="def-export-btn" id="exportDeficiencies">↓ Export filtered deficiencies (CSV)</button><button type="button" class="def-export-btn" id="exportDefReview">↓ Export management review (CSV)</button></div><h3>Deficiency detail</h3><div class="filters"><input type="search" id="fq" placeholder="Search asset / equipment ID / feeder" aria-label="Search asset, equipment ID, feeder or substation" value="'+esc(S.q)+'"><select id="fdefSort" aria-label="Sort deficiencies"><option value="oldest"'+(S.defSort==='oldest'?' selected':'')+'>Oldest open first</option><option value="newest"'+(S.defSort==='newest'?' selected':'')+'>Newest visit first</option><option value="count"'+(S.defSort==='count'?' selected':'')+'>Most deficiency items</option><option value="asset"'+(S.defSort==='asset'?' selected':'')+'>Asset name A–Z</option></select><select id="flm" aria-label="Filter by lineman"><option value="">All linemen</option>'+lms.map(n=>'<option'+(S.lm===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fst" aria-label="Filter by status"><option value="">All status</option><option value="open"'+(S.st==='open'?' selected':'')+'>Not rectified</option><option value="rect"'+(S.st==='rect'?' selected':'')+'>Rectified</option><option value="pending"'+(S.st==='pending'?' selected':'')+'>Pending / not checked</option></select></div><div id="deflist"></div></section>';
   if(S.cat) h=h.replace('<div id="deflist"></div>','<div class="drill-active"><span>Category: <b>'+esc(S.cat)+'</b></span><button type="button" id="clearcat">Clear ×</button></div><div id="deflist"></div>');
   return h;
 }
@@ -1120,6 +1128,34 @@ function deficiencyTrendPanel(rows){
  if(!entries.length)return h+'<p class="note">No valid visit dates available for these records.</p></section>';
  h+='<div class="def-trend-list">'+entries.map(([m,v])=>'<div class="def-trend-row"><div class="def-trend-label">'+esc(new Date(m+'-01T00:00:00').toLocaleDateString('en-IN',{month:'short',year:'2-digit'}))+'</div><div class="def-trend-track"><i class="def-trend-open" style="width:'+(v.open/max*100)+'%"></i><i class="def-trend-rect" style="width:'+(v.rect/max*100)+'%"></i></div><b>'+num(v.total)+'</b><small>'+num(v.open)+' open · '+num(v.rect)+' rectified</small></div>').join('')+'</div><div class="def-trend-legend"><span><i class="def-trend-open"></i> Open</span><span><i class="def-trend-rect"></i> Rectified</span></div></section>';return h;
 }
+function exportDeficiencyReviewReport(){
+ const records=getFilteredDeficiencyRows();
+ if(!records.length){alert('No matching deficiency records to include in the review report.');return;}
+ const actions=readDefActions(),today=localDateKey();
+ const headers=['Inspection type','Asset / Equipment','Equipment ID','Substation','Feeder','Function Location','Asset type','Capacity','Responsible lineman','Date of visit','Inspection status','Rectification status','Deficiency items','Team remark','Follow-up status','Action owner','Follow-up due date','Action remarks','Action last updated'];
+ const cell=value=>{
+  if(Array.isArray(value))value=value.map(x=>typeof x==='string'?x:(x.label||x.t||JSON.stringify(x))).join('; ');
+  if(value&&typeof value==='object')value=JSON.stringify(value);
+  if(typeof value==='boolean')value=value?'Inspected':'Pending';
+  let text=String(value==null?'':value);
+  if(text&&[61,43,64,45,9,13].includes(text.charCodeAt(0)))text="'"+text;
+  return '"'+text.replace(/"/g,'""')+'"';
+ };
+ const rows=[['Deficiency Management Review',today,'Inspection type',S.main==='dt'?'DT':'FP/SP'],['Active filters',[
+  S.substation?'Substation: '+S.substation:'',S.lm?'Lineman: '+S.lm:'',S.cat?'Category: '+S.cat:'',
+  S.st?'Status: '+S.st:'',S.dateFrom?'From: '+S.dateFrom:'',S.dateTo?'To: '+S.dateTo:'',S.q?'Search: '+S.q:''
+ ].filter(Boolean).join(' | ')],['Matching assets',records.length],[],headers];
+ records.forEach(r=>{
+  const a=actions[defActionId(r)]||{};
+  rows.push([S.main==='dt'?'DT':'FP/SP',r.name,r.eq,r.sub,r.fdr,r.fl,r.typ,r.kva,r.lm,r.dl,r.done,r.fix,
+   r.defs,r.remark,a.status||'Not tracked',a.owner,a.due,a.note,a.updated]);
+ });
+ const csv=rows.map(row=>row.map(cell).join(',')).join('\\r\\n');
+ const blob=new Blob(['\\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download=(S.main==='dt'?'DT':'FP_SP')+'_Deficiency_Management_Review_'+today+'.csv';
+ document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
 function exportFilteredDeficiencies(){
  const rows=getFilteredDeficiencyRows();if(!rows.length){alert('No matching deficiency records to export.');return;}
  const cols=[['Asset / Equipment','name'],['Equipment ID','eq'],['Substation','sub'],['Feeder','fdr'],['Function Location','fl'],['Asset Type','typ'],['Group','grp'],['Capacity','kva'],['Lineman','lm'],['Date of Visit','dl'],['Visit Date (ISO)','dk'],['Inspection Status','done'],['Rectification Status','fix'],['Deficiency Items','defs'],['Team Remark','remark']];
@@ -1157,6 +1193,15 @@ function deficiencyActionPriority(r,a){
  if(status!=='Completed'&&!due)return {label:'Follow-up date missing',cls:'no-due'};
  return null;
 }
+function renderDefActiveFilters(){
+ const entries=[];
+ const add=(key,label,value)=>{if(value!==''&&value!==null&&value!==undefined)entries.push({key,label,value:String(value)});};
+ add('substation','Substation',S.substation);add('lm','Lineman',S.lm);add('cat','Category',S.cat);add('q','Search',S.q);add('dateFrom','From',S.dateFrom);add('dateTo','To',S.dateTo);
+ add('st','Status',S.st==='open'?'Not rectified':S.st==='rect'?'Rectified':S.st==='pending'?'Pending / not checked':'');
+ add('defAge','Ageing',S.defAge==='0-7'?'0–7 days':S.defAge==='8-30'?'8–30 days':S.defAge==='31-90'?'31–90 days':S.defAge==='91+'?'Over 90 days':S.defAge==='undated'?'Undated':'');
+ if(!entries.length)return '';
+ return '<div class="def-active-filters" aria-label="Active deficiency filters"><div class="def-active-head"><b>Active filters · '+entries.length+'</b><button type="button" id="clearActiveDefFilters">Clear all</button></div><div class="def-filter-chips">'+entries.map(x=>'<button type="button" class="def-filter-chip" data-clear-def-filter="'+x.key+'"><span>'+esc(x.label)+': '+esc(x.value)+'</span><b aria-hidden="true">×</b></button>').join('')+'</div></div>';
+}
 function renderDefList(){
   const D=S.data[S.main],el=$('#deflist'); if(!D||!el) return;
   const q=S.q.toLowerCase();
@@ -1176,7 +1221,9 @@ function renderDefList(){
   shown.forEach(r=>{const key=r.sub||'—';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);});
   const actions=readDefActions();
   const grouped=[...groups.entries()].map(([sub,assets])=>'<section class="substation-group"><div class="substation-heading"><b>'+esc(sub)+'</b><span>'+assets.length+' asset'+(assets.length===1?'':'s')+'</span></div>'+assets.map(r=>{const id=defActionId(r),a=actions[id]||{};const priority=deficiencyActionPriority(r,a);return '<div class="item"><div class="def-asset-head"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.grp)+(r.kva?' · '+esc(r.kva):'')+'</small></div>'+(priority?'<span class="def-priority-badge '+priority.cls+'">'+esc(priority.label)+'</span>':'')+'</div><div class="im">'+(r.fdr?esc(r.fdr)+' · ':'')+esc(r.lm||'—')+' · '+esc(r.dl||'No date')+'</div><div>'+chips(r.defs)+fixBadge(r)+'</div>'+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'<details class="def-action-editor"><summary>＋ Action / follow-up'+(a.status?' · '+esc(a.status):'')+'</summary><div class="def-action-fields"><label>Responsible team / person<input data-action-owner value="'+esc(a.owner||'')+'" placeholder="Responsible person or team"></label><label>Follow-up date<input type="date" data-action-due value="'+esc(a.due||'')+'"></label><label>Action status<select data-action-status><option value="Pending"'+(a.status==='Pending'?' selected':'')+'>Pending</option><option value="In progress"'+(a.status==='In progress'?' selected':'')+'>In progress</option><option value="Completed"'+(a.status==='Completed'?' selected':'')+'>Completed</option></select></label><label>Action remarks<textarea data-action-note rows="2" placeholder="Action taken / next step">'+esc(a.note||'')+'</textarea></label><button type="button" class="btn" data-save-action="'+esc(id)+'">Save follow-up</button><small class="note">Local-only · Last saved: '+esc(a.updated||'Not saved')+'</small></div></details></div>';}).join('')+'</section>').join('');
-  el.innerHTML='<div class="def-results-meta"><b>'+num(list.length)+' matching assets</b><span>'+(list.length?'Showing '+num(Math.min(list.length,cap))+' of '+num(list.length):'Try resetting or widening the filters')+'</span></div>' +(list.length?grouped+(list.length>cap?'<p class="note">Showing first '+cap+' of '+list.length+' – narrow with the filters.</p>':''):'<p class="note">'+(S.st==='pending'?'No pending or unchecked assets.':'No matching deficiencies.')+'</p>');
+  el.innerHTML=renderDefActiveFilters()+'<div class="def-results-meta"><b>'+num(list.length)+' matching assets</b><span>'+(list.length?'Showing '+num(Math.min(list.length,cap))+' of '+num(list.length):'Try resetting or widening the filters')+'</span></div>' +(list.length?grouped+(list.length>cap?'<p class="note">Showing first '+cap+' of '+list.length+' – narrow with the filters.</p>':''):'<p class="note">'+(S.st==='pending'?'No pending or unchecked assets.':'No matching deficiencies.')+'</p>');
+  el.querySelectorAll('[data-clear-def-filter]').forEach(btn=>btn.onclick=()=>{const key=btn.dataset.clearDefFilter;if(key==='substation')S.substation='';else if(key==='lm')S.lm='';else if(key==='cat')S.cat='';else if(key==='q')S.q='';else if(key==='dateFrom')S.dateFrom='';else if(key==='dateTo')S.dateTo='';else if(key==='st')S.st='';else if(key==='defAge')S.defAge='';render(true);});
+  const clearActive=$('#clearActiveDefFilters');if(clearActive)clearActive.onclick=()=>{S.q='';S.lm='';S.st='';S.dateFrom='';S.dateTo='';S.substation='';S.cat='';S.defAge='';render(true);};
   el.querySelectorAll('[data-save-action]').forEach(btn=>btn.onclick=()=>{const card=btn.closest('.def-action-fields'),id=btn.dataset.saveAction,parts=JSON.parse(id),rec={main:S.main,asset:parts[1],sub:parts[2],feeder:parts[3],owner:card.querySelector('[data-action-owner]').value.trim(),due:card.querySelector('[data-action-due]').value,status:card.querySelector('[data-action-status]').value,note:card.querySelector('[data-action-note]').value.trim(),updated:new Date().toLocaleString('en-IN')},data=readDefActions();if(!rec.owner&&!rec.due&&!rec.note&&rec.status==='Pending')delete data[id];else data[id]=rec;if(writeDefActions(data))renderDefList();});
 }
 
@@ -1244,6 +1291,7 @@ function render(keepScroll){
     renderDefList();
     const q=$('#fq'),l=$('#flm'),s=$('#fst'),df=$('#dfFrom'),dt=$('#dfTo'),sub=$('#fsub'),cat=$('#fcat'),clear=$('#clearcat'),sort=$('#fdefSort'),exportDef=$('#exportDeficiencies'),resetDef=$('#clearDefFilters');
     if(exportDef)exportDef.onclick=exportFilteredDeficiencies;
+    const exportReview=$('#exportDefReview');if(exportReview)exportReview.onclick=exportDeficiencyReviewReport;
      if(resetDef)resetDef.onclick=()=>{S.q='';S.lm='';S.st='';S.dateFrom='';S.dateTo='';S.substation='';S.cat='';S.defAge='';S.defSort='oldest';render(true);};
     const exportMatrix=$('#exportDefMatrix');if(exportMatrix)exportMatrix.onclick=exportDeficiencyMatrix;
     const exportActions=$('#exportDefActions');if(exportActions)exportActions.onclick=exportDefActions;
