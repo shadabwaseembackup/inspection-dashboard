@@ -20,10 +20,10 @@ jobs:
           from pathlib import Path
           import re
           html = Path("index.html").read_text(encoding="utf-8")
-          scripts = re.findall(r"<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>", html, re.I)
+          scripts = re.findall(r"<script(?:\s[^>]*)?>([\s\S]*?)</script>", html, re.I)
           if not scripts:
               raise SystemExit("No inline JavaScript found")
-          Path("/tmp/dashboard-inline.js").write_text("\\n".join(scripts), encoding="utf-8")
+          Path("/tmp/dashboard-inline.js").write_text("\n".join(scripts), encoding="utf-8")
           PY
           node --check /tmp/dashboard-inline.js
       - name: Verify core dashboard and intelligence features
