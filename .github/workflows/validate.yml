@@ -1,0 +1,49 @@
+name: Validate dashboard
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, "feature/**"]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: Check inline JavaScript syntax
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html = Path("index.html").read_text(encoding="utf-8")
+          scripts = re.findall(r"<script(?:\s[^>]*)?>([\s\S]*?)</script>", html, re.I)
+          if not scripts:
+              raise SystemExit("No inline JavaScript found")
+          Path("/tmp/dashboard-inline.js").write_text("\n".join(scripts), encoding="utf-8")
+          PY
+          node --check /tmp/dashboard-inline.js
+      - name: Verify core dashboard and intelligence features
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          s = Path("index.html").read_text(encoding="utf-8")
+          required = [
+              'data-sub="intelligence"',
+              "function viewIntelligence(D)",
+              "function viewAnalytics(D)",
+              "function buildFP(rows)",
+              "function buildDT(rows)",
+              "function filterDefRows(rows)",
+              'id="intelForm"',
+              'id="fcat"',
+              "substation-heading",
+          ]
+          missing = [x for x in required if x not in s]
+          if missing:
+              raise SystemExit("Missing required features: " + ", ".join(missing))
+          print("Core dashboard and intelligence features verified.")
+          PY
