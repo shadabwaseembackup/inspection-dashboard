@@ -956,6 +956,18 @@ function deficiencyControlPanel(rows){
  h+='<div class="def-priority-grid">'+bands.map(b=>'<button type="button" class="def-priority-tile '+(S.defAge===b.key?'active':'')+'" data-defage="'+b.key+'"><b>'+num(dated.filter(x=>b.test(x.days)).length)+'</b><span>'+b.label+'</span><small>Open items</small></button>').join('')+'</div>';
  h+='<div class="def-sub-grid"><div><h4>Open deficiencies by substation</h4><p class="note">Top substations by open asset count</p></div><div class="def-sub-list">'+(top.length?top.map(([name,n])=>'<button type="button" data-defsub="'+esc(name)+'"><span>'+esc(name)+'</span><b>'+num(n)+'</b></button>').join(''):'<p class="note">No open deficiencies in the selected data.</p>')+'</div></div></section>';return h;
 }
+function substationPerformanceScorecard(rows){
+ const groups=new Map();
+ rows.forEach(r=>{const name=r.sub||'—';if(!groups.has(name))groups.set(name,{name,total:0,inspected:0,pending:0,deficient:0,open:0,rectified:0,aged:0,undated:0});const g=groups.get(name);g.total++;if(!r.done){g.pending++;return;}g.inspected++;});
+ const inspected=defRows(rows.filter(r=>r.done));
+ inspected.forEach(r=>{const g=groups.get(r.sub||'—');if(!g)return;g.deficient++;if(r.fix==='rect'){g.rectified++;return;}g.open++;const days=deficiencyDays(r);if(days===null)g.undated++;else if(days>30)g.aged++;});
+ const list=[...groups.values()].filter(g=>g.total>0).sort((a,b)=>b.open-a.open||b.pending-a.pending||a.name.localeCompare(b.name));
+ let h='<section class="card sub-scorecard"><div class="def-control-head"><div><h3>Substation performance scorecard</h3><p class="note">Comparison uses the currently selected inspection dataset and date filters. Rectification rate = rectified deficiency assets ÷ all inspected assets with recorded deficiencies. Ageing is from Date of Visit.</p></div><span class="page-tag">Source-derived</span></div>';
+ if(!list.length)return h+'<p class="note">No substation records available for this selection.</p></section>';
+ h+='<div class="scorecard-wrap"><table class="scorecard-table"><thead><tr><th>Substation</th><th>Inspected</th><th>Pending</th><th>Deficient</th><th>Open</th><th>Rectified</th><th>Rectification %</th><th>Open &gt;30d</th><th>Undated open</th></tr></thead><tbody>';
+ h+=list.map(g=>'<tr><td><button type="button" class="scorecard-sub-link" data-defsub="'+esc(g.name)+'">'+esc(g.name)+'</button></td><td>'+num(g.inspected)+'</td><td>'+num(g.pending)+'</td><td>'+num(g.deficient)+'</td><td><b>'+num(g.open)+'</b></td><td>'+num(g.rectified)+'</td><td>'+((g.deficient)?pct(g.rectified,g.deficient)+'%':'—')+'</td><td>'+num(g.aged)+'</td><td>'+num(g.undated)+'</td></tr>').join('');
+ h+='</tbody></table></div><p class="note">Sorted by open deficiency assets, then pending inspections. Click a substation name to filter the detail view. “Deficient” counts inspected assets with recorded deficiencies; open and rectified are mutually exclusive within that group. This is an operational comparison, not a safety score.</p></section>';return h;
+}
 function viewDef(D){
   D={...D,rows:filterDefRows(D.rows)};
   if(S.main==='dt') D={...D,rows:D.rows.filter(r=>String(r.lm||'').trim()!=='')};
@@ -969,6 +981,7 @@ function viewDef(D){
   let h='<div class="grid">'+stat('Assets with deficiency',wd.length,'r')+stat('Deficiency items',items,'w')+stat('From team remark',rem,'w')+stat('Not yet rectified',open,open?'r':'g')+stat('Pending / not checked',num(pending.length),pending.length?'w':'g')+'</div>';
   h+=deficiencyAgeing(D.rows);
   h+=deficiencyControlPanel(D.rows);
+  h+=substationPerformanceScorecard(D.rows);
   h+=deficiencyTrendPanel(D.rows);
   h+='<section class="card"><h3>Deficiency summary</h3><p class="drill-hint">Select a category to view matching assets below</p>'+(tk.length?tk.map((k,i)=>'<div class="row summary-drill'+(i?'':' first')+(S.cat===k?' active':'')+'" data-defcat="'+esc(k)+'" role="button" tabindex="0"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],wd.length),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
   if(S.main==='dt') h+=viewDTDeficiencySummary(D);
@@ -1175,7 +1188,17 @@ loadAll();
 .def-export-row{display:flex;justify-content:flex-end;margin:0 0 10px}.def-export-btn{border:1px solid var(--pri);border-radius:9px;padding:9px 12px;background:var(--pri2);color:var(--ink);font-weight:700;cursor:pointer}
 .def-trend-list{display:grid;gap:9px;margin-top:12px}.def-trend-row{display:grid;grid-template-columns:54px minmax(60px,1fr) 30px;gap:7px;align-items:center}.def-trend-label{font-size:11px;color:var(--mut)}.def-trend-row>b{text-align:right;font-size:12px}.def-trend-track{height:12px;border-radius:8px;background:var(--line);overflow:hidden;display:flex}.def-trend-open,.def-trend-rect{height:100%;display:block}.def-trend-open{background:#d97706}.def-trend-rect{background:#16a34a}.def-trend-row small{grid-column:2/4;color:var(--mut);font-size:10px;margin-top:-5px}.def-trend-legend{display:flex;gap:14px;margin-top:12px;color:var(--mut);font-size:11px}.def-trend-legend span{display:flex;align-items:center;gap:5px}.def-trend-legend i{display:inline-block;width:9px;height:9px;border-radius:3px}.def-trend-legend .def-trend-open{background:#d97706}.def-trend-legend .def-trend-rect{background:#16a34a}
 @media(max-width:420px){.def-trend-row{grid-template-columns:45px minmax(45px,1fr) 24px;gap:5px}}
-</style></body>
+</style>
+<style>
+.sub-scorecard .scorecard-wrap{width:100%;overflow-x:auto;margin-top:10px;border:1px solid var(--line);border-radius:10px}
+.scorecard-table{width:100%;min-width:790px;border-collapse:collapse;font-size:12px}
+.scorecard-table th,.scorecard-table td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+.scorecard-table th{color:var(--mut);font-weight:700;background:var(--bg)}
+.scorecard-table th:first-child,.scorecard-table td:first-child{text-align:left;position:sticky;left:0;background:var(--card)}
+.scorecard-sub-link{border:0;background:transparent;color:var(--pri);font:inherit;font-weight:700;text-align:left;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.scorecard-table tbody tr:last-child td{border-bottom:0}
+</style>
+</body>
 </html>
 
 <style>
