@@ -85,10 +85,27 @@ export default {
       const answer = cleanText(result?.response ?? result?.choices?.[0]?.message?.content ?? "", 4000);
       if (!answer) return json({ error: "The model returned an empty answer. Please retry." }, 502, headers);
       return json({ answer, model: MODEL, scope: "aggregate-only" }, 200, headers);
-    } catch {
-      // Workers Free has a hard daily AI allowance. Never retry with another model,
-      // route through a paid provider, or silently fall back to a billable service.
-      return json({ error: "AI is temporarily unavailable or today's free AI allowance has been used. No paid fallback was attempted. Try again after the daily reset." }, 503, headers);
+    } catch (error) {
+      // Preserve the free-only guarantee, but expose Cloudflare's diagnostic so
+      // quota, capacity, model, and configuration failures are distinguishable.
+      // Do not log request bodies, prompts, or inspection summaries.
+      const detail = cleanText(error?.message ?? error ?? "Unknown inference error", 500);
+      const code = detail.match(/\b(3036|3040|5007|5035|5028|3007|3023)\\b/)?.[1] || null;
+      let message = "AI inference failed.";
+      if (code === "3036") message = "Cloudflare Workers AI daily free allocation is exhausted. Try after the daily reset.";
+      else if (code === "3040") message = "Cloudflare Workers AI is temporarily out of capacity. Please retry later.";
+      else if (code === "5007" || code === "3042") message = "Cloudflare did not recognize the configured AI model. Check the model ID.";
+      else if (code === "5035") message = "This AI model requires a Workers Paid plan and is not available on the free plan.";
+      else if (code === "5028") message = "The configured AI model has been deprecated.";
+      else if (code === "3007") message = "The AI request timed out. Please retry.";
+      else if (code === "3023") message = "Cloudflare has temporarily blocked Workers AI access for this account.";
+      return json({
+        error: message,
+        code,
+        detail: detail || null,
+        model: MODEL,
+        paidFallback: false
+      }, 503, headers);
     }
   }
 };
