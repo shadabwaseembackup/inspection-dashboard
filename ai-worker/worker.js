@@ -90,7 +90,7 @@ export default {
       // quota, capacity, model, and configuration failures are distinguishable.
       // Do not log request bodies, prompts, or inspection summaries.
       const detail = cleanText(error?.message ?? error ?? "Unknown inference error", 500);
-      const code = detail.match(/\\b(3036|3040|5007|5035|5028|3007|3023)\\b/)?.[1] || null;
+      const code = detail.match(/\b(3036|3040|5007|5035|5028|3007|3023)\\b/)?.[1] || null;
       let message = "AI inference failed.";
       if (code === "3036") message = "Cloudflare Workers AI daily free allocation is exhausted. Try after the daily reset.";
       else if (code === "3040") message = "Cloudflare Workers AI is temporarily out of capacity. Please retry later.";
