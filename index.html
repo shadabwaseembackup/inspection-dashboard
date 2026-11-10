@@ -1062,7 +1062,7 @@ function render(keepScroll){
     const q=$('#fq'),l=$('#flm'),s=$('#fst'),df=$('#dfFrom'),dt=$('#dfTo'),sub=$('#fsub'),cat=$('#fcat'),clear=$('#clearcat'),sort=$('#fdefSort');
     if(q) q.oninput=e=>{S.q=e.target.value;clearTimeout(qTimer);qTimer=setTimeout(renderDefList,150);};
     if(sort)sort.onchange=e=>{S.defSort=e.target.value;renderDefList();};
-    document.querySelectorAll('[data-defage]').forEach(b=>b.onclick=()=>{S.defAge=S.defAge===b.dataset.defage?'':b.dataset.defage;render(true);});
+    document.querySelectorAll('[data-defage]').forEach(b=>b.onclick=()=>{S.defAge=S.defAge===b.dataset.defage?'':b.dataset.defage;S.st=S.defAge?'open':'';render(true);});
     document.querySelectorAll('[data-defsub]').forEach(b=>b.onclick=()=>{S.substation=b.dataset.defsub;render(true);document.querySelector('#deflist')?.scrollIntoView({behavior:'smooth',block:'start'});});
     if(l) l.onchange=e=>{S.lm=e.target.value;renderDefList();};
     if(s) s.onchange=e=>{S.st=e.target.value;renderDefList();};
