@@ -889,7 +889,7 @@ function deficiencyAgeing(rows){
   const today=new Date();today.setHours(0,0,0,0);
   const bands=[{label:'0–7 days',min:0,max:7,count:0,cls:'g'},{label:'8–30 days',min:8,max:30,count:0,cls:'n'},{label:'31–90 days',min:31,max:90,count:0,cls:'w'},{label:'Over 90 days',min:91,max:Infinity,count:0,cls:'r'}];
   let undated=0,dated=0,oldest=0;
-  open.forEach(r=>{const key=String(r.dk||'');if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(key)){undated++;return;}const d=new Date(key+'T00:00:00');if(Number.isNaN(d.getTime())){undated++;return;}const days=Math.max(0,Math.floor((today-d)/86400000));dated++;oldest=Math.max(oldest,days);const band=bands.find(b=>days>=b.min&&days<=b.max);if(band)band.count++;});
+  open.forEach(r=>{const key=String(r.dk||'');if(key.length!==10||key[4]!=='-'||key[7]!=='-'||!Number.isFinite(Date.parse(key+'T00:00:00'))){undated++;return;}const d=new Date(key+'T00:00:00');if(Number.isNaN(d.getTime())){undated++;return;}const days=Math.max(0,Math.floor((today-d)/86400000));dated++;oldest=Math.max(oldest,days);const band=bands.find(b=>days>=b.min&&days<=b.max);if(band)band.count++;});
   let h='<section class="card ageing-card"><h3>Open deficiency follow-up</h3><p class="note">Ageing is measured from the recorded Date of Visit, not the confirmed date the defect first arose. Use it as a follow-up indicator only.</p>';
   h+='<div class="grid">'+stat('Open / unclear',num(open.length),open.length?'r':'g')+stat('With dated visit',num(dated),'n')+stat('Visit date missing',num(undated),undated?'w':'g')+stat('Oldest recorded visit',dated?num(oldest)+' days':'—',oldest>30?'w':'')+'</div>';
   h+='<div class="ageing-bands">'+bands.map(b=>'<div class="ageing-row"><span>'+b.label+'</span><div class="ageing-track"><i class="'+b.cls+'" style="width:'+pct(b.count,dated)+'%"></i></div><b>'+num(b.count)+'</b></div>').join('')+'</div>';
@@ -907,8 +907,8 @@ function viewDef(D){
   const tk=Object.keys(tc).sort((a,b)=>tc[b]-tc[a]);
   const lms=[...new Set(D.rows.map(r=>r.lm||'—'))].sort();
   let h='<div class="grid">'+stat('Assets with deficiency',wd.length,'r')+stat('Deficiency items',items,'w')+stat('From team remark',rem,'w')+stat('Not yet rectified',open,open?'r':'g')+stat('Pending / not checked',num(pending.length),pending.length?'w':'g')+'</div>';
-  h+='<section class="card"><h3>Deficiency summary</h3><p class="drill-hint">Select a category to view matching assets below</p>'+(tk.length?tk.map((k,i)=>'<div class="row summary-drill'+(i?'':' first')+(S.cat===k?' active':'')+'" data-defcat="'+esc(k)+'" role="button" tabindex="0"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],wd.length),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
   h+=deficiencyAgeing(D.rows);
+  h+='<section class="card"><h3>Deficiency summary</h3><p class="drill-hint">Select a category to view matching assets below</p>'+(tk.length?tk.map((k,i)=>'<div class="row summary-drill'+(i?'':' first')+(S.cat===k?' active':'')+'" data-defcat="'+esc(k)+'" role="button" tabindex="0"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],wd.length),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
   if(S.main==='dt') h+=viewDTDeficiencySummary(D);
   if(S.main==='fpsp') h+=viewFPDeficiencySummary(D);
   const subs=[...new Set(D.rows.map(r=>r.sub||'—'))].sort();
