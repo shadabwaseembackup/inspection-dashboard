@@ -1,4 +1,4 @@
-const MODEL = "@cf/meta/llama-3.2-3b-instruct";
+const MODEL = "@cf/zai-org/glm-4.7-flash";
 
 function cors(origin, allowed) {
   const ok = origin && origin === allowed;
@@ -59,7 +59,7 @@ export default {
     const url = new URL(request.url);
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
     if (origin && origin !== allowed) return json({ error: "Origin not allowed" }, 403, headers);
-    if (url.pathname === "/health" && request.method === "GET") return json({ ok: true, service: "inspection-intelligence", ai: Boolean(env.AI), model: MODEL }, 200, headers);
+    if (url.pathname === "/health" && request.method === "GET") return json({ ok: true, service: "inspection-intelligence", ai: Boolean(env.AI), model: MODEL, mode: "free-allocation-only" }, 200, headers);
     if (url.pathname !== "/ask" || request.method !== "POST") return json({ error: "Not found" }, 404, headers);
     if (!env.AI || !env.TURNSTILE_SECRET) return json({ error: "AI service is not configured yet." }, 503, headers);
     let body;
@@ -76,12 +76,19 @@ export default {
       { role: "user", content: "Aggregate inspection summary (no individual asset records):\n" + JSON.stringify(summary) + "\n\nQuestion: " + question }
     ];
     try {
-      const result = await env.AI.run(MODEL, { messages, max_tokens: 450, temperature: 0.2 });
+      const result = await env.AI.run(MODEL, {
+        messages,
+        max_completion_tokens: 450,
+        temperature: 0.2,
+        reasoning_effort: "none"
+      });
       const answer = cleanText(result?.response ?? result?.choices?.[0]?.message?.content ?? "", 4000);
       if (!answer) return json({ error: "The model returned an empty answer. Please retry." }, 502, headers);
       return json({ answer, model: MODEL, scope: "aggregate-only" }, 200, headers);
     } catch {
-      return json({ error: "AI is temporarily unavailable or its free daily allowance has been reached. Try again later." }, 503, headers);
+      // Workers Free has a hard daily AI allowance. Never retry with another model,
+      // route through a paid provider, or silently fall back to a billable service.
+      return json({ error: "AI is temporarily unavailable or today's free AI allowance has been used. No paid fallback was attempted. Try again after the daily reset." }, 503, headers);
     }
   }
 };
