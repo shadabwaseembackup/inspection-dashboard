@@ -453,6 +453,35 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 @media(max-width:520px){.drilldown-head{align-items:center}.drilldown-head .btn{flex:0 0 auto}}
 
 .analytics-hierarchy{grid-column:1/-1}.hierarchy-substation{border:1px solid var(--line,#dce2ea);border-radius:12px;margin:9px 0;overflow:hidden}.hierarchy-substation summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;cursor:pointer;list-style:none}.hierarchy-substation summary::-webkit-details-marker{display:none}.hierarchy-substation summary:after{content:'＋';font-weight:700}.hierarchy-substation[open] summary:after{content:'−'}.hierarchy-substation summary span:first-child{display:grid;gap:3px}.hierarchy-substation summary small,.hierarchy-feeder small{color:var(--muted,#687386);font-size:12px}.hierarchy-stats{font-size:12px;color:var(--muted,#687386);text-align:right}.hierarchy-feeders{padding:0 12px 12px;display:grid;gap:7px}.hierarchy-feeder{display:grid;grid-template-columns:minmax(90px,1.3fr) 1fr 1fr auto;gap:10px;align-items:center;padding:10px;border-radius:9px;background:var(--surface-2,#f4f6f9);cursor:pointer;font-size:12px}.hierarchy-feeder:hover,.hierarchy-feeder:focus{outline:2px solid var(--accent,#477de8);outline-offset:1px}@media(max-width:600px){.hierarchy-substation summary{align-items:flex-start;flex-direction:column}.hierarchy-stats{text-align:left}.hierarchy-feeder{grid-template-columns:1fr 1fr;gap:6px}.hierarchy-feeder b{grid-column:1/-1}}.hierarchy-tools{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(170px,1fr) auto;gap:8px;align-items:center;margin:10px 0 12px}.hierarchy-tools .note{margin:0;white-space:nowrap}.hierarchy-tools input,.hierarchy-tools select{min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}.hierarchy-substation[hidden],.hierarchy-feeder[hidden]{display:none!important}@media(max-width:620px){.hierarchy-tools{grid-template-columns:1fr 1fr}.hierarchy-tools input{grid-column:1/-1}.hierarchy-tools .note{grid-column:1/-1}}
+
+/* Sticky global navigation: keep the complete dashboard header visible while scrolling */
+html,body{overflow-x:clip}
+header{
+  position:sticky!important;
+  position:-webkit-sticky!important;
+  top:0!important;
+  z-index:1000!important;
+  align-self:start;
+  isolation:isolate;
+  background:color-mix(in srgb,var(--card) 96%,transparent);
+  box-shadow:0 8px 24px rgba(15,35,70,.10);
+}
+/* Keep the tab rows usable on narrow screens without making the page wider */
+header .tabs,header .subs{
+  max-width:100%;
+  min-width:0;
+  overscroll-behavior-x:contain;
+}
+header .tabs{overflow-x:auto;scrollbar-width:thin}
+header .tabs button,header .subs button{flex:0 0 auto;white-space:nowrap}
+header .hd{min-width:0}
+@media(max-width:760px){
+  header{padding-top:calc(10px + env(safe-area-inset-top,0px))}
+  header .tabs{padding-bottom:7px}
+  header .subs{overflow-x:auto;scrollbar-width:thin;padding-bottom:9px}
+  header .subs button{min-height:40px}
+}
+
 </style>
 </head>
 <body>
