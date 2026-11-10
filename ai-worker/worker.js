@@ -1,4 +1,4 @@
-const MODEL = "@cf/zai-org/glm-4.7-flash";
+const MODEL = "@cf/google/gemma-4-26b-a4b-it";
 
 function cors(origin, allowed) {
   const ok = origin && origin === allowed;
