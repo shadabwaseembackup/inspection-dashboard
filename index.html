@@ -1446,4 +1446,13 @@ loadAll();
 .lm-tools select{max-width:190px;flex:0 1 190px}
 .risk-row{padding:9px 0;border-top:1px solid var(--line)}.risk-row:first-of-type{border-top:0}.risk-main,.risk-meta{display:flex;justify-content:space-between;align-items:center;gap:8px}.risk-main b{font-size:12px;overflow-wrap:anywhere}.risk-main span,.risk-meta{font-size:10px;color:var(--mut)}.risk-meta{margin:3px 0 6px}
 @media(max-width:650px){.lm-tools{flex-wrap:wrap}.lm-tools select{max-width:none;flex:1 1 100%}.lm-count{margin-left:auto}.risk-main{align-items:flex-start}.risk-main span{white-space:nowrap}}
+
+/* KPI cards: keep metric and label on one horizontal row */
+.analytics-kpi{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:12px;min-width:0}
+.analytics-kpi strong{display:block;flex:0 0 auto;font-size:clamp(20px,3vw,25px);line-height:1.1;white-space:nowrap}
+.analytics-kpi span{display:block;min-width:0;font-size:12px;line-height:1.25;overflow-wrap:anywhere}
+.stat{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;min-width:0;min-height:68px;padding:12px 14px}
+.stat b{flex:0 0 auto;font-size:clamp(18px,2.5vw,22px);line-height:1.1;white-space:nowrap}
+.stat span{order:0;min-width:0;font-size:12px;line-height:1.25;overflow-wrap:anywhere}
+@media(max-width:420px){.analytics-kpi{gap:8px;padding:10px}.analytics-kpi strong{font-size:20px}.analytics-kpi span{font-size:11px}.stat{gap:8px;padding:10px;min-height:60px}.stat b{font-size:18px}.stat span{font-size:11px}}
 </style>
