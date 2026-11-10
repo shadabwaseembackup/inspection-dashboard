@@ -665,6 +665,7 @@ function render(keepScroll){
   document.querySelectorAll('[data-sub]').forEach(b=>b.classList.toggle('on',b.dataset.sub===S.sub));
   renderStatus();
   const D=S.data[S.main],el=$('#view');
+  if(turnstileWidget!==null&&window.turnstile){try{window.turnstile.remove(turnstileWidget);}catch(e){}turnstileWidget=null;}
   if(!D){
     const s=S.src[S.main];
     el.innerHTML=empty(s.s==='loading'?'Loading from Google Sheet…':'No data loaded for this tab yet.<br>Tap ⟳ to retry the live fetch, or use the manual fallback below.');
