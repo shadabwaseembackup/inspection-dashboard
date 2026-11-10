@@ -512,6 +512,14 @@ header .hd{min-width:0}
 @media(max-width:480px){.def-asset-head{gap:6px;flex-direction:column;align-items:flex-start}.def-priority-badge{max-width:100%;font-size:10px}}
 @media(prefers-color-scheme:dark){.def-priority-badge.overdue,.def-priority-badge.age-high{background:#48251f;color:#ffb3a0;border-color:#9b5545}.def-priority-badge.due-soon,.def-priority-badge.age-mid,.def-priority-badge.no-due{background:#453719;color:#ffda8a;border-color:#8c6b2a}}
 
+/* Visible, individually removable deficiency filter chips */
+.def-active-filters{margin:0 0 10px;padding:10px 11px;border:1px solid var(--line);border-radius:12px;background:var(--pri2)}
+.def-active-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;font-size:12px}
+.def-active-head button{border:0;background:transparent;color:var(--pri);font:inherit;font-weight:750;cursor:pointer;padding:4px 2px}
+.def-filter-chips{display:flex;flex-wrap:wrap;gap:6px}
+.def-filter-chip{display:inline-flex;align-items:center;gap:8px;max-width:100%;border:1px solid var(--line);border-radius:999px;padding:5px 9px;background:var(--card);color:var(--ink);font:inherit;font-size:11px;cursor:pointer}
+.def-filter-chip span{overflow-wrap:anywhere;text-align:left}.def-filter-chip b{font-size:14px;color:var(--pri);line-height:1}
+.def-filter-chip:focus-visible,.def-active-head button:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
 </style>
 </head>
 <body>
@@ -1157,6 +1165,15 @@ function deficiencyActionPriority(r,a){
  if(status!=='Completed'&&!due)return {label:'Follow-up date missing',cls:'no-due'};
  return null;
 }
+function renderDefActiveFilters(){
+ const entries=[];
+ const add=(key,label,value)=>{if(value!==''&&value!==null&&value!==undefined)entries.push({key,label,value:String(value)});};
+ add('substation','Substation',S.substation);add('lm','Lineman',S.lm);add('cat','Category',S.cat);add('q','Search',S.q);add('dateFrom','From',S.dateFrom);add('dateTo','To',S.dateTo);
+ add('st','Status',S.st==='open'?'Not rectified':S.st==='rect'?'Rectified':S.st==='pending'?'Pending / not checked':'');
+ add('defAge','Ageing',S.defAge==='0-7'?'0–7 days':S.defAge==='8-30'?'8–30 days':S.defAge==='31-90'?'31–90 days':S.defAge==='91+'?'Over 90 days':S.defAge==='undated'?'Undated':'');
+ if(!entries.length)return '';
+ return '<div class="def-active-filters" aria-label="Active deficiency filters"><div class="def-active-head"><b>Active filters · '+entries.length+'</b><button type="button" id="clearActiveDefFilters">Clear all</button></div><div class="def-filter-chips">'+entries.map(x=>'<button type="button" class="def-filter-chip" data-clear-def-filter="'+x.key+'"><span>'+esc(x.label)+': '+esc(x.value)+'</span><b aria-hidden="true">×</b></button>').join('')+'</div></div>';
+}
 function renderDefList(){
   const D=S.data[S.main],el=$('#deflist'); if(!D||!el) return;
   const q=S.q.toLowerCase();
@@ -1176,7 +1193,9 @@ function renderDefList(){
   shown.forEach(r=>{const key=r.sub||'—';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);});
   const actions=readDefActions();
   const grouped=[...groups.entries()].map(([sub,assets])=>'<section class="substation-group"><div class="substation-heading"><b>'+esc(sub)+'</b><span>'+assets.length+' asset'+(assets.length===1?'':'s')+'</span></div>'+assets.map(r=>{const id=defActionId(r),a=actions[id]||{};const priority=deficiencyActionPriority(r,a);return '<div class="item"><div class="def-asset-head"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.grp)+(r.kva?' · '+esc(r.kva):'')+'</small></div>'+(priority?'<span class="def-priority-badge '+priority.cls+'">'+esc(priority.label)+'</span>':'')+'</div><div class="im">'+(r.fdr?esc(r.fdr)+' · ':'')+esc(r.lm||'—')+' · '+esc(r.dl||'No date')+'</div><div>'+chips(r.defs)+fixBadge(r)+'</div>'+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'<details class="def-action-editor"><summary>＋ Action / follow-up'+(a.status?' · '+esc(a.status):'')+'</summary><div class="def-action-fields"><label>Responsible team / person<input data-action-owner value="'+esc(a.owner||'')+'" placeholder="Responsible person or team"></label><label>Follow-up date<input type="date" data-action-due value="'+esc(a.due||'')+'"></label><label>Action status<select data-action-status><option value="Pending"'+(a.status==='Pending'?' selected':'')+'>Pending</option><option value="In progress"'+(a.status==='In progress'?' selected':'')+'>In progress</option><option value="Completed"'+(a.status==='Completed'?' selected':'')+'>Completed</option></select></label><label>Action remarks<textarea data-action-note rows="2" placeholder="Action taken / next step">'+esc(a.note||'')+'</textarea></label><button type="button" class="btn" data-save-action="'+esc(id)+'">Save follow-up</button><small class="note">Local-only · Last saved: '+esc(a.updated||'Not saved')+'</small></div></details></div>';}).join('')+'</section>').join('');
-  el.innerHTML='<div class="def-results-meta"><b>'+num(list.length)+' matching assets</b><span>'+(list.length?'Showing '+num(Math.min(list.length,cap))+' of '+num(list.length):'Try resetting or widening the filters')+'</span></div>' +(list.length?grouped+(list.length>cap?'<p class="note">Showing first '+cap+' of '+list.length+' – narrow with the filters.</p>':''):'<p class="note">'+(S.st==='pending'?'No pending or unchecked assets.':'No matching deficiencies.')+'</p>');
+  el.innerHTML=renderDefActiveFilters()+'<div class="def-results-meta"><b>'+num(list.length)+' matching assets</b><span>'+(list.length?'Showing '+num(Math.min(list.length,cap))+' of '+num(list.length):'Try resetting or widening the filters')+'</span></div>' +(list.length?grouped+(list.length>cap?'<p class="note">Showing first '+cap+' of '+list.length+' – narrow with the filters.</p>':''):'<p class="note">'+(S.st==='pending'?'No pending or unchecked assets.':'No matching deficiencies.')+'</p>');
+  el.querySelectorAll('[data-clear-def-filter]').forEach(btn=>btn.onclick=()=>{const key=btn.dataset.clearDefFilter;if(key==='substation')S.substation='';else if(key==='lm')S.lm='';else if(key==='cat')S.cat='';else if(key==='q')S.q='';else if(key==='dateFrom')S.dateFrom='';else if(key==='dateTo')S.dateTo='';else if(key==='st')S.st='';else if(key==='defAge')S.defAge='';render(true);});
+  const clearActive=$('#clearActiveDefFilters');if(clearActive)clearActive.onclick=()=>{S.q='';S.lm='';S.st='';S.dateFrom='';S.dateTo='';S.substation='';S.cat='';S.defAge='';render(true);};
   el.querySelectorAll('[data-save-action]').forEach(btn=>btn.onclick=()=>{const card=btn.closest('.def-action-fields'),id=btn.dataset.saveAction,parts=JSON.parse(id),rec={main:S.main,asset:parts[1],sub:parts[2],feeder:parts[3],owner:card.querySelector('[data-action-owner]').value.trim(),due:card.querySelector('[data-action-due]').value,status:card.querySelector('[data-action-status]').value,note:card.querySelector('[data-action-note]').value.trim(),updated:new Date().toLocaleString('en-IN')},data=readDefActions();if(!rec.owner&&!rec.due&&!rec.note&&rec.status==='Pending')delete data[id];else data[id]=rec;if(writeDefActions(data))renderDefList();});
 }
 
