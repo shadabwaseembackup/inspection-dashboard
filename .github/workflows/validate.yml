@@ -47,13 +47,15 @@ jobs:
               raise SystemExit("Missing required features: " + ", ".join(missing))
           print("Core dashboard and intelligence features verified.")
           PY
-
-      - name: Check optional AI Worker syntax
+      - name: Check optional AI Worker syntax and free-tier safeguards
         run: |
           if [ -f ai-worker/worker.js ]; then
             node --check ai-worker/worker.js
             test -f ai-worker/wrangler.toml
             grep -q 'TURNSTILE_SECRET' ai-worker/worker.js
             grep -q 'aggregateOnly' ai-worker/worker.js
-            echo "AI Worker syntax and privacy guard checks passed."
+            grep -q '@cf/zai-org/glm-4.7-flash' ai-worker/worker.js
+            ! grep -Eq '@cf/meta/llama-3.2-3b-instruct|@cf/meta/llama-3-8b-instruct|@cf/google/gemma-4-26b-a4b-it' ai-worker/worker.js
+            grep -q 'No paid fallback was attempted' ai-worker/worker.js
+            echo "AI Worker syntax, model selection, and privacy/cost guard checks passed."
           fi
