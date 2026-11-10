@@ -1,4 +1,4 @@
-const MODEL = "@cf/meta/llama-3.1-8b-instruct";
+const MODEL = "@cf/meta/llama-3.2-3b-instruct";
 
 function cors(origin, allowed) {
   const ok = origin && origin === allowed;
