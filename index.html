@@ -1138,7 +1138,7 @@ function exportDeficiencyReviewReport(){
   if(value&&typeof value==='object')value=JSON.stringify(value);
   if(typeof value==='boolean')value=value?'Inspected':'Pending';
   let text=String(value==null?'':value);
-  if(/^[=+@\\-\\t\\r]/.test(text))text="'"+text;
+  if(text&&[61,43,64,45,9,13].includes(text.charCodeAt(0)))text="'"+text;
   return '"'+text.replace(/"/g,'""')+'"';
  };
  const rows=[['Deficiency Management Review',today,'Inspection type',S.main==='dt'?'DT':'FP/SP'],['Active filters',[
