@@ -141,7 +141,7 @@ main{width:100%;min-width:0}
   .dt-table th,.dt-table td{font-size:9px;padding:5px 1px}
 }
 
-</style>
+.substation-group{border-top:1px solid var(--line);padding-top:7px;margin-top:8px}.substation-group:first-child{border-top:0;margin-top:0}.substation-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;margin:0 0 4px;border-radius:9px;background:var(--pri2);color:var(--ink)}.substation-heading b{font-size:14px;overflow-wrap:anywhere}.substation-heading span{font-size:11px;color:var(--mut);white-space:nowrap}.substation-group .item:first-of-type{border-top:0}</style>
 </head>
 <body>
 <header>
@@ -518,7 +518,7 @@ function viewDef(D){
   if(S.main==='dt') h+=viewDTDeficiencySummary(D);
   if(S.main==='fpsp') h+=viewFPDeficiencySummary(D);
   const subs=[...new Set(D.rows.map(r=>r.sub||'—'))].sort();
-  h+='<section class="card"><h3>Deficiency filters</h3><div class="filters"><label class="note">From<input type="date" id="dfFrom" value="'+esc(S.dateFrom)+'"></label><label class="note">To<input type="date" id="dfTo" value="'+esc(S.dateTo)+'"></label><select id="fsub" aria-label="Filter by substation"><option value="">All substations</option>'+subs.map(n=>'<option'+(S.substation===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select></div><h3>Deficiency detail</h3><div class="filters"><input type="search" id="fq" placeholder="Search asset / substation" aria-label="Search deficiencies" value="'+esc(S.q)+'"><select id="flm" aria-label="Filter by lineman"><option value="">All linemen</option>'+lms.map(n=>'<option'+(S.lm===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fst" aria-label="Filter by status"><option value="">All status</option><option value="open"'+(S.st==='open'?' selected':'')+'>Not rectified</option><option value="rect"'+(S.st==='rect'?' selected':'')+'>Rectified</option><option value="pending"'+(S.st==='pending'?' selected':'')+'>Pending / not checked</option></select></div><div id="deflist"></div></section>';
+  h+='<section class="card"><h3>Deficiency filters</h3><div class="filters"><label class="note">From<input type="date" id="dfFrom" value="'+esc(S.dateFrom)+'"></label><label class="note">To<input type="date" id="dfTo" value="'+esc(S.dateTo)+'"></label><select id="fsub" aria-label="Filter by substation"><option value="">All substations</option>'+subs.map(n=>'<option'+(S.substation===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fcat" aria-label="Filter by deficiency header"><option value="">All deficiency headers</option>'+tk.map(n=>'<option'+(S.cat===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select></div><h3>Deficiency detail</h3><div class="filters"><input type="search" id="fq" placeholder="Search asset / substation" aria-label="Search deficiencies" value="'+esc(S.q)+'"><select id="flm" aria-label="Filter by lineman"><option value="">All linemen</option>'+lms.map(n=>'<option'+(S.lm===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fst" aria-label="Filter by status"><option value="">All status</option><option value="open"'+(S.st==='open'?' selected':'')+'>Not rectified</option><option value="rect"'+(S.st==='rect'?' selected':'')+'>Rectified</option><option value="pending"'+(S.st==='pending'?' selected':'')+'>Pending / not checked</option></select></div><div id="deflist"></div></section>';
   if(S.cat) h=h.replace('<div id="deflist"></div>','<div class="drill-active"><span>Category: <b>'+esc(S.cat)+'</b></span><button type="button" id="clearcat">Clear ×</button></div><div id="deflist"></div>');
   return h;
 }
@@ -535,8 +535,10 @@ function renderDefList(){
     if(q){const t=[r.name,r.eq,r.sub,r.fdr,r.lm,r.remark].concat(r.defs.map(d=>d.label)).join(' ').toLowerCase();if(t.indexOf(q)<0) return false;}
     return true;
   }).sort((a,b)=>(b.dk||'').localeCompare(a.dk||'')||b.defs.length-a.defs.length);
-  const cap=150;
-  el.innerHTML=list.length?list.slice(0,cap).map(r=>'<div class="item"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.grp)+(r.kva?' · '+esc(r.kva):'')+'</small></div><div class="im">'+esc(r.sub)+(r.fdr?' · '+esc(r.fdr):'')+' · '+esc(r.lm||'—')+' · '+esc(r.dl||'No date')+'</div><div>'+chips(r.defs)+fixBadge(r)+'</div>'+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'</div>').join('')+(list.length>cap?'<p class="note">Showing first '+cap+' of '+list.length+' – narrow with the filters.</p>':'') :'<p class="note">'+(S.st==='pending'?'No pending or unchecked assets.':'No matching deficiencies.')+'</p>';
+  const cap=150,shown=list.slice(0,cap),groups=new Map();
+  shown.forEach(r=>{const key=r.sub||'—';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);});
+  const grouped=[...groups.entries()].map(([sub,assets])=>'<section class="substation-group"><div class="substation-heading"><b>'+esc(sub)+'</b><span>'+assets.length+' asset'+(assets.length===1?'':'s')+'</span></div>'+assets.map(r=>'<div class="item"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.grp)+(r.kva?' · '+esc(r.kva):'')+'</small></div><div class="im">'+(r.fdr?esc(r.fdr)+' · ':'')+esc(r.lm||'—')+' · '+esc(r.dl||'No date')+'</div><div>'+chips(r.defs)+fixBadge(r)+'</div>'+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'</div>').join('')+'</section>').join('');
+  el.innerHTML=list.length?grouped+(list.length>cap?'<p class="note">Showing first '+cap+' of '+list.length+' – narrow with the filters.</p>':''):'<p class="note">'+(S.st==='pending'?'No pending or unchecked assets.':'No matching deficiencies.')+'</p>';
 }
 
 /* ================= MAIN RENDER ================= */
@@ -564,13 +566,14 @@ function render(keepScroll){
   el.innerHTML=S.sub==='progress'?viewProgress(D):S.sub==='lineman'?viewLineman(D):S.sub==='analytics'?viewAnalytics(D):viewDef(D);
   if(S.sub==='def'){
     renderDefList();
-    const q=$('#fq'),l=$('#flm'),s=$('#fst'),df=$('#dfFrom'),dt=$('#dfTo'),sub=$('#fsub'),clear=$('#clearcat');
+    const q=$('#fq'),l=$('#flm'),s=$('#fst'),df=$('#dfFrom'),dt=$('#dfTo'),sub=$('#fsub'),cat=$('#fcat'),clear=$('#clearcat');
     if(q) q.oninput=e=>{S.q=e.target.value;clearTimeout(qTimer);qTimer=setTimeout(renderDefList,150);};
     if(l) l.onchange=e=>{S.lm=e.target.value;renderDefList();};
     if(s) s.onchange=e=>{S.st=e.target.value;renderDefList();};
     if(df) df.onchange=e=>{S.dateFrom=e.target.value;render();};
     if(dt) dt.onchange=e=>{S.dateTo=e.target.value;render();};
     if(sub) sub.onchange=e=>{S.substation=e.target.value;render();};
+    if(cat) cat.onchange=e=>{S.cat=e.target.value;render(true);};
     if(clear) clear.onclick=()=>{S.cat='';render();};
     document.querySelectorAll('[data-defcat]').forEach(row=>{const choose=()=>{S.cat=row.dataset.defcat;S.st='';render(true);document.querySelector('#deflist')?.scrollIntoView({behavior:'smooth',block:'start'});};row.onclick=choose;row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose();}};});
   }
