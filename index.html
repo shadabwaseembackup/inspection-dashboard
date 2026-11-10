@@ -968,6 +968,17 @@ function substationPerformanceScorecard(rows){
  h+=list.map(g=>'<tr><td><button type="button" class="scorecard-sub-link" data-defsub="'+esc(g.name)+'">'+esc(g.name)+'</button></td><td>'+num(g.inspected)+'</td><td>'+num(g.pending)+'</td><td>'+num(g.deficient)+'</td><td><b>'+num(g.open)+'</b></td><td>'+num(g.rectified)+'</td><td>'+((g.deficient)?pct(g.rectified,g.deficient)+'%':'—')+'</td><td>'+num(g.aged)+'</td><td>'+num(g.undated)+'</td></tr>').join('');
  h+='</tbody></table></div><p class="note">Sorted by open deficiency assets, then pending inspections. Click a substation name to filter the detail view. “Deficient” counts inspected assets with recorded deficiencies; open and rectified are mutually exclusive within that group. This is an operational comparison, not a safety score.</p></section>';return h;
 }
+function linemanPerformanceScorecard(rows){
+ const groups=new Map();
+ rows.forEach(r=>{const name=String(r.lm||'').trim()||'Not recorded';if(!groups.has(name))groups.set(name,{name,total:0,inspected:0,pending:0,deficient:0,items:0,open:0,rectified:0,aged:0,undated:0});const g=groups.get(name);g.total++;if(r.done)g.inspected++;else g.pending++;});
+ defRows(rows.filter(r=>r.done)).forEach(r=>{const name=String(r.lm||'').trim()||'Not recorded',g=groups.get(name);if(!g)return;g.deficient++;g.items+=r.defs.length;if(r.fix==='rect'){g.rectified++;return;}g.open++;const days=deficiencyDays(r);if(days===null)g.undated++;else if(days>30)g.aged++;});
+ const list=[...groups.values()].sort((a,b)=>b.open-a.open||b.pending-a.pending||b.inspected-a.inspected||a.name.localeCompare(b.name));
+ let h='<section class="card lm-scorecard"><div class="def-control-head"><div><h3>Lineman performance scorecard</h3><p class="note">Inspection workload and recorded rectification status by assigned lineman. Includes “Not recorded” separately where the source has no lineman name. This is a workload comparison, not an individual performance or safety rating.</p></div><span class="page-tag">Source-derived</span></div>';
+ if(!list.length)return h+'<p class="note">No inspection records available for this selection.</p></section>';
+ h+='<div class="scorecard-wrap"><table class="scorecard-table lm-score-table"><thead><tr><th>Lineman</th><th>Assigned</th><th>Inspected</th><th>Pending</th><th>Coverage %</th><th>Deficient assets</th><th>Deficiency items</th><th>Open</th><th>Rectified</th><th>Rectification %</th><th>Open &gt;30d</th><th>Undated open</th></tr></thead><tbody>';
+ h+=list.map(g=>'<tr><td>'+(g.name==='Not recorded'?'<span>'+esc(g.name)+'</span>':'<button type="button" class="scorecard-sub-link" data-deflineman="'+esc(g.name)+'">'+esc(g.name)+'</button>')+'</td><td>'+num(g.total)+'</td><td>'+num(g.inspected)+'</td><td>'+num(g.pending)+'</td><td>'+pct(g.inspected,g.total)+'%</td><td>'+num(g.deficient)+'</td><td>'+num(g.items)+'</td><td><b>'+num(g.open)+'</b></td><td>'+num(g.rectified)+'</td><td>'+(g.deficient?pct(g.rectified,g.deficient)+'%':'—')+'</td><td>'+num(g.aged)+'</td><td>'+num(g.undated)+'</td></tr>').join('');
+ h+='</tbody></table></div><p class="note">Coverage = inspected ÷ assigned records. Rectification = rectified deficiency assets ÷ inspected assets with recorded deficiencies. Ageing is calculated from Date of Visit. Click a lineman name to filter the detail list. Counts are limited to the selected inspection type and date range.</p></section>';return h;
+}
 function viewDef(D){
   D={...D,rows:filterDefRows(D.rows)};
   if(S.main==='dt') D={...D,rows:D.rows.filter(r=>String(r.lm||'').trim()!=='')};
@@ -982,6 +993,7 @@ function viewDef(D){
   h+=deficiencyAgeing(D.rows);
   h+=deficiencyControlPanel(D.rows);
   h+=substationPerformanceScorecard(D.rows);
+  h+=linemanPerformanceScorecard(D.rows);
   h+=deficiencyTrendPanel(D.rows);
   h+='<section class="card"><h3>Deficiency summary</h3><p class="drill-hint">Select a category to view matching assets below</p>'+(tk.length?tk.map((k,i)=>'<div class="row summary-drill'+(i?'':' first')+(S.cat===k?' active':'')+'" data-defcat="'+esc(k)+'" role="button" tabindex="0"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],wd.length),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
   if(S.main==='dt') h+=viewDTDeficiencySummary(D);
@@ -1106,6 +1118,7 @@ function render(keepScroll){
     if(sort)sort.onchange=e=>{S.defSort=e.target.value;renderDefList();};
     document.querySelectorAll('[data-defage]').forEach(b=>b.onclick=()=>{S.defAge=S.defAge===b.dataset.defage?'':b.dataset.defage;S.st=S.defAge?'open':'';render(true);});
     document.querySelectorAll('[data-defsub]').forEach(b=>b.onclick=()=>{S.substation=b.dataset.defsub;render(true);document.querySelector('#deflist')?.scrollIntoView({behavior:'smooth',block:'start'});});
+    document.querySelectorAll('[data-deflineman]').forEach(b=>b.onclick=()=>{S.lm=b.dataset.deflineman==='Not recorded'?'':b.dataset.deflineman;render(true);document.querySelector('#deflist')?.scrollIntoView({behavior:'smooth',block:'start'});});
     if(l) l.onchange=e=>{S.lm=e.target.value;renderDefList();};
     if(s) s.onchange=e=>{S.st=e.target.value;renderDefList();};
     if(df) df.onchange=e=>{S.dateFrom=e.target.value;render();};
@@ -1197,6 +1210,13 @@ loadAll();
 .scorecard-table th:first-child,.scorecard-table td:first-child{text-align:left;position:sticky;left:0;background:var(--card)}
 .scorecard-sub-link{border:0;background:transparent;color:var(--pri);font:inherit;font-weight:700;text-align:left;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
 .scorecard-table tbody tr:last-child td{border-bottom:0}
+</style>
+
+<style>
+.lm-score-table{min-width:1040px}
+.lm-scorecard .scorecard-wrap{overscroll-behavior-x:contain}
+.lm-scorecard .scorecard-table td:nth-child(5),.lm-scorecard .scorecard-table td:nth-child(10){font-weight:700}
+@media(max-width:480px){.lm-scorecard .def-control-head{display:block}.lm-scorecard .page-tag{display:inline-block;margin-top:7px}}
 </style>
 </body>
 </html>
