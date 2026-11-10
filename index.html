@@ -1153,7 +1153,7 @@ function render(keepScroll){
     const q=$('#fq'),l=$('#flm'),s=$('#fst'),df=$('#dfFrom'),dt=$('#dfTo'),sub=$('#fsub'),cat=$('#fcat'),clear=$('#clearcat'),sort=$('#fdefSort'),exportDef=$('#exportDeficiencies');
     if(exportDef)exportDef.onclick=exportFilteredDeficiencies;
     const exportMatrix=$('#exportDefMatrix');if(exportMatrix)exportMatrix.onclick=exportDeficiencyMatrix;
-    document.querySelectorAll('[data-matrix-drill]').forEach(b=>b.onclick=()=>{const [sub,feeder,lineman]=JSON.parse(b.dataset.matrixDrill);S.substation=sub==='Not recorded'?'—':sub;S.lm=lineman==='Not recorded'?'':lineman;S.q=feeder==='Not recorded'?'':feeder;S.st='open';S.defAge='';S.cat='';render(true);document.querySelector('#deflist')?.scrollIntoView({behavior:'smooth',block:'start'});});
+    document.querySelectorAll('[data-matrix-drill]').forEach(b=>b.onclick=()=>{const [sub,feeder,lineman]=JSON.parse(b.dataset.matrixDrill);S.substation=sub==='Not recorded'?'—':sub;S.lm=lineman==='Not recorded'?'—':lineman;S.q=feeder==='Not recorded'?'':feeder;S.st='open';S.defAge='';S.cat='';render(true);document.querySelector('#deflist')?.scrollIntoView({behavior:'smooth',block:'start'});});
     if(q) q.oninput=e=>{S.q=e.target.value;clearTimeout(qTimer);qTimer=setTimeout(renderDefList,150);};
     if(sort)sort.onchange=e=>{S.defSort=e.target.value;renderDefList();};
     document.querySelectorAll('[data-defage]').forEach(b=>b.onclick=()=>{S.defAge=S.defAge===b.dataset.defage?'':b.dataset.defage;S.st=S.defAge?'open':'';render(true);});
