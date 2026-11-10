@@ -760,7 +760,72 @@ function viewProgress(D){
   const dm=new Map();
   done.forEach(r=>{const k=r.dk||'zz';let g=dm.get(k);if(!g){g={l:r.dl||'No date',n:0,lm:{}};dm.set(k,g);}g.n++;const q=r.lm||'—';g.lm[q]=(g.lm[q]||0)+1;});
   const keys=[...dm.keys()].sort((a,b)=>a==='zz'?1:b==='zz'?-1:b.localeCompare(a)).slice(0,30);
-  h+='<section class="analytics-panel analytics-hierarchy"><h3>Substation → Feeder hierarchy</h3><p class="note">Expand a substation to compare feeder coverage, pending assets and deficiency workload. Select a feeder to inspect source records.</p>'+(hierarchyHtml||'<p class="note">No substation / feeder data available.</p>')+'</section><section class="analytics-panel"><h3>Lineman activity/h3><table class="analytics-table"><thead><tr><th>Lineman</th><th>Inspected</th><th>Affected</th><th>Deficiency items</th></tr></thead><tbody>'+la.map(([k,x])=>'<tr class="analytics-drill-target" role="button" tabindex="0" data-drill-kind="lineman" data-drill-key="'+esc(k)+'" title="View lineman inspection records"><td>'+esc(k)+'</td><td>'+x.n+'</td><td>'+x.d+'</td><td>'+x.items+'</td></tr>').join('')+'</tbody></table></section><section class="analytics-panel"><h3>Frequent deficiency categories</h3>'+ca.map(([k,n])=>'<div class="metric-line analytics-drill-target" role="button" tabindex="0" data-drill-kind="category" data-drill-key="'+esc(k)+'" title="View matching deficiency records"><div class="metric-label">'+esc(k)+'</div><div class="metric-track red"><i style="width:'+(n/cm*100)+'%"></i></div><div class="metric-value">'+n+'</div></div>').join('')+'</section></div><section class="analytics-panel analytics-drilldown" id="analyticsDrilldown" hidden></section>';
+  h+='<section class="card"><h3>Date-wise inspections done</h3>';
+  if(!keys.length) h+='<p class="note">Nothing inspected yet.</p>';
+  keys.forEach((k,i)=>{const g=dm.get(k);
+    h+='<div class="row'+(i?'':' first')+'" style="grid-template-columns:minmax(0,1fr) auto"><div class="rn"><b>'+esc(g.l)+'</b><div class="note" style="margin:2px 0 0">'+Object.keys(g.lm).map(n=>esc(n)+' '+g.lm[n]).join(' · ')+'</div></div><div class="rv"><b>'+g.n+'</b></div></div>';});
+  if(dm.has('zz')) h+='<p class="note">"No date": Date of Visit is blank on those rows – ask the team to fill it in.</p>';
+  h+='</section>';
+  h+=groupList('Substation-wise (done / total)',groupBy(rows,r=>r.sub));
+  return h;
+}
+
+function lmBody(key){
+  return (S.lmMap.get(key)||[]).map(r=>'<div class="item"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.dl||'No date')+'</small></div><div class="im">'+esc(r.sub)+(r.kva?' · '+esc(r.kva):'')+'</div>'+(r.defs.length?'<div>'+(r.done?chips(r.defs)+fixBadge(r):'<span class="chip w">Pending / not checked</span>')+'</div>':'<div><span class="chip g">All OK</span></div>')+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'</div>').join('');
+}
+function viewLineman(D){
+  const done=D.rows.filter(r=>r.done);
+  S.lmMap=new Map();
+  if(!done.length) return empty('No inspections recorded yet.');
+  const m=new Map();
+  done.forEach(r=>{const k=(r.lm||'').toLowerCase()||'—';let g=m.get(k);if(!g){g={key:k,k:r.lm||'Not recorded',list:[]};m.set(k,g);}g.list.push(r);});
+  const arr=[...m.values()];
+  const stats=g=>({inspections:g.list.length,deficient:g.list.filter(r=>r.defs.length).length,items:g.list.reduce((n,r)=>n+r.defs.length,0),rate:pct(g.list.filter(r=>r.defs.length).length,g.list.length)});
+  const sort=(a,b)=>{const x=stats(a),y=stats(b);return S.lmSort==='deficient'?y.deficient-x.deficient||y.inspections-x.inspections:S.lmSort==='rate'?y.rate-x.rate||y.inspections-x.inspections:S.lmSort==='items'?y.items-x.items||y.inspections-x.inspections:y.inspections-x.inspections;};
+  arr.sort(sort);
+  let h='<div class="page-intro"><div><h2>Lineman performance</h2><p>Compare completed inspections, affected assets and recorded deficiency workload by field team member.</p></div><span class="page-tag">FIELD ACTIVITY</span></div>';
+  h+='<div class="grid">'+stat('Linemen',arr.length)+stat('Inspections',num(done.length),'g')+stat('Assets with deficiency',defRows(done).length,'r')+stat('Deficiency items',done.reduce((s,r)=>s+r.defs.length,0),'w')+'</div>';
+  h+='<div class="lm-tools"><input type="search" id="lmSearch" placeholder="Search lineman name…" aria-label="Search lineman"><select id="lmSort" aria-label="Sort lineman performance"><option value="inspections"'+(S.lmSort==='inspections'?' selected':'')+'>Sort: inspections</option><option value="deficient"'+(S.lmSort==='deficient'?' selected':'')+'>Sort: affected assets</option><option value="rate"'+(S.lmSort==='rate'?' selected':'')+'>Sort: deficiency rate</option><option value="items"'+(S.lmSort==='items'?' selected':'')+'>Sort: deficiency items</option></select><span class="lm-count" id="lmCount">'+arr.length+' teams</span></div><div class="note" style="margin:0 0 9px">Deficiency rate = inspected assets with one or more recorded deficiencies ÷ inspections. It is a workload indicator, not an individual performance judgement.</div><div id="lmCards">';
+  arr.forEach(g=>{
+    const x=stats(g),split={};g.list.forEach(r=>split[r.grp]=(split[r.grp]||0)+1);
+    const last=g.list.map(r=>r.dk).filter(Boolean).sort().pop();
+    const lastL=last?(g.list.find(r=>r.dk===last).dl):'—';
+    S.lmMap.set(g.key,g.list.slice().sort(byDateDesc));
+    h+='<details class="card" data-k="'+esc(g.key)+'"><summary><div class="lmh"><div><b>'+esc(g.k)+'</b><div class="note" style="margin:2px 0 0">'+Object.keys(split).map(k=>k+' '+split[k]).join(' · ')+' · last visit: '+esc(lastL)+'</div></div><div style="text-align:right"><b class="n">'+x.inspections+'</b><div class="note" style="margin:0">'+x.deficient+' affected · '+x.items+' items</div></div></div>'+bar(x.rate,true)+'<div class="note">'+x.rate+'% of inspected assets have recorded deficiencies</div></summary><div class="body"></div></details>';
+  });
+  h+='</div>';
+  return h;
+}
+function viewAnalytics(D){
+ const rows=D.rows,done=rows.filter(r=>r.done),deficient=defRows(rows),pending=rows.filter(r=>!r.done),rect=deficient.filter(r=>r.fix==='rect'),open=deficient.filter(r=>r.fix!=='rect'),rate=pct(done.length,rows.length);
+ const monthly=new Map();done.forEach(r=>{const k=r.dk&&/^\\d{4}-\\d{2}/.test(r.dk)?r.dk.slice(0,7):'';if(k)monthly.set(k,(monthly.get(k)||0)+1);});
+ const months=[...monthly.entries()].sort((a,b)=>a[0].localeCompare(b[0])).slice(-8),mx=Math.max(1,...months.map(x=>x[1]));
+ const trend=months.length?'<div class="trend-bars">'+months.map(([k,n])=>'<div class="trend-col"><small>'+n+'</small><i style="height:'+Math.max(3,n/mx*100)+'%"></i><b>'+esc(k.slice(5))+'</b></div>').join('')+'</div>':'<p class="note">Date-wise monthly trend will appear when inspection dates are available.</p>';
+ const bySub=new Map();rows.forEach(r=>{const k=r.sub||'—';let g=bySub.get(k);if(!g){g={name:k,total:0,done:0,pending:0,affected:0,open:0,rectified:0};bySub.set(k,g);}g.total++;if(r.done)g.done++;else g.pending++;});
+ deficient.forEach(r=>{const g=bySub.get(r.sub||'—');if(g){g.affected++;if(r.fix==='rect')g.rectified++;else g.open++;}});
+ const subs=[...bySub.values()].map(g=>({...g,rate:pct(g.done,g.total)}));
+ const byFeeder=new Map();rows.forEach(r=>{const k=String(r.fdr||'').trim()||'Not recorded';let g=byFeeder.get(k);if(!g){g={name:k,total:0,done:0,pending:0,affected:0,open:0,rectified:0};byFeeder.set(k,g);}g.total++;if(r.done)g.done++;else g.pending++;});
+ deficient.forEach(r=>{const g=byFeeder.get(String(r.fdr||'').trim()||'Not recorded');if(g){g.affected++;if(r.fix==='rect')g.rectified++;else g.open++;}});
+ const feeders=[...byFeeder.values()].map(g=>({...g,rate:pct(g.done,g.total)}));
+ const feederPriority=feeders.slice().sort((a,b)=>b.open-a.open||b.pending-a.pending||b.affected-a.affected||a.name.localeCompare(b.name)).slice(0,10);
+ const feederMax=Math.max(1,...feederPriority.map(x=>x.open));
+ const hierarchy=new Map();rows.forEach(r=>{const sk=r.sub||'—',fk=String(r.fdr||'').trim()||'Not recorded';let sg=hierarchy.get(sk);if(!sg){sg={name:sk,total:0,done:0,pending:0,feeders:new Map()};hierarchy.set(sk,sg);}sg.total++;if(r.done)sg.done++;else sg.pending++;let fg=sg.feeders.get(fk);if(!fg){fg={name:fk,total:0,done:0,pending:0,affected:0,open:0,rectified:0};sg.feeders.set(fk,fg);}fg.total++;if(r.done)fg.done++;else fg.pending++;});
+ deficient.forEach(r=>{const sg=hierarchy.get(r.sub||'—'),fg=sg&&sg.feeders.get(String(r.fdr||'').trim()||'Not recorded');if(fg){fg.affected++;if(r.fix==='rect')fg.rectified++;else fg.open++;}});
+ const hierarchyRows=[...hierarchy.values()].sort((a,b)=>b.pending-a.pending||a.name.localeCompare(b.name));
+ const hierarchyHtml=hierarchyRows.map(sg=>{const fs=[...sg.feeders.values()].sort((a,b)=>b.open-a.open||b.pending-a.pending||a.name.localeCompare(b.name));return '<details class="hierarchy-substation"><summary><span><b>'+esc(sg.name)+'</b><small>'+fs.length+' feeders · '+sg.total+' assets</small></span><span class="hierarchy-stats">'+pct(sg.done,sg.total)+'% covered · '+sg.pending+' pending</span></summary><div class="hierarchy-feeders">'+(fs.length?fs.map(fg=>'<div class="hierarchy-feeder analytics-drill-target" role="button" tabindex="0" data-drill-kind="feeder" data-drill-key="'+esc(fg.name)+'" title="View feeder records"><b>'+esc(fg.name)+'</b><span>'+pct(fg.done,fg.total)+'% coverage ('+fg.done+'/'+fg.total+')</span><span>'+fg.open+' open · '+fg.pending+' pending</span><small>'+fg.affected+' affected assets</small></div>').join(''):'<p class="note">No feeder records.</p>')+'</div></details>';}).join('');
+ const coverage=subs.slice().sort((a,b)=>b.rate-a.rate||b.total-a.total).slice(0,8);
+ const sh=coverage.map(x=>'<div class="metric-line analytics-drill-target" role="button" tabindex="0" data-drill-kind="substation" data-drill-key="'+esc(x.name)+'" title="View inspection records"><div class="metric-label">'+esc(x.name)+'</div><div class="metric-track"><i style="width:'+x.rate+'%"></i></div><div class="metric-value">'+x.rate+'% ('+x.done+'/'+x.total+')</div></div>').join('');
+ const risk=subs.slice().sort((a,b)=>b.open-a.open||b.pending-a.pending||b.affected-a.affected).slice(0,8);
+ const rh=risk.map(x=>'<div class="risk-row analytics-drill-target" role="button" tabindex="0" data-drill-kind="substation" data-drill-key="'+esc(x.name)+'" title="View inspection records"><div class="risk-main"><b>'+esc(x.name)+'</b><span>'+x.open+' open · '+x.pending+' pending</span></div><div class="risk-meta"><span>'+x.rate+'% inspected</span><span>'+x.affected+' affected assets</span></div><div class="metric-track red"><i style="width:'+pct(x.open,Math.max(1,...risk.map(y=>y.open)))+'%"></i></div></div>').join('');
+ const lm=new Map();done.forEach(r=>{const k=r.lm||'Not recorded';let x=lm.get(k);if(!x){x={n:0,d:0,items:0};lm.set(k,x);}x.n++;if(r.defs.length)x.d++;x.items+=r.defs.length;});
+ const la=[...lm.entries()].sort((a,b)=>b[1].n-a[1].n).slice(0,8);
+ const cats=new Map();deficient.forEach(r=>r.defs.forEach(d=>{const k=d.t==='remark'?'Team remark':d.label.replace(/ \(\d+\)$/,'');cats.set(k,(cats.get(k)||0)+1);}));
+ const ca=[...cats.entries()].sort((a,b)=>b[1]-a[1]).slice(0,7),cm=Math.max(1,...ca.map(x=>x[1]));
+ const rectRate=pct(rect.length,deficient.length);
+ return '<div class="page-intro"><div><h2>Operational analytics</h2><p>Performance trends, inspection workload and substation risk signals calculated from the selected records.</p></div><span class="page-tag">LIVE DATA VIEW</span></div>'+
+ '<div class="analytics-kpis"><div class="analytics-kpi"><strong>'+rate+'%</strong><span>Inspection coverage</span></div><div class="analytics-kpi"><strong>'+num(pending.length)+'</strong><span>Pending assets</span></div><div class="analytics-kpi"><strong>'+num(deficient.length)+'</strong><span>Assets with deficiency</span></div><div class="analytics-kpi"><strong>'+num(rect.length)+'</strong><span>Assets marked rectified</span></div></div>'+
+ '<div class="insight-strip"><div class="insight-tile"><b>'+num(open.length)+'</b><span>Open / unclear affected assets</span></div><div class="insight-tile"><b>'+rectRate+'%</b><span>Deficient assets rectified</span></div><div class="insight-tile"><b>'+num(subs.length)+'</b><span>Substations represented</span></div></div>'+
+ '<div class="analytics-grid"><section class="analytics-panel"><h3>Monthly inspection trend</h3><p class="note">Completed inspections · latest 8 available months</p>'+trend+'</section><section class="analytics-panel"><h3>Substation inspection coverage</h3><p class="note">Highest coverage first · completed / total</p>'+sh+'</section><section class="analytics-panel"><h3>Substations needing attention</h3><p class="note">Prioritised by open deficiencies, then pending workload. Not a safety-risk score.</p>'+(rh||'<p class="note">No substation records available.</p>')+'</section><section class="analytics-panel analytics-hierarchy"><h3>Substation → Feeder hierarchy</h3><p class="note">Expand a substation to compare feeder coverage, pending assets and deficiency workload. Select a feeder to inspect source records.</p>'+(hierarchyHtml||'<p class="note">No substation / feeder data available.</p>')+'</section><section class="analytics-panel"><h3>Lineman activity</h3><table class="analytics-table"><thead><tr><th>Lineman</th><th>Inspected</th><th>Affected</th><th>Deficiency items</th></tr></thead><tbody>'+la.map(([k,x])=>'<tr class="analytics-drill-target" role="button" tabindex="0" data-drill-kind="lineman" data-drill-key="'+esc(k)+'" title="View lineman inspection records"><td>'+esc(k)+'</td><td>'+x.n+'</td><td>'+x.d+'</td><td>'+x.items+'</td></tr>').join('')+'</tbody></table></section><section class="analytics-panel"><h3>Frequent deficiency categories</h3>'+ca.map(([k,n])=>'<div class="metric-line analytics-drill-target" role="button" tabindex="0" data-drill-kind="category" data-drill-key="'+esc(k)+'" title="View matching deficiency records"><div class="metric-label">'+esc(k)+'</div><div class="metric-track red"><i style="width:'+(n/cm*100)+'%"></i></div><div class="metric-value">'+n+'</div></div>').join('')+'</section></div><section class="analytics-panel analytics-drilldown" id="analyticsDrilldown" hidden></section>';
 }
 
 function showAnalyticsDrilldown(kind,key,D){
