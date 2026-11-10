@@ -979,6 +979,43 @@ function linemanPerformanceScorecard(rows){
  h+=list.map(g=>'<tr><td>'+(g.name==='Not recorded'?'<span>'+esc(g.name)+'</span>':'<button type="button" class="scorecard-sub-link" data-deflineman="'+esc(g.name)+'">'+esc(g.name)+'</button>')+'</td><td>'+num(g.total)+'</td><td>'+num(g.inspected)+'</td><td>'+num(g.pending)+'</td><td>'+pct(g.inspected,g.total)+'%</td><td>'+num(g.deficient)+'</td><td>'+num(g.items)+'</td><td><b>'+num(g.open)+'</b></td><td>'+num(g.rectified)+'</td><td>'+(g.deficient?pct(g.rectified,g.deficient)+'%':'—')+'</td><td>'+num(g.aged)+'</td><td>'+num(g.undated)+'</td></tr>').join('');
  h+='</tbody></table></div><p class="note">Coverage = inspected ÷ assigned records. Rectification = rectified deficiency assets ÷ inspected assets with recorded deficiencies. Ageing is calculated from Date of Visit. Click a lineman name to filter the detail list. Counts are limited to the selected inspection type and date range.</p></section>';return h;
 }
+function deficiencyMatrixRows(rows){
+ const groups=new Map();
+ const inspected=defRows(rows.filter(r=>r.done));
+ inspected.forEach(r=>{
+  const sub=String(r.sub||'Not recorded').trim()||'Not recorded';
+  const feeder=String(r.fdr||'Not recorded').trim()||'Not recorded';
+  const lineman=String(r.lm||'Not recorded').trim()||'Not recorded';
+  const key=JSON.stringify([sub,feeder,lineman]);
+  if(!groups.has(key))groups.set(key,{sub,feeder,lineman,assets:0,items:0,open:0,rectified:0,d0:0,d8:0,d31:0,d90:0,undated:0});
+  const g=groups.get(key);g.assets++;g.items+=r.defs.length;
+  if(r.fix==='rect'){g.rectified++;return;}
+  g.open++;const days=deficiencyDays(r);
+  if(days===null)g.undated++;else if(days<=7)g.d0++;else if(days<=30)g.d8++;else if(days<=90)g.d31++;else g.d90++;
+ });
+ return [...groups.values()].sort((a,b)=>a.sub.localeCompare(b.sub)||a.feeder.localeCompare(b.feeder)||a.lineman.localeCompare(b.lineman));
+}
+function deficiencyMonitoringMatrix(rows){
+ const groups=deficiencyMatrixRows(rows);
+ let h='<section class="card def-matrix"><div class="def-control-head"><div><h3>Deficiency rectification monitoring matrix</h3><p class="note">Substation → feeder → lineman. Counts are inspected assets with recorded deficiencies; ageing applies only to open assets and uses Date of Visit.</p></div><span class="page-tag">Source-derived</span></div>';
+ h+='<div class="def-matrix-toolbar"><span class="note">'+num(groups.length)+' substation / feeder / lineman combinations</span><button type="button" class="btn" id="exportDefMatrix">↓ Export matrix CSV</button></div>';
+ if(!groups.length)return h+'<p class="note">No inspected deficiency records in this selection.</p></section>';
+ h+='<div class="scorecard-wrap"><table class="scorecard-table def-matrix-table"><thead><tr><th>Substation</th><th>Feeder</th><th>Lineman</th><th>Deficient assets</th><th>Open</th><th>Rectified</th><th>0–7d</th><th>8–30d</th><th>31–90d</th><th>&gt;90d</th><th>Undated</th><th>Deficiency items</th><th>Drill down</th></tr></thead><tbody>';
+ h+=groups.map(g=>'<tr><td>'+esc(g.sub)+'</td><td>'+esc(g.feeder)+'</td><td>'+esc(g.lineman)+'</td><td>'+num(g.assets)+'</td><td><b>'+num(g.open)+'</b></td><td>'+num(g.rectified)+'</td><td>'+num(g.d0)+'</td><td>'+num(g.d8)+'</td><td>'+num(g.d31)+'</td><td>'+num(g.d90)+'</td><td>'+num(g.undated)+'</td><td>'+num(g.items)+'</td><td><button type="button" class="scorecard-sub-link" data-matrix-drill="'+esc(JSON.stringify([g.sub,g.feeder,g.lineman]))+'">View assets</button></td></tr>').join('');
+ h+='</tbody></table></div><p class="note">Each row is a unique substation / feeder / lineman combination. “Deficiency items” counts recorded issue labels and may exceed asset counts. Missing hierarchy values are retained as “Not recorded”. Select View assets to filter the detail list. This is an operational follow-up matrix, not a safety or individual performance rating.</p></section>';return h;
+}
+function exportDeficiencyMatrix(){
+ const D=S.data[S.main];if(!D||!Array.isArray(D.rows))return;
+ let rows=filterDefRows(D.rows);if(S.main==='dt')rows=rows.filter(r=>String(r.lm||'').trim()!=='');
+ const groups=deficiencyMatrixRows(rows);if(!groups.length){alert('No matrix records available to export.');return;}
+ const cols=['sub','feeder','lineman','assets','open','rectified','d0','d8','d31','d90','undated','items'];
+ const labels=['Substation','Feeder','Lineman','Deficient assets','Open','Rectified','0–7 days','8–30 days','31–90 days','Over 90 days','Undated open','Deficiency items'];
+ const cell=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+ const csv=[labels.map(cell).join(',')].concat(groups.map(g=>cols.map(k=>cell(g[k])).join(','))).join('\r\n');
+ const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download=(S.main==='dt'?'DT':'FP_SP')+'_Deficiency_Monitoring_Matrix_'+new Date().toISOString().slice(0,10)+'.csv';
+ document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
 function viewDef(D){
   D={...D,rows:filterDefRows(D.rows)};
   if(S.main==='dt') D={...D,rows:D.rows.filter(r=>String(r.lm||'').trim()!=='')};
@@ -994,6 +1031,7 @@ function viewDef(D){
   h+=deficiencyControlPanel(D.rows);
   h+=substationPerformanceScorecard(D.rows);
   h+=linemanPerformanceScorecard(D.rows);
+  h+=deficiencyMonitoringMatrix(D.rows);
   h+=deficiencyTrendPanel(D.rows);
   h+='<section class="card"><h3>Deficiency summary</h3><p class="drill-hint">Select a category to view matching assets below</p>'+(tk.length?tk.map((k,i)=>'<div class="row summary-drill'+(i?'':' first')+(S.cat===k?' active':'')+'" data-defcat="'+esc(k)+'" role="button" tabindex="0"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],wd.length),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
   if(S.main==='dt') h+=viewDTDeficiencySummary(D);
@@ -1114,6 +1152,8 @@ function render(keepScroll){
     renderDefList();
     const q=$('#fq'),l=$('#flm'),s=$('#fst'),df=$('#dfFrom'),dt=$('#dfTo'),sub=$('#fsub'),cat=$('#fcat'),clear=$('#clearcat'),sort=$('#fdefSort'),exportDef=$('#exportDeficiencies');
     if(exportDef)exportDef.onclick=exportFilteredDeficiencies;
+    const exportMatrix=$('#exportDefMatrix');if(exportMatrix)exportMatrix.onclick=exportDeficiencyMatrix;
+    document.querySelectorAll('[data-matrix-drill]').forEach(b=>b.onclick=()=>{const [sub,feeder,lineman]=JSON.parse(b.dataset.matrixDrill);S.substation=sub==='Not recorded'?'—':sub;S.lm=lineman==='Not recorded'?'':lineman;S.q=feeder==='Not recorded'?'':feeder;S.st='open';S.defAge='';S.cat='';render(true);document.querySelector('#deflist')?.scrollIntoView({behavior:'smooth',block:'start'});});
     if(q) q.oninput=e=>{S.q=e.target.value;clearTimeout(qTimer);qTimer=setTimeout(renderDefList,150);};
     if(sort)sort.onchange=e=>{S.defSort=e.target.value;renderDefList();};
     document.querySelectorAll('[data-defage]').forEach(b=>b.onclick=()=>{S.defAge=S.defAge===b.dataset.defage?'':b.dataset.defage;S.st=S.defAge?'open':'';render(true);});
@@ -1217,6 +1257,13 @@ loadAll();
 .lm-scorecard .scorecard-wrap{overscroll-behavior-x:contain}
 .lm-scorecard .scorecard-table td:nth-child(5),.lm-scorecard .scorecard-table td:nth-child(10){font-weight:700}
 @media(max-width:480px){.lm-scorecard .def-control-head{display:block}.lm-scorecard .page-tag{display:inline-block;margin-top:7px}}
+</style>
+<style>
+.def-matrix-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 0}
+.def-matrix-table{min-width:1250px}
+.def-matrix-table td:nth-child(5){font-weight:800}
+.def-matrix .scorecard-wrap{overscroll-behavior-x:contain}
+@media(max-width:520px){.def-matrix-toolbar{align-items:flex-start;flex-direction:column}.def-matrix-toolbar .btn{width:100%}}
 </style>
 </body>
 </html>
