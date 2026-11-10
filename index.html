@@ -957,6 +957,7 @@ function viewFPDeficiencySummary(D){
  return '<div class="dt-summary-note">Net deficiency counts aggregate all substations; detailed tables below retain substation-wise grouping. Count cells show completed assets meeting each parameter condition. Yellow source fields use numeric thresholds (earthing below 2; HRC quantities above 0).</div>'+make('Deficiency : Feeder Pillar / Service Pillar','Pillar',true)+make('Deficiency : Pole','Pole',true)+make('Deficiency : Feeder Pillar / Service Pillar (Substation wise)','Pillar',false)+make('Deficiency : Pole (Substation wise)','Pole',false);
 }
 function filterDefRows(rows){return rows.filter(r=>{if(S.dateFrom&&(!r.dk||r.dk<S.dateFrom))return false;if(S.dateTo&&(!r.dk||r.dk>S.dateTo))return false;if(S.substation&&(r.sub||'—')!==S.substation)return false;return true;});}
+function localDateKey(date=new Date()){return [date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');}
 function deficiencyAgeing(rows){
   const open=defRows(rows.filter(r=>r.done)).filter(r=>r.fix!=='rect');
   const today=new Date();today.setHours(0,0,0,0);
@@ -1042,7 +1043,7 @@ function exportDeficiencyMatrix(){
  const cell=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
  const csv=[labels.map(cell).join(',')].concat(groups.map(g=>cols.map(k=>cell(g[k])).join(','))).join('\r\n');
  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');
- a.href=url;a.download=(S.main==='dt'?'DT':'FP_SP')+'_Deficiency_Monitoring_Matrix_'+new Date().toISOString().slice(0,10)+'.csv';
+ a.href=url;a.download=(S.main==='dt'?'DT':'FP_SP')+'_Deficiency_Monitoring_Matrix_'+localDateKey()+'.csv';
  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function viewDef(D){
@@ -1094,15 +1095,15 @@ function exportFilteredDeficiencies(){
  const cols=[['Asset / Equipment','name'],['Equipment ID','eq'],['Substation','sub'],['Feeder','fdr'],['Function Location','fl'],['Asset Type','typ'],['Group','grp'],['Capacity','kva'],['Lineman','lm'],['Date of Visit','dl'],['Visit Date (ISO)','dk'],['Inspection Status','done'],['Rectification Status','fix'],['Deficiency Items','defs'],['Team Remark','remark']];
  const cell=v=>{if(Array.isArray(v))v=v.map(x=>typeof x==='string'?x:(x.label||x.t||JSON.stringify(x))).join('; ');else if(v&&typeof v==='object')v=JSON.stringify(v);if(typeof v==='boolean')v=v?'Inspected':'Pending';return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';};
  const csv=[cols.map(c=>cell(c[0])).join(',')].concat(rows.map(r=>cols.map(c=>cell(r[c[1]])).join(','))).join('\r\n');
- const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=(S.main==='dt'?'DT':'FP_SP')+'_Deficiencies_Filtered_'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=(S.main==='dt'?'DT':'FP_SP')+'_Deficiencies_Filtered_'+localDateKey()+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
 const DEF_ACTION_KEY='inspection-dashboard:deficiency-actions:v1';
 function readDefActions(){try{return JSON.parse(localStorage.getItem(DEF_ACTION_KEY)||'{}')||{};}catch(e){return {};}}
 function writeDefActions(data){try{localStorage.setItem(DEF_ACTION_KEY,JSON.stringify(data));return true;}catch(e){alert('Could not save locally. Check browser storage availability.');return false;}}
 function defActionId(r){return JSON.stringify([S.main,String(r.eq||r.name||''),String(r.sub||''),String(r.fdr||'')]);}
-function defActionPanel(rows){const all=readDefActions(),keys=new Set(rows.map(defActionId)),items=Object.entries(all).filter(([k])=>keys.has(k)).map(x=>x[1]),active=items.filter(x=>x.status!=='Completed').length,today=new Date().toISOString().slice(0,10),overdue=items.filter(x=>x.status!=='Completed'&&x.due&&x.due<today).length;return '<section class="card def-action-summary"><div class="def-control-head"><div><h3>Deficiency action tracker</h3><p class="note">Follow-up notes are saved only in this browser on this device. They are separate from the Google Sheet and are not synced to other users.</p></div><span class="page-tag">Local workspace</span></div><div class="grid">'+stat('Tracked assets',num(items.length),'n')+stat('Active follow-ups',num(active),active?'w':'g')+stat('Overdue follow-ups',num(overdue),overdue?'r':'g')+'</div><button type="button" class="btn" id="exportDefActions">↓ Export action tracker CSV</button></section>';}
-function exportDefActions(){const all=readDefActions(),rows=[['Inspection type','Asset / Equipment ID','Substation','Feeder','Responsible team / person','Follow-up date','Action status','Action remarks','Last updated']];Object.values(all).forEach(x=>rows.push([x.main,x.asset,x.sub,x.feeder,x.owner,x.due,x.status,x.note,x.updated]));const cell=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"',csv=rows.map(r=>r.map(cell).join(',')).join('\r\n'),blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Deficiency_Action_Tracker_'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);}
+function defActionPanel(rows){const all=readDefActions(),keys=new Set(rows.map(defActionId)),items=Object.entries(all).filter(([k])=>keys.has(k)).map(x=>x[1]),active=items.filter(x=>x.status!=='Completed').length,today=localDateKey(),overdue=items.filter(x=>x.status!=='Completed'&&x.due&&x.due<today).length;return '<section class="card def-action-summary"><div class="def-control-head"><div><h3>Deficiency action tracker</h3><p class="note">Follow-up notes are saved only in this browser on this device. They are separate from the Google Sheet and are not synced to other users.</p></div><span class="page-tag">Local workspace</span></div><div class="grid">'+stat('Tracked assets',num(items.length),'n')+stat('Active follow-ups',num(active),active?'w':'g')+stat('Overdue follow-ups',num(overdue),overdue?'r':'g')+'</div><button type="button" class="btn" id="exportDefActions">↓ Export action tracker CSV</button></section>';}
+function exportDefActions(){const all=readDefActions(),rows=[['Inspection type','Asset / Equipment ID','Substation','Feeder','Responsible team / person','Follow-up date','Action status','Action remarks','Last updated']];Object.values(all).forEach(x=>rows.push([x.main,x.asset,x.sub,x.feeder,x.owner,x.due,x.status,x.note,x.updated]));const cell=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"',csv=rows.map(r=>r.map(cell).join(',')).join('\r\n'),blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Deficiency_Action_Tracker_'+localDateKey()+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);}
 function renderDefList(){
   const D=S.data[S.main],el=$('#deflist'); if(!D||!el) return;
   const q=S.q.toLowerCase();
@@ -1133,7 +1134,7 @@ function exportDatasetCSV(){
   const q=v=>{if(Array.isArray(v))v=v.map(x=>typeof x==='string'?x:(x.label||x.t||JSON.stringify(x))).join('; ');else if(v&&typeof v==='object')v=JSON.stringify(v);if(typeof v==='boolean')v=v?'Inspected':'Pending';return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';};
   const lines=[cols.map(c=>q(c[0])).join(',')].concat(D.rows.map(r=>cols.map(c=>q(r[c[1]])).join(',')));
   const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});
-  const url=URL.createObjectURL(blob),a=document.createElement('a'),stamp=new Date().toISOString().slice(0,10);
+  const url=URL.createObjectURL(blob),a=document.createElement('a'),stamp=localDateKey();
   a.href=url;a.download=(S.main==='dt'?'DT':'FP_SP')+'_Inspection_'+stamp+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
 }
 
