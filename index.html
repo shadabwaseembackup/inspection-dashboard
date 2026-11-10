@@ -539,7 +539,7 @@ function buildAiSummary(D){
 }
 function renderTurnstile(){
  const el=$('#intelTurnstile');if(!el||!window.turnstile||turnstileWidget!==null)return;
- try{turnstileWidget=window.turnstile.render(el,{sitekey:'0x4AAAAAAF7drilFQiuFk3l3',theme:'auto',callback:()=>{const b=$('#intelAsk');if(b)b.disabled=false;},'expired-callback':()=>{if($('#intelAsk'))$('#intelAsk').disabled=true;},'error-callback':()=>{if($('#intelAsk'))$('#intelAsk').disabled=true;}});}
+ try{turnstileWidget=window.turnstile.render(el,{sitekey:'0x4AAAAAAF7drilFQIuFk3l3',theme:'auto',callback:()=>{const b=$('#intelAsk');if(b)b.disabled=false;},'expired-callback':()=>{if($('#intelAsk'))$('#intelAsk').disabled=true;},'error-callback':()=>{if($('#intelAsk'))$('#intelAsk').disabled=true;}});}
  catch(e){const r=$('#intelAiResult');if(r)r.textContent='Verification widget could not load. Refresh and try again.';}
 }
 async function askCloudflareAI(question,D){
