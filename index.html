@@ -935,6 +935,17 @@ function renderDefList(){
   el.innerHTML=list.length?grouped+(list.length>cap?'<p class="note">Showing first '+cap+' of '+list.length+' – narrow with the filters.</p>':''):'<p class="note">'+(S.st==='pending'?'No pending or unchecked assets.':'No matching deficiencies.')+'</p>';
 }
 
+
+function exportDatasetCSV(){
+  const D=S.data[S.main];if(!D||!Array.isArray(D.rows)||!D.rows.length){alert('No records available to export.');return;}
+  const cols=[['Asset / Equipment','name'],['Equipment ID','eq'],['Substation','sub'],['Feeder','fdr'],['Function Location','fl'],['Asset Type','typ'],['Group','grp'],['Capacity','kva'],['Lineman','lm'],['Date of Visit','dl'],['Visit Date (ISO)','dk'],['Inspection Status','done'],['Rectification Status','fix'],['Deficiency Items','defs'],['Team Remark','remark']];
+  const q=v=>{if(Array.isArray(v))v=v.map(x=>typeof x==='string'?x:(x.label||x.t||JSON.stringify(x))).join('; ');else if(v&&typeof v==='object')v=JSON.stringify(v);if(typeof v==='boolean')v=v?'Inspected':'Pending';return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';};
+  const lines=[cols.map(c=>q(c[0])).join(',')].concat(D.rows.map(r=>cols.map(c=>q(r[c[1]])).join(',')));
+  const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a'),stamp=new Date().toISOString().slice(0,10);
+  a.href=url;a.download=(S.main==='dt'?'DT':'FP_SP')+'_Inspection_'+stamp+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+}
+
 /* ================= MAIN RENDER ================= */
 function renderStatus(){
   const nm={fpsp:'FP SP',dt:'DT'};
@@ -959,6 +970,11 @@ function render(keepScroll){
     return;
   }
   el.innerHTML=S.sub==='progress'?viewProgress(D):S.sub==='lineman'?viewLineman(D):S.sub==='analytics'?viewAnalytics(D):S.sub==='intelligence'?viewIntelligence(D):viewDef(D);
+  const exportBar=document.createElement('section');exportBar.className='card export-toolbar';
+  exportBar.innerHTML='<div class="export-copy"><b>Export selected dataset</b><span>Download all currently loaded '+(S.main==='dt'?'DT':'FP / SP')+' records as CSV for Excel analysis.</span></div><div class="export-actions"><button type="button" class="btn" id="exportCsv">↓ Export CSV</button><button type="button" class="btn" id="printView">Print / PDF</button></div>';
+  el.insertBefore(exportBar,el.firstChild);
+  $('#exportCsv').onclick=exportDatasetCSV;
+  $('#printView').onclick=()=>window.print();
   if(S.sub==='intelligence'){
     const form=$('#intelForm'),input=$('#intelQuery');
     if(form)form.onsubmit=e=>{e.preventDefault();const question=input.value.trim();if(question)askCloudflareAI(question,D);};
@@ -1024,6 +1040,15 @@ render();
 loadAll();
 })();
 </script>
+
+<style>
+/* Dataset export controls */
+.export-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;border-color:var(--line);background:linear-gradient(120deg,var(--card),var(--pri2))}
+.export-copy{display:flex;flex-direction:column;gap:2px;min-width:0}.export-copy b{font-size:13px}.export-copy span{font-size:11px;color:var(--mut)}
+.export-actions{display:flex;gap:5px;flex:0 0 auto}.export-actions .btn{margin:0;font-weight:700}
+@media(max-width:520px){.export-toolbar{align-items:flex-start;flex-direction:column}.export-actions{width:100%}.export-actions .btn{flex:1}}
+@media print{header,.export-toolbar,.btn,.tabs,.subs,#status{display:none!important}body{background:#fff;color:#111}main{max-width:none;padding:0}.card,.analytics-panel{box-shadow:none;break-inside:avoid}.item{content-visibility:visible}}
+</style>
 </body>
 </html>
 
