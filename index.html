@@ -824,7 +824,7 @@ function showAnalyticsDrilldown(kind,key,D){
  const rows=D.rows.filter(r=>{
   if(kind==='substation')return (r.sub||'—')===key;
   if(kind==='lineman')return (r.lm||'Not recorded')===key;
-  if(kind==='category')return r.defs.some(d=>(d.t==='remark'?'Team remark':d.label.replace(/ \\(\\d+\\)$/,''))===key);
+  if(kind==='category')return r.defs.some(d=>(d.t==='remark'?'Team remark':d.label.replace(/ \(\d+\)$/,''))===key);
   return false;
  }).sort((a,b)=>(b.dk||'').localeCompare(a.dk||'')||b.defs.length-a.defs.length);
  const shown=rows.slice(0,100);
