@@ -1292,8 +1292,8 @@ function render(keepScroll){
     return;
   }
   el.innerHTML=S.sub==='progress'?viewProgress(D):S.sub==='lineman'?viewLineman(D):S.sub==='analytics'?viewAnalytics(D):S.sub==='intelligence'?viewIntelligence(D):viewDef(D);
-  const exportBar=document.createElement('section');exportBar.className='card export-toolbar';
-  exportBar.innerHTML='<div class="export-copy"><b>Export selected dataset</b><span>Download all currently loaded '+(S.main==='dt'?'DT':'FP / SP')+' records as CSV for Excel analysis.</span></div><div class="export-actions"><button type="button" class="btn" id="exportCsv">↓ Export CSV</button><button type="button" class="btn" id="printView">Print / PDF</button></div>';
+  const exportBar=document.createElement('details');exportBar.className='card export-toolbar';
+  exportBar.innerHTML='<summary class="export-summary"><span class="export-copy"><b>Export selected dataset</b><span>Download all currently loaded '+(S.main==='dt'?'DT':'FP / SP')+' records as CSV for Excel analysis.</span></span><span class="export-toggle" aria-hidden="true">＋</span></summary><div class="export-panel"><div class="export-actions"><button type="button" class="btn" id="exportCsv">↓ Export CSV</button><button type="button" class="btn" id="printView">Print / PDF</button></div></div>';
   el.insertBefore(exportBar,el.firstChild);
   $('#exportCsv').onclick=exportDatasetCSV;
   $('#printView').onclick=()=>window.print();
@@ -1385,10 +1385,15 @@ loadAll();
 
 <style>
 /* Dataset export controls */
-.export-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;border-color:var(--line);background:linear-gradient(120deg,var(--card),var(--pri2))}
+.export-toolbar{display:block;border-color:var(--line);background:linear-gradient(120deg,var(--card),var(--pri2))}
+.export-summary{display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer;list-style:none;min-width:0}
+.export-summary::-webkit-details-marker{display:none}
 .export-copy{display:flex;flex-direction:column;gap:2px;min-width:0}.export-copy b{font-size:13px}.export-copy span{font-size:11px;color:var(--mut)}
-.export-actions{display:flex;gap:5px;flex:0 0 auto}.export-actions .btn{margin:0;font-weight:700}
-@media(max-width:520px){.export-toolbar{align-items:flex-start;flex-direction:column}.export-actions{width:100%}.export-actions .btn{flex:1}}
+.export-toggle{display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;border-radius:9px;background:var(--pri2);color:var(--pri);font-size:20px;font-weight:700;transition:transform .18s}
+.export-toolbar[open] .export-toggle{transform:rotate(45deg)}
+.export-panel{padding-top:12px;margin-top:12px;border-top:1px solid var(--line)}
+.export-actions{display:flex;gap:8px;flex:0 0 auto}.export-actions .btn{margin:0;font-weight:700;flex:1}
+@media(max-width:520px){.export-summary{align-items:center}.export-actions{width:100%;flex-direction:column}.export-actions .btn{width:100%}}
 @media print{header,.export-toolbar,.btn,.tabs,.subs,#status{display:none!important}body{background:#fff;color:#111}main{max-width:none;padding:0}.card,.analytics-panel{box-shadow:none;break-inside:avoid}.item{content-visibility:visible}}
 </style>
 <style>
