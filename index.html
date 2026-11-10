@@ -543,7 +543,7 @@ const FIX_YES=/^(ok|okay|0k|yes|y|done|हाँ|हां|ठीक|fixed|recti
 const FIX_NO=/^(no|n|nahi|nhi|नहीं|नही)$/i;
 
 /* ================= STATE ================= */
-const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',cat:'',dateFrom:'',dateTo:'',substation:'',aiQuery:'',lmSort:'inspections',open:new Set(),lmMap:new Map(),
+const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',cat:'',dateFrom:'',dateTo:'',substation:'',defAge:'',defSort:'oldest',aiQuery:'',lmSort:'inspections',open:new Set(),lmMap:new Map(),
   data:{fpsp:null,dt:null},src:{fpsp:{s:'none'},dt:{s:'none'}}};
 const RAW={fpsp:'',dt:''};
 let lastLoad=0,qTimer=0,busy=0,turnstileWidget=null;
@@ -940,6 +940,22 @@ function deficiencyAgeing(rows){
   if(undated)h+='<p class="note">Action: update missing Date of Visit values before using ageing bands for follow-up prioritisation.</p>';
   h+='</section>';return h;
 }
+
+function deficiencyDays(r){
+ const key=String(r.dk||'');if(!/^\d{4}-\d{2}-\d{2}$/.test(key))return null;
+ const d=new Date(key+'T00:00:00');if(Number.isNaN(d.getTime()))return null;
+ const today=new Date();today.setHours(0,0,0,0);return Math.max(0,Math.floor((today-d)/86400000));
+}
+function deficiencyControlPanel(rows){
+ const open=defRows(rows.filter(r=>r.done)).filter(r=>r.fix!=='rect');
+ const dated=open.map(r=>({r,days:deficiencyDays(r)}));
+ const bands=[{key:'0-7',label:'0–7 days',test:d=>d!==null&&d<=7},{key:'8-30',label:'8–30 days',test:d=>d!==null&&d>=8&&d<=30},{key:'31-90',label:'31–90 days',test:d=>d!==null&&d>=31&&d<=90},{key:'90+',label:'Over 90 days',test:d=>d!==null&&d>90},{key:'undated',label:'Visit date missing',test:d=>d===null}];
+ const subMap=new Map();open.forEach(r=>{const k=r.sub||'—';subMap.set(k,(subMap.get(k)||0)+1);});
+ const top=[...subMap.entries()].sort((a,b)=>b[1]-a[1]).slice(0,6);
+ let h='<section class="card def-control"><div class="def-control-head"><div><h3>Rectification control centre</h3><p class="note">Follow-up priority uses recorded visit age and rectification status only. It is not an electrical safety severity rating.</p></div><span class="page-tag">Live source data</span></div>';
+ h+='<div class="def-priority-grid">'+bands.map(b=>'<button type="button" class="def-priority-tile '+(S.defAge===b.key?'active':'')+'" data-defage="'+b.key+'"><b>'+num(dated.filter(x=>b.test(x.days)).length)+'</b><span>'+b.label+'</span><small>Open items</small></button>').join('')+'</div>';
+ h+='<div class="def-sub-grid"><div><h4>Open deficiencies by substation</h4><p class="note">Top substations by open asset count</p></div><div class="def-sub-list">'+(top.length?top.map(([name,n])=>'<button type="button" data-defsub="'+esc(name)+'"><span>'+esc(name)+'</span><b>'+num(n)+'</b></button>').join(''):'<p class="note">No open deficiencies in the selected data.</p>')+'</div></div></section>';return h;
+}
 function viewDef(D){
   D={...D,rows:filterDefRows(D.rows)};
   if(S.main==='dt') D={...D,rows:D.rows.filter(r=>String(r.lm||'').trim()!=='')};
@@ -952,11 +968,12 @@ function viewDef(D){
   const lms=[...new Set(D.rows.map(r=>r.lm||'—'))].sort();
   let h='<div class="grid">'+stat('Assets with deficiency',wd.length,'r')+stat('Deficiency items',items,'w')+stat('From team remark',rem,'w')+stat('Not yet rectified',open,open?'r':'g')+stat('Pending / not checked',num(pending.length),pending.length?'w':'g')+'</div>';
   h+=deficiencyAgeing(D.rows);
+  h+=deficiencyControlPanel(D.rows);
   h+='<section class="card"><h3>Deficiency summary</h3><p class="drill-hint">Select a category to view matching assets below</p>'+(tk.length?tk.map((k,i)=>'<div class="row summary-drill'+(i?'':' first')+(S.cat===k?' active':'')+'" data-defcat="'+esc(k)+'" role="button" tabindex="0"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],wd.length),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
   if(S.main==='dt') h+=viewDTDeficiencySummary(D);
   if(S.main==='fpsp') h+=viewFPDeficiencySummary(D);
   const subs=[...new Set(D.rows.map(r=>r.sub||'—'))].sort();
-  h+='<section class="card"><h3>Deficiency filters</h3><div class="filters"><label class="note">From<input type="date" id="dfFrom" value="'+esc(S.dateFrom)+'"></label><label class="note">To<input type="date" id="dfTo" value="'+esc(S.dateTo)+'"></label><select id="fsub" aria-label="Filter by substation"><option value="">All substations</option>'+subs.map(n=>'<option'+(S.substation===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fcat" aria-label="Filter by deficiency header"><option value="">All deficiency headers</option>'+tk.map(n=>'<option'+(S.cat===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select></div><h3>Deficiency detail</h3><div class="filters"><input type="search" id="fq" placeholder="Search asset / substation" aria-label="Search deficiencies" value="'+esc(S.q)+'"><select id="flm" aria-label="Filter by lineman"><option value="">All linemen</option>'+lms.map(n=>'<option'+(S.lm===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fst" aria-label="Filter by status"><option value="">All status</option><option value="open"'+(S.st==='open'?' selected':'')+'>Not rectified</option><option value="rect"'+(S.st==='rect'?' selected':'')+'>Rectified</option><option value="pending"'+(S.st==='pending'?' selected':'')+'>Pending / not checked</option></select></div><div id="deflist"></div></section>';
+  h+='<section class="card"><h3>Deficiency filters</h3><div class="filters"><label class="note">From<input type="date" id="dfFrom" value="'+esc(S.dateFrom)+'"></label><label class="note">To<input type="date" id="dfTo" value="'+esc(S.dateTo)+'"></label><select id="fsub" aria-label="Filter by substation"><option value="">All substations</option>'+subs.map(n=>'<option'+(S.substation===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fcat" aria-label="Filter by deficiency header"><option value="">All deficiency headers</option>'+tk.map(n=>'<option'+(S.cat===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select></div><h3>Deficiency detail</h3><div class="filters"><input type="search" id="fq" placeholder="Search asset / equipment ID / feeder" aria-label="Search asset, equipment ID, feeder or substation" value="'+esc(S.q)+'"><select id="fdefSort" aria-label="Sort deficiencies"><option value="oldest"'+(S.defSort==='oldest'?' selected':'')+'>Oldest open first</option><option value="newest"'+(S.defSort==='newest'?' selected':'')+'>Newest visit first</option><option value="count"'+(S.defSort==='count'?' selected':'')+'>Most deficiency items</option><option value="asset"'+(S.defSort==='asset'?' selected':'')+'>Asset name A–Z</option></select><select id="flm" aria-label="Filter by lineman"><option value="">All linemen</option>'+lms.map(n=>'<option'+(S.lm===n?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select><select id="fst" aria-label="Filter by status"><option value="">All status</option><option value="open"'+(S.st==='open'?' selected':'')+'>Not rectified</option><option value="rect"'+(S.st==='rect'?' selected':'')+'>Rectified</option><option value="pending"'+(S.st==='pending'?' selected':'')+'>Pending / not checked</option></select></div><div id="deflist"></div></section>';
   if(S.cat) h=h.replace('<div id="deflist"></div>','<div class="drill-active"><span>Category: <b>'+esc(S.cat)+'</b></span><button type="button" id="clearcat">Clear ×</button></div><div id="deflist"></div>');
   return h;
 }
@@ -970,10 +987,11 @@ function renderDefList(){
     if(S.lm&&(r.lm||'—')!==S.lm) return false;
     if(S.st==='rect'&&r.fix!=='rect') return false;
     if(S.st==='open'&&r.fix==='rect') return false;
+    if(S.defAge){const days=deficiencyDays(r);if(S.defAge==='undated'&&days!==null)return false;if(S.defAge!=='undated'){if(days===null)return false;const range=S.defAge==='0-7'?[0,7]:S.defAge==='8-30'?[8,30]:S.defAge==='31-90'?[31,90]:[91,Infinity];if(days<range[0]||days>range[1])return false;}}
     if(q){const t=[r.name,r.eq,r.sub,r.fdr,r.lm,r.remark].concat(r.defs.map(d=>d.label)).join(' ').toLowerCase();if(t.indexOf(q)<0) return false;}
     return true;
-  }).sort((a,b)=>(b.dk||'').localeCompare(a.dk||'')||b.defs.length-a.defs.length);
-  const cap=150,shown=list.slice(0,cap),groups=new Map();
+  }).sort((a,b)=>S.defSort==='asset'?String(a.name).localeCompare(String(b.name)):S.defSort==='count'?b.defs.length-a.defs.length:S.defSort==='newest'?(b.dk||'').localeCompare(a.dk||''):(a.dk||'9999-99-99').localeCompare(b.dk||'9999-99-99'));
+  const cap=500,shown=list.slice(0,cap),groups=new Map();
   shown.forEach(r=>{const key=r.sub||'—';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);});
   const grouped=[...groups.entries()].map(([sub,assets])=>'<section class="substation-group"><div class="substation-heading"><b>'+esc(sub)+'</b><span>'+assets.length+' asset'+(assets.length===1?'':'s')+'</span></div>'+assets.map(r=>'<div class="item"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.grp)+(r.kva?' · '+esc(r.kva):'')+'</small></div><div class="im">'+(r.fdr?esc(r.fdr)+' · ':'')+esc(r.lm||'—')+' · '+esc(r.dl||'No date')+'</div><div>'+chips(r.defs)+fixBadge(r)+'</div>'+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'</div>').join('')+'</section>').join('');
   el.innerHTML=list.length?grouped+(list.length>cap?'<p class="note">Showing first '+cap+' of '+list.length+' – narrow with the filters.</p>':''):'<p class="note">'+(S.st==='pending'?'No pending or unchecked assets.':'No matching deficiencies.')+'</p>';
@@ -1041,8 +1059,11 @@ function render(keepScroll){
   }
   if(S.sub==='def'){
     renderDefList();
-    const q=$('#fq'),l=$('#flm'),s=$('#fst'),df=$('#dfFrom'),dt=$('#dfTo'),sub=$('#fsub'),cat=$('#fcat'),clear=$('#clearcat');
+    const q=$('#fq'),l=$('#flm'),s=$('#fst'),df=$('#dfFrom'),dt=$('#dfTo'),sub=$('#fsub'),cat=$('#fcat'),clear=$('#clearcat'),sort=$('#fdefSort');
     if(q) q.oninput=e=>{S.q=e.target.value;clearTimeout(qTimer);qTimer=setTimeout(renderDefList,150);};
+    if(sort)sort.onchange=e=>{S.defSort=e.target.value;renderDefList();};
+    document.querySelectorAll('[data-defage]').forEach(b=>b.onclick=()=>{S.defAge=S.defAge===b.dataset.defage?'':b.dataset.defage;render(true);});
+    document.querySelectorAll('[data-defsub]').forEach(b=>b.onclick=()=>{S.substation=b.dataset.defsub;render(true);document.querySelector('#deflist')?.scrollIntoView({behavior:'smooth',block:'start'});});
     if(l) l.onchange=e=>{S.lm=e.target.value;renderDefList();};
     if(s) s.onchange=e=>{S.st=e.target.value;renderDefList();};
     if(df) df.onchange=e=>{S.dateFrom=e.target.value;render();};
@@ -1061,7 +1082,7 @@ $('#view').addEventListener('toggle',e=>{
   if(d.open){S.open.add(d.dataset.k);const b=d.querySelector('.body');if(b&&!b.firstChild)b.innerHTML=lmBody(d.dataset.k);}
   else S.open.delete(d.dataset.k);
 },true);
-document.querySelectorAll('[data-main]').forEach(b=>b.onclick=()=>{S.main=b.dataset.main;S.q='';S.lm='';S.st='';S.dateFrom='';S.dateTo='';S.substation='';S.open.clear();render();window.scrollTo(0,0);});
+document.querySelectorAll('[data-main]').forEach(b=>b.onclick=()=>{S.main=b.dataset.main;S.q='';S.lm='';S.st='';S.dateFrom='';S.dateTo='';S.substation='';S.defAge='';S.defSort='oldest';S.open.clear();render();window.scrollTo(0,0);});
 document.querySelectorAll('[data-sub]').forEach(b=>b.onclick=()=>{S.sub=b.dataset.sub;render();window.scrollTo(0,0);});
 $('#rf').onclick=()=>loadAll(true);
 document.querySelectorAll('[data-file]').forEach(inp=>inp.onchange=async e=>{
@@ -1102,7 +1123,26 @@ loadAll();
 @media(max-width:520px){.export-toolbar{align-items:flex-start;flex-direction:column}.export-actions{width:100%}.export-actions .btn{flex:1}}
 @media print{header,.export-toolbar,.btn,.tabs,.subs,#status{display:none!important}body{background:#fff;color:#111}main{max-width:none;padding:0}.card,.analytics-panel{box-shadow:none;break-inside:avoid}.item{content-visibility:visible}}
 </style>
-</body>
+<style>
+/* Free, client-side deficiency management controls */
+.def-control{border:1px solid var(--line);background:linear-gradient(145deg,var(--card),var(--pri2))}
+.def-control-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.def-control-head h3{margin:0}
+.def-priority-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:12px}
+.def-priority-tile{min-width:0;text-align:left;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--card);color:var(--ink);cursor:pointer}
+.def-priority-tile b{display:block;font-size:21px;color:var(--pri);line-height:1.1}
+.def-priority-tile span{display:block;font-size:11px;font-weight:700;margin-top:5px}
+.def-priority-tile small{display:block;color:var(--mut);font-size:10px;margin-top:2px}
+.def-priority-tile.active{border-color:var(--pri);box-shadow:inset 0 0 0 1px var(--pri);background:var(--pri2)}
+.def-sub-grid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.5fr);gap:12px;margin-top:16px;padding-top:13px;border-top:1px solid var(--line)}
+.def-sub-grid h4{margin:0;font-size:13px}
+.def-sub-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.def-sub-list button{display:flex;justify-content:space-between;gap:8px;align-items:center;min-width:0;text-align:left;border:1px solid var(--line);border-radius:9px;padding:8px;background:var(--card);color:var(--ink);cursor:pointer}
+.def-sub-list button span{font-size:11px;overflow-wrap:anywhere}.def-sub-list button b{font-size:12px;color:var(--pri)}
+.def-sub-list button:hover,.def-priority-tile:hover{border-color:var(--pri)}
+@media(max-width:650px){.def-priority-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.def-priority-tile{padding:9px}.def-priority-tile b{font-size:18px}.def-sub-grid{grid-template-columns:1fr;gap:8px}.def-sub-list{grid-template-columns:1fr 1fr}.def-control-head{display:block}.def-control-head .page-tag{display:inline-block;margin-top:7px}}
+@media(max-width:380px){.def-sub-list{grid-template-columns:1fr}}
+</style></body>
 </html>
 
 <style>
