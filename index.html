@@ -1032,6 +1032,7 @@ function viewDef(D){
   h+=substationPerformanceScorecard(D.rows);
   h+=linemanPerformanceScorecard(D.rows);
   h+=deficiencyMonitoringMatrix(D.rows);
+  h+=defActionPanel(defRows(D.rows.filter(r=>r.done)));
   h+=deficiencyTrendPanel(D.rows);
   h+='<section class="card"><h3>Deficiency summary</h3><p class="drill-hint">Select a category to view matching assets below</p>'+(tk.length?tk.map((k,i)=>'<div class="row summary-drill'+(i?'':' first')+(S.cat===k?' active':'')+'" data-defcat="'+esc(k)+'" role="button" tabindex="0"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],wd.length),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
   if(S.main==='dt') h+=viewDTDeficiencySummary(D);
@@ -1067,6 +1068,12 @@ function exportFilteredDeficiencies(){
  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=(S.main==='dt'?'DT':'FP_SP')+'_Deficiencies_Filtered_'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
+const DEF_ACTION_KEY='inspection-dashboard:deficiency-actions:v1';
+function readDefActions(){try{return JSON.parse(localStorage.getItem(DEF_ACTION_KEY)||'{}')||{};}catch(e){return {};}}
+function writeDefActions(data){try{localStorage.setItem(DEF_ACTION_KEY,JSON.stringify(data));return true;}catch(e){alert('Could not save locally. Check browser storage availability.');return false;}}
+function defActionId(r){return JSON.stringify([S.main,String(r.eq||r.name||''),String(r.sub||''),String(r.fdr||'')]);}
+function defActionPanel(rows){const all=readDefActions(),keys=new Set(rows.map(defActionId)),items=Object.entries(all).filter(([k])=>keys.has(k)).map(x=>x[1]),active=items.filter(x=>x.status!=='Completed').length,today=new Date().toISOString().slice(0,10),overdue=items.filter(x=>x.status!=='Completed'&&x.due&&x.due<today).length;return '<section class="card def-action-summary"><div class="def-control-head"><div><h3>Deficiency action tracker</h3><p class="note">Follow-up notes are saved only in this browser on this device. They are separate from the Google Sheet and are not synced to other users.</p></div><span class="page-tag">Local workspace</span></div><div class="grid">'+stat('Tracked assets',num(items.length),'n')+stat('Active follow-ups',num(active),active?'w':'g')+stat('Overdue follow-ups',num(overdue),overdue?'r':'g')+'</div><button type="button" class="btn" id="exportDefActions">↓ Export action tracker CSV</button></section>';}
+function exportDefActions(){const all=readDefActions(),rows=[['Inspection type','Asset / Equipment ID','Substation','Feeder','Responsible team / person','Follow-up date','Action status','Action remarks','Last updated']];Object.values(all).forEach(x=>rows.push([x.main,x.asset,x.sub,x.feeder,x.owner,x.due,x.status,x.note,x.updated]));const cell=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"',csv=rows.map(r=>r.map(cell).join(',')).join('\r\n'),blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Deficiency_Action_Tracker_'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);}
 function renderDefList(){
   const D=S.data[S.main],el=$('#deflist'); if(!D||!el) return;
   const q=S.q.toLowerCase();
@@ -1084,8 +1091,10 @@ function renderDefList(){
   list=getFilteredDeficiencyRows();
   const cap=500,shown=list.slice(0,cap),groups=new Map();
   shown.forEach(r=>{const key=r.sub||'—';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);});
-  const grouped=[...groups.entries()].map(([sub,assets])=>'<section class="substation-group"><div class="substation-heading"><b>'+esc(sub)+'</b><span>'+assets.length+' asset'+(assets.length===1?'':'s')+'</span></div>'+assets.map(r=>'<div class="item"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.grp)+(r.kva?' · '+esc(r.kva):'')+'</small></div><div class="im">'+(r.fdr?esc(r.fdr)+' · ':'')+esc(r.lm||'—')+' · '+esc(r.dl||'No date')+'</div><div>'+chips(r.defs)+fixBadge(r)+'</div>'+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'</div>').join('')+'</section>').join('');
+  const actions=readDefActions();
+  const grouped=[...groups.entries()].map(([sub,assets])=>'<section class="substation-group"><div class="substation-heading"><b>'+esc(sub)+'</b><span>'+assets.length+' asset'+(assets.length===1?'':'s')+'</span></div>'+assets.map(r=>{const id=defActionId(r),a=actions[id]||{};return '<div class="item"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.grp)+(r.kva?' · '+esc(r.kva):'')+'</small></div><div class="im">'+(r.fdr?esc(r.fdr)+' · ':'')+esc(r.lm||'—')+' · '+esc(r.dl||'No date')+'</div><div>'+chips(r.defs)+fixBadge(r)+'</div>'+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'<details class="def-action-editor"><summary>＋ Action / follow-up'+(a.status?' · '+esc(a.status):'')+'</summary><div class="def-action-fields"><label>Responsible team / person<input data-action-owner value="'+esc(a.owner||'')+'" placeholder="Responsible person or team"></label><label>Follow-up date<input type="date" data-action-due value="'+esc(a.due||'')+'"></label><label>Action status<select data-action-status><option value="Pending"'+(a.status==='Pending'?' selected':'')+'>Pending</option><option value="In progress"'+(a.status==='In progress'?' selected':'')+'>In progress</option><option value="Completed"'+(a.status==='Completed'?' selected':'')+'>Completed</option></select></label><label>Action remarks<textarea data-action-note rows="2" placeholder="Action taken / next step">'+esc(a.note||'')+'</textarea></label><button type="button" class="btn" data-save-action="'+esc(id)+'">Save follow-up</button><small class="note">Local-only · Last saved: '+esc(a.updated||'Not saved')+'</small></div></details></div>';}).join('')+'</section>').join('');
   el.innerHTML=list.length?grouped+(list.length>cap?'<p class="note">Showing first '+cap+' of '+list.length+' – narrow with the filters.</p>':''):'<p class="note">'+(S.st==='pending'?'No pending or unchecked assets.':'No matching deficiencies.')+'</p>';
+  el.querySelectorAll('[data-save-action]').forEach(btn=>btn.onclick=()=>{const card=btn.closest('.def-action-fields'),id=btn.dataset.saveAction,parts=JSON.parse(id),rec={main:S.main,asset:parts[1],sub:parts[2],feeder:parts[3],owner:card.querySelector('[data-action-owner]').value.trim(),due:card.querySelector('[data-action-due]').value,status:card.querySelector('[data-action-status]').value,note:card.querySelector('[data-action-note]').value.trim(),updated:new Date().toLocaleString('en-IN')},data=readDefActions();if(!rec.owner&&!rec.due&&!rec.note&&rec.status==='Pending')delete data[id];else data[id]=rec;if(writeDefActions(data))renderDefList();});
 }
 
 
@@ -1153,6 +1162,7 @@ function render(keepScroll){
     const q=$('#fq'),l=$('#flm'),s=$('#fst'),df=$('#dfFrom'),dt=$('#dfTo'),sub=$('#fsub'),cat=$('#fcat'),clear=$('#clearcat'),sort=$('#fdefSort'),exportDef=$('#exportDeficiencies');
     if(exportDef)exportDef.onclick=exportFilteredDeficiencies;
     const exportMatrix=$('#exportDefMatrix');if(exportMatrix)exportMatrix.onclick=exportDeficiencyMatrix;
+    const exportActions=$('#exportDefActions');if(exportActions)exportActions.onclick=exportDefActions;
     document.querySelectorAll('[data-matrix-drill]').forEach(b=>b.onclick=()=>{const [sub,feeder,lineman]=JSON.parse(b.dataset.matrixDrill);S.substation=sub==='Not recorded'?'—':sub;S.lm=lineman==='Not recorded'?'—':lineman;S.q=feeder==='Not recorded'?'':feeder;S.st='open';S.defAge='';S.cat='';render(true);document.querySelector('#deflist')?.scrollIntoView({behavior:'smooth',block:'start'});});
     if(q) q.oninput=e=>{S.q=e.target.value;clearTimeout(qTimer);qTimer=setTimeout(renderDefList,150);};
     if(sort)sort.onchange=e=>{S.defSort=e.target.value;renderDefList();};
@@ -1265,7 +1275,7 @@ loadAll();
 .def-matrix .scorecard-wrap{overscroll-behavior-x:contain}
 @media(max-width:520px){.def-matrix-toolbar{align-items:flex-start;flex-direction:column}.def-matrix-toolbar .btn{width:100%}}
 </style>
-</body>
+<style>.def-action-editor{margin-top:10px;border-top:1px solid var(--line,#ddd);padding-top:8px}.def-action-editor summary{cursor:pointer;font-weight:650;font-size:13px;padding:5px 0}.def-action-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:10px}.def-action-fields label{display:flex;flex-direction:column;gap:4px;font-size:12px}.def-action-fields input,.def-action-fields select,.def-action-fields textarea{width:100%;min-width:0;padding:9px;border:1px solid var(--line,#ccc);border-radius:8px;background:var(--surface,#fff);color:inherit;font:inherit}.def-action-fields [data-action-note],.def-action-fields button,.def-action-fields .note{grid-column:1/-1}@media(max-width:520px){.def-action-fields{grid-template-columns:1fr}}</style></body>
 </html>
 
 <style>
