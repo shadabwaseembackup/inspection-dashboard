@@ -502,6 +502,16 @@ header .hd{min-width:0}
 .def-action-progress-track i{display:block;height:100%;border-radius:inherit;background:var(--pri);min-width:0}
 @media(max-width:420px){.def-action-progress>div:first-child{align-items:flex-start;flex-direction:column;gap:3px}.def-action-progress b{text-align:left}}
 
+
+/* Deficiency asset cards: distinguish operational follow-up urgency */
+.def-asset-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;min-width:0}
+.def-asset-head .it{min-width:0;flex:1}
+.def-priority-badge{display:inline-flex;align-items:center;flex:0 0 auto;max-width:48%;padding:4px 8px;border:1px solid var(--line);border-radius:999px;font-size:10px;line-height:1.25;font-weight:800;text-align:center;white-space:normal;background:var(--pri2);color:var(--ink)}
+.def-priority-badge.overdue,.def-priority-badge.age-high{border-color:#d97757;background:#fff0eb;color:#a5361e}
+.def-priority-badge.due-soon,.def-priority-badge.age-mid,.def-priority-badge.no-due{border-color:#d5a33d;background:#fff8e7;color:#805700}
+@media(max-width:480px){.def-asset-head{gap:6px;flex-direction:column;align-items:flex-start}.def-priority-badge{max-width:100%;font-size:10px}}
+@media(prefers-color-scheme:dark){.def-priority-badge.overdue,.def-priority-badge.age-high{background:#48251f;color:#ffb3a0;border-color:#9b5545}.def-priority-badge.due-soon,.def-priority-badge.age-mid,.def-priority-badge.no-due{background:#453719;color:#ffda8a;border-color:#8c6b2a}}
+
 </style>
 </head>
 <body>
@@ -1133,6 +1143,20 @@ function defActionPanel(rows){
  return '<section class="card def-action-summary"><div class="def-control-head"><div><h3>Deficiency action tracker</h3><p class="note">Follow-up notes are saved only in this browser on this device. They are separate from the Google Sheet and are not synced to other users.</p></div><span class="page-tag">Local workspace</span></div><div class="grid">'+stat('Tracked assets',num(items.length),'n')+stat('Active follow-ups',num(active),active?'w':'g')+stat('Overdue follow-ups',num(overdue),overdue?'r':'g')+stat('Due in next 7 days',num(dueSoon),dueSoon?'w':'g')+stat('Missing due date',num(noDue),noDue?'w':'g')+'</div><div class="def-action-progress"><div><span>Completed follow-ups</span><b>'+num(completed)+' / '+num(items.length)+' · '+completion+'%</b></div><div class="def-action-progress-track"><i style="width:'+completion+'%"></i></div></div><button type="button" class="btn" id="exportDefActions">↓ Export action tracker CSV</button></section>';
 }
 function exportDefActions(){const all=readDefActions(),rows=[['Inspection type','Asset / Equipment ID','Substation','Feeder','Responsible team / person','Follow-up date','Action status','Action remarks','Last updated']];Object.values(all).forEach(x=>rows.push([x.main,x.asset,x.sub,x.feeder,x.owner,x.due,x.status,x.note,x.updated]));const cell=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"',csv=rows.map(r=>r.map(cell).join(',')).join('\r\n'),blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Deficiency_Action_Tracker_'+localDateKey()+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);}
+function deficiencyActionPriority(r,a){
+ const today=localDateKey(),status=String(a.status||'Pending'),due=String(a.due||'');
+ if(status!=='Completed'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(due)&&due<today)return {label:'Follow-up overdue',cls:'overdue'};
+ if(status!=='Completed'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(due)){
+  const [y,m,d]=today.split('-').map(Number),base=new Date(y,m-1,d);base.setDate(base.getDate()+7);
+  const limit=[base.getFullYear(),String(base.getMonth()+1).padStart(2,'0'),String(base.getDate()).padStart(2,'0')].join('-');
+  if(due<=limit)return {label:'Due within 7 days',cls:'due-soon'};
+ }
+ const age=deficiencyDays(r);
+ if(age!==null&&age>90)return {label:'Visit age >90 days',cls:'age-high'};
+ if(age!==null&&age>30)return {label:'Visit age >30 days',cls:'age-mid'};
+ if(status!=='Completed'&&!due)return {label:'Follow-up date missing',cls:'no-due'};
+ return null;
+}
 function renderDefList(){
   const D=S.data[S.main],el=$('#deflist'); if(!D||!el) return;
   const q=S.q.toLowerCase();
@@ -1151,7 +1175,7 @@ function renderDefList(){
   const cap=500,shown=list.slice(0,cap),groups=new Map();
   shown.forEach(r=>{const key=r.sub||'—';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(r);});
   const actions=readDefActions();
-  const grouped=[...groups.entries()].map(([sub,assets])=>'<section class="substation-group"><div class="substation-heading"><b>'+esc(sub)+'</b><span>'+assets.length+' asset'+(assets.length===1?'':'s')+'</span></div>'+assets.map(r=>{const id=defActionId(r),a=actions[id]||{};return '<div class="item"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.grp)+(r.kva?' · '+esc(r.kva):'')+'</small></div><div class="im">'+(r.fdr?esc(r.fdr)+' · ':'')+esc(r.lm||'—')+' · '+esc(r.dl||'No date')+'</div><div>'+chips(r.defs)+fixBadge(r)+'</div>'+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'<details class="def-action-editor"><summary>＋ Action / follow-up'+(a.status?' · '+esc(a.status):'')+'</summary><div class="def-action-fields"><label>Responsible team / person<input data-action-owner value="'+esc(a.owner||'')+'" placeholder="Responsible person or team"></label><label>Follow-up date<input type="date" data-action-due value="'+esc(a.due||'')+'"></label><label>Action status<select data-action-status><option value="Pending"'+(a.status==='Pending'?' selected':'')+'>Pending</option><option value="In progress"'+(a.status==='In progress'?' selected':'')+'>In progress</option><option value="Completed"'+(a.status==='Completed'?' selected':'')+'>Completed</option></select></label><label>Action remarks<textarea data-action-note rows="2" placeholder="Action taken / next step">'+esc(a.note||'')+'</textarea></label><button type="button" class="btn" data-save-action="'+esc(id)+'">Save follow-up</button><small class="note">Local-only · Last saved: '+esc(a.updated||'Not saved')+'</small></div></details></div>';}).join('')+'</section>').join('');
+  const grouped=[...groups.entries()].map(([sub,assets])=>'<section class="substation-group"><div class="substation-heading"><b>'+esc(sub)+'</b><span>'+assets.length+' asset'+(assets.length===1?'':'s')+'</span></div>'+assets.map(r=>{const id=defActionId(r),a=actions[id]||{};const priority=deficiencyActionPriority(r,a);return '<div class="item"><div class="def-asset-head"><div class="it"><b>'+esc(r.name)+'</b><small>'+esc(r.grp)+(r.kva?' · '+esc(r.kva):'')+'</small></div>'+(priority?'<span class="def-priority-badge '+priority.cls+'">'+esc(priority.label)+'</span>':'')+'</div><div class="im">'+(r.fdr?esc(r.fdr)+' · ':'')+esc(r.lm||'—')+' · '+esc(r.dl||'No date')+'</div><div>'+chips(r.defs)+fixBadge(r)+'</div>'+(r.remark?'<div class="rem">'+esc(r.remark)+'</div>':'')+'<details class="def-action-editor"><summary>＋ Action / follow-up'+(a.status?' · '+esc(a.status):'')+'</summary><div class="def-action-fields"><label>Responsible team / person<input data-action-owner value="'+esc(a.owner||'')+'" placeholder="Responsible person or team"></label><label>Follow-up date<input type="date" data-action-due value="'+esc(a.due||'')+'"></label><label>Action status<select data-action-status><option value="Pending"'+(a.status==='Pending'?' selected':'')+'>Pending</option><option value="In progress"'+(a.status==='In progress'?' selected':'')+'>In progress</option><option value="Completed"'+(a.status==='Completed'?' selected':'')+'>Completed</option></select></label><label>Action remarks<textarea data-action-note rows="2" placeholder="Action taken / next step">'+esc(a.note||'')+'</textarea></label><button type="button" class="btn" data-save-action="'+esc(id)+'">Save follow-up</button><small class="note">Local-only · Last saved: '+esc(a.updated||'Not saved')+'</small></div></details></div>';}).join('')+'</section>').join('');
   el.innerHTML='<div class="def-results-meta"><b>'+num(list.length)+' matching assets</b><span>'+(list.length?'Showing '+num(Math.min(list.length,cap))+' of '+num(list.length):'Try resetting or widening the filters')+'</span></div>' +(list.length?grouped+(list.length>cap?'<p class="note">Showing first '+cap+' of '+list.length+' – narrow with the filters.</p>':''):'<p class="note">'+(S.st==='pending'?'No pending or unchecked assets.':'No matching deficiencies.')+'</p>');
   el.querySelectorAll('[data-save-action]').forEach(btn=>btn.onclick=()=>{const card=btn.closest('.def-action-fields'),id=btn.dataset.saveAction,parts=JSON.parse(id),rec={main:S.main,asset:parts[1],sub:parts[2],feeder:parts[3],owner:card.querySelector('[data-action-owner]').value.trim(),due:card.querySelector('[data-action-due]').value,status:card.querySelector('[data-action-status]').value,note:card.querySelector('[data-action-note]').value.trim(),updated:new Date().toLocaleString('en-IN')},data=readDefActions();if(!rec.owner&&!rec.due&&!rec.note&&rec.status==='Pending')delete data[id];else data[id]=rec;if(writeDefActions(data))renderDefList();});
 }
