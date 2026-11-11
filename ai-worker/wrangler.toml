@@ -7,4 +7,4 @@ workers_dev = true
 binding = "AI"
 
 [vars]
-ALLOWED_ORIGIN = "https://shadabwaseembackup.github.io"
+ALLOWED_ORIGIN = "https://waseem.shadab-waseem.workers.dev"
