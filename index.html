@@ -799,7 +799,7 @@ function buildDT(rows){
   for(let i=1;i<rows.length;i++){
     const row=rows[i],eq=v(row,ci.eq),code=v(row,ci.code);
     if(!eq&&!code){orphan++;continue;}
-    const parsedDate=pd(v(row,ci.date)),d=parsedDate&&/^\\d{4}-\\d{2}-\\d{2}$/.test(parsedDate.key)?parsedDate:null,lm=v(row,ci.lm);
+    const parsedDate=pd(v(row,ci.date)),d=parsedDate&&/^\d{4}-\d{2}-\d{2}$/.test(parsedDate.key)?parsedDate:null,lm=v(row,ci.lm);
     const done=!!(d||lm||checkCols.some(k=>v(row,k)));
     if(done&&d) visitEvents.push({grp:/rmu/i.test(v(row,ci.typ))?'RMU':'DT',lm,dk:d.key,dl:d.label,done:true});
     const f=done?finish(row,ci,evalRules(row,H,rules),done):{defs:[],remark:'',fix:'',fixRaw:''};
@@ -815,7 +815,7 @@ function buildDT(rows){
   }
   const fields=[];rules.forEach(r=>r.cols.forEach(ci2=>{const label=H[ci2]||r.l,group=r.hdr?'RMU':'DT';if(!fields.some(x=>x.key===label))fields.push({key:label,label,group});}));
   const dateDiagnostics={header:(H[ci.date]||'Column A')+' (Column A source)',total:0,dated:0,undated:0,rmus:0,datedRMU:0,undatedRMU:0,latestKey:'',latestLabel:'',latestRecords:[]};
-  for(let i=1;i<rows.length;i++){const row=rows[i],eq=v(row,ci.eq),code=v(row,ci.code);if(!eq&&!code)continue;const isRMU=/rmu/i.test(v(row,ci.typ)),d=pd(v(row,ci.date)),valid=!!(d&&/^\d{4}-\d{2}-\d{2}$/.test(d.key));dateDiagnostics.total++;if(isRMU)dateDiagnostics.rmus++;if(valid){dateDiagnostics.dated++;if(isRMU)dateDiagnostics.datedRMU++;if(!dateDiagnostics.latestKey||d.key>dateDiagnostics.latestKey){dateDiagnostics.latestKey=d.key;dateDiagnostics.latestLabel=d.label;dateDiagnostics.latestRecords=[];}if(d.key===dateDiagnostics.latestKey)dateDiagnostics.latestRecords.push({eq:eq||code,type:isRMU?'RMU':'DT',date:v(row,ci.date),lm:v(row,ci.lm)});}else{dateDiagnostics.undated++;if(isRMU)dateDiagnostics.undatedRMU++;}}
+  for(let i=1;i<rows.length;i++){const row=rows[i],eq=v(row,ci.eq),code=v(row,ci.code);if(!eq&&!code)continue;const isRMU=/rmu/i.test(v(row,ci.typ)),parsedDate=pd(v(row,ci.date)),d=parsedDate&&/^\d{4}-\d{2}-\d{2}$/.test(parsedDate.key)?parsedDate:null,valid=!!d;dateDiagnostics.total++;if(isRMU)dateDiagnostics.rmus++;if(valid){dateDiagnostics.dated++;if(isRMU)dateDiagnostics.datedRMU++;if(!dateDiagnostics.latestKey||d.key>dateDiagnostics.latestKey){dateDiagnostics.latestKey=d.key;dateDiagnostics.latestLabel=d.label;dateDiagnostics.latestRecords=[];}if(d.key===dateDiagnostics.latestKey)dateDiagnostics.latestRecords.push({eq:eq||code,type:isRMU?'RMU':'DT',date:v(row,ci.date),lm:v(row,ci.lm)});}else{dateDiagnostics.undated++;if(isRMU)dateDiagnostics.undatedRMU++;}}
   dateDiagnostics.latestRecords=dateDiagnostics.latestRecords.slice(0,10);
   map.forEach(o=>{o.dtAnomalies={};const raw=rows.find(row=>v(row,ci.eq)===o.eq||v(row,ci.code)===o.name);if(!raw)return;rules.forEach(r=>r.cols.forEach(ci2=>{const val=norm(raw[ci2]);if(!val)return;const bad=r.t==='no'?FIX_NO.test(val):isBad(val);if(bad)o.dtAnomalies[H[ci2]||r.l]=1;}));});
   return {rows:[...map.values()],visitEvents,dtFields:fields,dateDiagnostics,note:orphan?orphan+' row(s) without asset ID ignored':''};
