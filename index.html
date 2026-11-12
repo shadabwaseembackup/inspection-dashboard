@@ -564,6 +564,16 @@ header .hd{min-width:0}
 .progress-compact .progress-compact-simple .progress-compact-pct{font-size:46px}
 .progress-compact .progress-compact-simple .progress-compact-mid .note{font-size:11px;margin:0 0 7px}
 @media(max-width:720px){.progress-compact .progress-compact-body.progress-compact-simple{grid-template-columns:auto minmax(0,1fr)}}
+
+/* Separate DT and RMU inspection timelines */
+.date-summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+.date-summary-column{min-width:0;margin:0;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.date-summary-column h3{font-size:15px;margin:0 0 8px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.date-summary-column .date-summary-row{grid-template-columns:minmax(0,1fr) auto;gap:6px;padding:9px 0}
+.date-summary-column .date-summary-date{font-size:13px;font-weight:750}
+.date-summary-column .date-summary-team{font-size:11px;line-height:1.4;overflow-wrap:anywhere}
+.date-summary-column .date-summary-count{font-size:15px}
+@media(max-width:700px){.date-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.date-summary-column{padding:8px 7px;border-radius:10px}.date-summary-column h3{font-size:13px}.date-summary-column .date-summary-row{gap:4px}.date-summary-column .date-summary-date{font-size:11px}.date-summary-column .date-summary-team{font-size:9.5px}.date-summary-column .date-summary-count{font-size:12px}}
 </style>
 </head>
 <body>
@@ -903,39 +913,45 @@ function viewProgress(D){
   h+='<div class="insight-strip"><div class="insight-tile"><b>'+num(open)+'</b><span>Open / unclear deficiencies</span></div><div class="insight-tile"><b>'+num(rect)+'</b><span>Marked rectified</span></div><div class="insight-tile"><b>'+num(groupBy(rows,r=>r.sub).length)+'</b><span>Substations represented</span></div></div>';
   const typeBreakdown=groupBy(rows,r=>r.grp).map(g=>({...g,k:g.k==='Transformer'?'DT (Transformer)':g.k}));
   h+=groupList(S.main==='dt'?'DT / RMU breakup':'Pole / Pillar',typeBreakdown);
-  const dm=new Map();
-  // For DT/RMU, aggregate the latest retained visit date per equipment ID.
-  // Keep date grouping independent of the asset-type progress calculations.
-  const dateRows=S.main==='dt'
-    ?[...(D.visitEvents||[]),...rows.filter(r=>r.done&&!r.dk)]
-    :done;
-  dateRows.forEach(r=>{
-    const k=r.dk||'zz';let g=dm.get(k);
-    if(!g){g={l:r.dl||'No date',n:0,lm:{},types:{DT:{n:0,lm:{}},RMU:{n:0,lm:{}}}};dm.set(k,g);}
-    g.n++;const q=r.lm||'—';g.lm[q]=(g.lm[q]||0)+1;
-    if(S.main==='dt'){
-      const type=r.grp==='RMU'?'RMU':'DT',tg=g.types[type];
-      tg.n++;tg.lm[q]=(tg.lm[q]||0)+1;
-    }
-  });
-  const keys=[...dm.keys()].sort((a,b)=>a==='zz'?1:b==='zz'?-1:b.localeCompare(a)).slice(0,30);
-  h+='<section class="card"><h3>Live Data Diagnostics</h3><p class="note">Source: DT Inspection · Date column: '+esc(D.dateDiagnostics?.header||'Not detected')+' · Last successful refresh: '+esc(S.src.dt?.ts?S.src.dt.ts.toLocaleString('en-IN'):'Not available')+'</p><div class="grid"><div class="stat"><b>'+num(D.dateDiagnostics?.datedRMU||0)+'</b><span>Dated RMU rows</span></div><div class="stat"><b>'+num(D.dateDiagnostics?.undatedRMU||0)+'</b><span>Undated RMU rows</span></div><div class="stat"><b>'+num(D.dateDiagnostics?.total||0)+'</b><span>Rows with asset ID</span></div></div><p class="note">Latest received date: <b>'+esc(D.dateDiagnostics?.latestLabel||'No dated records')+'</b></p>'+(D.dateDiagnostics?.latestRecords?.length?'<div class="table-wrap"><table><thead><tr><th>Equipment ID</th><th>Type</th><th>Raw Date of Visit</th><th>Lineman</th></tr></thead><tbody>'+D.dateDiagnostics.latestRecords.map(x=>'<tr><td>'+esc(x.eq)+'</td><td>'+esc(x.type)+'</td><td>'+esc(x.date)+'</td><td>'+esc(x.lm||'—')+'</td></tr>').join('')+'</tbody></table></div>':'<p class="note">No dated rows received from the live source.</p>')+'</section>';
-  h+='<section class="date-summary"><h3>Date-wise inspections done</h3>';
-  if(!keys.length) h+='<p class="note">Nothing inspected yet.</p>';
-  keys.forEach(k=>{const g=dm.get(k);
-    let detail='';
-    if(S.main==='dt'){
-      detail=['DT','RMU'].filter(type=>g.types[type].n).map(type=>{
-        const t=g.types[type];
-        return '<div class="date-summary-team"><b>'+type+' '+t.n+'</b> · '+Object.keys(t.lm).map(n=>esc(n)+' '+t.lm[n]).join(' · ')+'</div>';
-      }).join('');
-    }else{
-      detail='<div class="date-summary-team">'+Object.keys(g.lm).map(n=>esc(n)+' '+g.lm[n]).join(' · ')+'</div>';
-    }
-    h+='<div class="date-summary-row"><div><div class="date-summary-date">'+esc(g.l)+'</div>'+detail+'</div><div class="date-summary-count">'+g.n+'</div></div>';
-  });
-  if(dm.has('zz')) h+='<p class="date-summary-help">"No date": Date of Visit is blank on those rows – ask the team to fill it in.</p>';
-  h+='</section>';
+  if(S.main==='dt'){
+    // Keep DT and RMU date histories completely separate, newest date first.
+    // Dated visit events retain row-level history; undated assets appear in their own column.
+    const byType={DT:new Map(),RMU:new Map()};
+    const dateRows=[...(D.visitEvents||[]),...rows.filter(r=>r.done&&!r.dk).map(r=>({...r,grp:r.grp==='RMU'?'RMU':'DT'}))];
+    dateRows.forEach(r=>{
+      const type=r.grp==='RMU'?'RMU':'DT',groups=byType[type],key=r.dk||'zz';
+      let g=groups.get(key);
+      if(!g){g={label:r.dl||'No date',count:0,linemen:{}};groups.set(key,g);}
+      g.count++;
+      const lm=r.lm||'—';g.linemen[lm]=(g.linemen[lm]||0)+1;
+    });
+    const renderType=(type)=>{
+      const groups=byType[type],keys=[...groups.keys()].sort((a,b)=>a==='zz'?1:b==='zz'?-1:b.localeCompare(a)).slice(0,30);
+      let out='<section class="date-summary date-summary-column"><h3>'+type+' inspections</h3>';
+      if(!keys.length)out+='<p class="note">No completed inspections recorded.</p>';
+      keys.forEach(key=>{
+        const g=groups.get(key);
+        out+='<div class="date-summary-row"><div><div class="date-summary-date">'+esc(g.label)+'</div><div class="date-summary-team">'+Object.keys(g.linemen).map(n=>esc(n)+' '+g.linemen[n]).join(' · ')+'</div></div><div class="date-summary-count">'+g.count+'</div></div>';
+      });
+      out+='</section>';
+      return out;
+    };
+    h+='<div class="date-summary-grid">'+renderType('DT')+renderType('RMU')+'</div>';
+    if(byType.DT.has('zz')||byType.RMU.has('zz'))h+='<p class="date-summary-help">"No date" records are listed separately in the relevant DT or RMU column because Date of Visit is blank or unrecognised.</p>';
+  }else{
+    const dm=new Map();
+    done.forEach(r=>{
+      const key=r.dk||'zz';let g=dm.get(key);
+      if(!g){g={label:r.dl||'No date',count:0,linemen:{}};dm.set(key,g);}
+      g.count++;const lm=r.lm||'—';g.linemen[lm]=(g.linemen[lm]||0)+1;
+    });
+    const keys=[...dm.keys()].sort((a,b)=>a==='zz'?1:b==='zz'?-1:b.localeCompare(a)).slice(0,30);
+    h+='<section class="date-summary"><h3>Date-wise inspections done</h3>';
+    if(!keys.length)h+='<p class="note">Nothing inspected yet.</p>';
+    keys.forEach(key=>{const g=dm.get(key);h+='<div class="date-summary-row"><div><div class="date-summary-date">'+esc(g.label)+'</div><div class="date-summary-team">'+Object.keys(g.linemen).map(n=>esc(n)+' '+g.linemen[n]).join(' · ')+'</div></div><div class="date-summary-count">'+g.count+'</div></div>';});
+    if(dm.has('zz'))h+='<p class="date-summary-help">"No date": Date of Visit is blank on those rows – ask the team to fill it in.</p>';
+    h+='</section>';
+  }
   h+=groupList('Substation-wise (done / total)',groupBy(rows,r=>r.sub));
   return h;
 }
