@@ -842,8 +842,18 @@ function viewProgress(D){
   const rows=D.rows,tot=rows.length,done=rows.filter(r=>r.done),dn=done.length;
   const dfc=defRows(rows).length,open=defRows(done).filter(r=>r.fix!=='rect').length,rect=defRows(done).filter(r=>r.fix==='rect').length;
   let h='<div class="page-intro"><div><h2>Inspection progress</h2><p>Coverage, pending workload and field completion across the currently selected dataset.</p></div><span class="page-tag">'+(S.main==='dt'?'DT INSPECTION':'FP / SP INSPECTION')+'</span></div>';
-  h+='<section class="card"><div class="hero"><div class="big">'+pct(dn,tot)+'%</div><div style="flex:1"><div class="note" style="margin:0 0 6px">'+num(dn)+' of '+num(tot)+' inspected</div>'+bar(pct(dn,tot))+'</div></div></section>';
-  h+='<div class="grid">'+stat('Total assets',num(tot))+stat('Inspected',num(dn),'g')+stat('Pending',num(tot-dn),tot-dn?'w':'')+stat('With deficiency',num(dfc),dfc?'r':'')+'</div>';
+  if(S.main==='dt'){
+    const dtRows=rows.filter(r=>r.grp!=='RMU'),rmuRows=rows.filter(r=>r.grp==='RMU');
+    const progressPart=(label,list)=>{
+      const inspected=list.filter(r=>r.done).length,total=list.length,percent=pct(inspected,total);
+      return '<section class="card"><h3>'+label+'</h3><div class="hero"><div class="big">'+percent+'%</div><div style="flex:1"><div class="note" style="margin:0 0 6px">'+num(total)+' total assets · '+num(inspected)+' inspection done</div>'+bar(percent)+'</div></div><div class="grid">'+stat('Total assets',num(total))+stat('Inspection done',num(inspected),'g')+'</div></section>';
+    };
+    h+=progressPart('DT Inspection',dtRows)+progressPart('RMU Inspection',rmuRows);
+    h+='<div class="grid">'+stat('Total assets',num(tot))+stat('Inspected',num(dn),'g')+stat('Pending',num(tot-dn),tot-dn?'w':'')+stat('With deficiency',num(dfc),dfc?'r':'')+'</div>';
+  }else{
+    h+='<section class="card"><div class="hero"><div class="big">'+pct(dn,tot)+'%</div><div style="flex:1"><div class="note" style="margin:0 0 6px">'+num(dn)+' of '+num(tot)+' inspected</div>'+bar(pct(dn,tot))+'</div></div></section>';
+    h+='<div class="grid">'+stat('Total assets',num(tot))+stat('Inspected',num(dn),'g')+stat('Pending',num(tot-dn),tot-dn?'w':'')+stat('With deficiency',num(dfc),dfc?'r':'')+'</div>';
+  }
   h+='<div class="insight-strip"><div class="insight-tile"><b>'+num(open)+'</b><span>Open / unclear deficiencies</span></div><div class="insight-tile"><b>'+num(rect)+'</b><span>Marked rectified</span></div><div class="insight-tile"><b>'+num(groupBy(rows,r=>r.sub).length)+'</b><span>Substations represented</span></div></div>';
   h+=groupList(S.main==='dt'?'Asset type':'Pole / Pillar',groupBy(rows,r=>r.grp));
   const dm=new Map();
