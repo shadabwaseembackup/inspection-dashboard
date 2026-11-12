@@ -691,7 +691,7 @@ function pd(s){
   let m=s.match(/Date\((\d{4})\s*,\s*(\d{1,2})\s*,\s*(\d{1,2})/i);
   if(m) return mk(+m[1],+m[2]+1,+m[3]);
   // Excel / CSV timestamp strings: discard time, timezone and trailing locale punctuation.
-  s=s.split(/[ T]/)[0].replace(/[,;]+$/,'');
+  s=s.split(/[\sT]+/)[0].replace(/[,;]+$/,'');
   if((m=s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/))) return mk(+m[1],+m[2],+m[3]);
   if((m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/))){
     const a=+m[1],b=+m[2];let y=+m[3];if(y<100)y+=2000;
@@ -777,9 +777,11 @@ function buildDT(rows){
   // Preserve dated inspection events separately from the unique-asset map.
   // Progress cards use unique assets; the date-wise report uses actual dated rows.
   const visitEvents=[];
+  const dateCol=H.findIndex(h=>{const n=norm(h).toLowerCase().replace(/[^a-z0-9]/g,'');return /date.*visit|visit.*date/.test(n);});
   const ci={typ:c(/^asset type$/i),sub:c(/^substation_?name$/i),eq:c(/^sapequipmentid$/i),kva:c(/^kvarating$/i),
-    code:c(/^asset_code$/i),fl:c(/^fl code$/i),date:c(/^date of visit$/i),lm:c(/लाइनमैन/),rem:c(/आई कमी/),fix:c(/दूर की/)};
+    code:c(/^asset_code$/i),fl:c(/^fl code$/i),date:dateCol,lm:c(/लाइनमैन/),rem:c(/आई कमी/),fix:c(/दूर की/)};
   if(ci.eq<0) throw new Error('Columns not recognised – expected the DT Inspection tab');
+  if(ci.date<0) throw new Error('Date of Visit column not recognised in DT Inspection. Check the column K header.');
   const rules=prep(DT_RULES,H),checkCols=[...new Set(rules.reduce((a,r)=>a.concat(r.cols),[]))];
   const map=new Map();let orphan=0;
   for(let i=1;i<rows.length;i++){
@@ -800,8 +802,11 @@ function buildDT(rows){
     if(!old || (!old.done&&o.done) || (newDate && (!oldDate || newDate>oldDate)) || (!oldDate && !newDate && !old.done && o.done)) map.set(key,o);
   }
   const fields=[];rules.forEach(r=>r.cols.forEach(ci2=>{const label=H[ci2]||r.l,group=r.hdr?'RMU':'DT';if(!fields.some(x=>x.key===label))fields.push({key:label,label,group});}));
+  const dateDiagnostics={header:H[ci.date]||'',total:0,dated:0,undated:0,rmus:0,datedRMU:0,undatedRMU:0,latestKey:'',latestLabel:'',latestRecords:[]};
+  for(let i=1;i<rows.length;i++){const row=rows[i],eq=v(row,ci.eq),code=v(row,ci.code);if(!eq&&!code)continue;const isRMU=/rmu/i.test(v(row,ci.typ)),d=pd(v(row,ci.date)),valid=!!(d&&/^\d{4}-\d{2}-\d{2}$/.test(d.key));dateDiagnostics.total++;if(isRMU)dateDiagnostics.rmus++;if(valid){dateDiagnostics.dated++;if(isRMU)dateDiagnostics.datedRMU++;if(!dateDiagnostics.latestKey||d.key>dateDiagnostics.latestKey){dateDiagnostics.latestKey=d.key;dateDiagnostics.latestLabel=d.label;dateDiagnostics.latestRecords=[];}if(d.key===dateDiagnostics.latestKey)dateDiagnostics.latestRecords.push({eq:eq||code,type:isRMU?'RMU':'DT',date:v(row,ci.date),lm:v(row,ci.lm)});}else{dateDiagnostics.undated++;if(isRMU)dateDiagnostics.undatedRMU++;}}
+  dateDiagnostics.latestRecords=dateDiagnostics.latestRecords.slice(0,10);
   map.forEach(o=>{o.dtAnomalies={};const raw=rows.find(row=>v(row,ci.eq)===o.eq||v(row,ci.code)===o.name);if(!raw)return;rules.forEach(r=>r.cols.forEach(ci2=>{const val=norm(raw[ci2]);if(!val)return;const bad=r.t==='no'?FIX_NO.test(val):isBad(val);if(bad)o.dtAnomalies[H[ci2]||r.l]=1;}));});
-  return {rows:[...map.values()],visitEvents,dtFields:fields,note:orphan?orphan+' row(s) without asset ID ignored':''};
+  return {rows:[...map.values()],visitEvents,dtFields:fields,dateDiagnostics,note:orphan?orphan+' row(s) without asset ID ignored':''};
 }
 
 /* ================= LOADING ================= */
@@ -914,6 +919,7 @@ function viewProgress(D){
     }
   });
   const keys=[...dm.keys()].sort((a,b)=>a==='zz'?1:b==='zz'?-1:b.localeCompare(a)).slice(0,30);
+  h+='<section class="card"><h3>Live Data Diagnostics</h3><p class="note">Source: DT Inspection · Date column: '+esc(D.dateDiagnostics?.header||'Not detected')+' · Last successful refresh: '+esc(S.src.dt?.ts?S.src.dt.ts.toLocaleString('en-IN'):'Not available')+'</p><div class="grid"><div class="stat"><b>'+num(D.dateDiagnostics?.datedRMU||0)+'</b><span>Dated RMU rows</span></div><div class="stat"><b>'+num(D.dateDiagnostics?.undatedRMU||0)+'</b><span>Undated RMU rows</span></div><div class="stat"><b>'+num(D.dateDiagnostics?.total||0)+'</b><span>Rows with asset ID</span></div></div><p class="note">Latest received date: <b>'+esc(D.dateDiagnostics?.latestLabel||'No dated records')+'</b></p>'+(D.dateDiagnostics?.latestRecords?.length?'<div class="table-wrap"><table><thead><tr><th>Equipment ID</th><th>Type</th><th>Raw Date of Visit</th><th>Lineman</th></tr></thead><tbody>'+D.dateDiagnostics.latestRecords.map(x=>'<tr><td>'+esc(x.eq)+'</td><td>'+esc(x.type)+'</td><td>'+esc(x.date)+'</td><td>'+esc(x.lm||'—')+'</td></tr>').join('')+'</tbody></table></div>':'<p class="note">No dated rows received from the live source.</p>')+'</section>';
   h+='<section class="date-summary"><h3>Date-wise inspections done</h3>';
   if(!keys.length) h+='<p class="note">Nothing inspected yet.</p>';
   keys.forEach(k=>{const g=dm.get(k);
