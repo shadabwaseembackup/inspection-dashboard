@@ -537,6 +537,15 @@ header .hd{min-width:0}
 .def-filter-chip{display:inline-flex;align-items:center;gap:8px;max-width:100%;border:1px solid var(--line);border-radius:999px;padding:5px 9px;background:var(--card);color:var(--ink);font:inherit;font-size:11px;cursor:pointer}
 .def-filter-chip span{overflow-wrap:anywhere;text-align:left}.def-filter-chip b{font-size:14px;color:var(--pri);line-height:1}
 .def-filter-chip:focus-visible,.def-active-head button:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+.date-summary{padding:10px 12px 8px;border:1px solid var(--line);border-radius:14px;background:var(--card);margin:10px 0 12px}
+.date-summary h3{display:flex;align-items:center;gap:9px;margin:0 0 10px;font-size:13px;font-weight:750}
+.date-summary h3:before{content:"";display:block;width:3px;height:13px;border-radius:3px;background:var(--pri);flex:0 0 3px}
+.date-summary-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:8px 2px;border-top:1px solid var(--line)}
+.date-summary-row:first-of-type{border-top:0}
+.date-summary-date{font-size:12px;font-weight:750;color:var(--ink);margin-bottom:3px}
+.date-summary-team{font-size:11px;line-height:1.45;color:var(--mut);overflow-wrap:anywhere}
+.date-summary-count{font-size:13px;font-weight:750;color:var(--ink);text-align:right;min-width:24px}
+.date-summary .date-summary-help{font-size:10.5px;line-height:1.4;color:var(--mut);margin:6px 0 0}
 </style>
 </head>
 <body>
@@ -859,11 +868,11 @@ function viewProgress(D){
   const dm=new Map();
   done.forEach(r=>{const k=r.dk||'zz';let g=dm.get(k);if(!g){g={l:r.dl||'No date',n:0,lm:{}};dm.set(k,g);}g.n++;const q=r.lm||'—';g.lm[q]=(g.lm[q]||0)+1;});
   const keys=[...dm.keys()].sort((a,b)=>a==='zz'?1:b==='zz'?-1:b.localeCompare(a)).slice(0,30);
-  h+='<section class="card"><h3>Date-wise inspections done</h3>';
+  h+='<section class="date-summary"><h3>Date-wise inspections done</h3>';
   if(!keys.length) h+='<p class="note">Nothing inspected yet.</p>';
-  keys.forEach((k,i)=>{const g=dm.get(k);
-    h+='<div class="row'+(i?'':' first')+'" style="grid-template-columns:minmax(0,1fr) auto"><div class="rn"><b>'+esc(g.l)+'</b><div class="note" style="margin:2px 0 0">'+Object.keys(g.lm).map(n=>esc(n)+' '+g.lm[n]).join(' · ')+'</div></div><div class="rv"><b>'+g.n+'</b></div></div>';});
-  if(dm.has('zz')) h+='<p class="note">"No date": Date of Visit is blank on those rows – ask the team to fill it in.</p>';
+  keys.forEach(k=>{const g=dm.get(k);
+    h+='<div class="date-summary-row"><div><div class="date-summary-date">'+esc(g.l)+'</div><div class="date-summary-team">'+Object.keys(g.lm).map(n=>esc(n)+' '+g.lm[n]).join(' · ')+'</div></div><div class="date-summary-count">'+g.n+'</div></div>';});
+  if(dm.has('zz')) h+='<p class="date-summary-help">"No date": Date of Visit is blank on those rows – ask the team to fill it in.</p>';
   h+='</section>';
   h+=groupList('Substation-wise (done / total)',groupBy(rows,r=>r.sub));
   return h;
