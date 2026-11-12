@@ -98,7 +98,6 @@ async function fetchPrivateSheet(tab, env) {
   const endpoint = "https://sheets.googleapis.com/v4/spreadsheets/" + GOOGLE_SHEETS_ID + "/values/" + encodeURIComponent(range) + "?valueRenderOption=FORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING";
   const response = await fetch(endpoint, { headers: { Authorization: "Bearer " + token, Accept: "application/json" } });
   if (!response.ok) {
-    const detail = await response.text();
     // Do not return upstream response bodies, which may contain operational metadata.
     return json({ error: "Google Sheets read failed (" + response.status + "). Check service-account spreadsheet access and API configuration." }, 502);
   }
