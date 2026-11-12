@@ -686,13 +686,16 @@ function parseCSV(t){
 function mk(y,mon,d){const p=n=>('0'+n).slice(-2);return {key:y+'-'+p(mon)+'-'+p(d),label:d+' '+(MON[mon-1]||'?')+' '+y};}
 function pd(s){
   s=norm(s); if(!s) return null;
-  // Google Sheets may emit ISO timestamps, locale dates, or Excel serial dates.
   const raw=s;
-  s=s.split(/[ T]/)[0]; let m;
+  // Google Visualization date serialization: Date(YYYY, zeroBasedMonth, DD[, ...]).
+  let m=s.match(/Date\((\d{4})\s*,\s*(\d{1,2})\s*,\s*(\d{1,2})/i);
+  if(m) return mk(+m[1],+m[2]+1,+m[3]);
+  // Excel / CSV timestamp strings: discard time, timezone and trailing locale punctuation.
+  s=s.split(/[ T]/)[0].replace(/[,;]+$/,'');
   if((m=s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/))) return mk(+m[1],+m[2],+m[3]);
   if((m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/))){
-    let a=+m[1],b=+m[2],y=+m[3]; if(y<100) y+=2000;
-    // Inspection sheets use Indian dd-mm-yyyy ordering.
+    const a=+m[1],b=+m[2];let y=+m[3];if(y<100)y+=2000;
+    // This workbook uses Indian day-month-year ordering.
     return mk(y,b,a);
   }
   if(/^\d{5}(?:\.\d+)?$/.test(s)){
