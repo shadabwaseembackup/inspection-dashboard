@@ -581,6 +581,7 @@ header .hd{min-width:0}
   <div class="top">
     <div><h1>Alaknanda Division</h1><p>GK-2 · Inspection Dashboard</p></div>
     <button type="button" class="icon" id="rf" title="Refresh from Google Sheet" aria-label="Refresh from Google Sheet">⟳</button>
+     <button type="button" class="btn" id="logout" title="End dashboard session" aria-label="Log out">Log out</button>
   </div>
   <div class="hd">
     <div id="status" role="status" aria-live="polite"></div>
@@ -623,6 +624,10 @@ header .hd{min-width:0}
 <script>
 (function(){
 'use strict';
+
+/* End the protected dashboard session through the same-origin Worker endpoint. */
+const logoutButton=document.getElementById('logout');
+if(logoutButton){logoutButton.addEventListener('click',async()=>{logoutButton.disabled=true;logoutButton.textContent='Signing out…';try{const response=await fetch('/logout',{method:'POST',credentials:'same-origin',cache:'no-store'});if(!response.ok)throw new Error('Logout failed');window.location.replace('/');}catch(error){logoutButton.disabled=false;logoutButton.textContent='Log out';window.alert('Could not log out. Please try again.');}});}
 
 /* ================= CONFIG ================= */
 const SHEET='1mmvLq7GbnX935I4-EzTnZXA-K2nccotRJYS8PppVqOc';
