@@ -59,10 +59,10 @@ const SHEET_TABS = { fpsp: "FP SP Inspection", dt: "DT Inspection" };
 let googleTokenCache = { token: "", expiresAt: 0 };
 
 function base64urlText(value) {
-  return btoa(unescape(encodeURIComponent(value))).replace(/\\+/g, "-").replace(/\\//g, "_").replace(/=+$/g, "");
+  return btoa(unescape(encodeURIComponent(value))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 function pemBytes(pem) {
-  const body = String(pem || "").replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\\s/g, "");
+  const body = String(pem || "").replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s/g, "");
   return Uint8Array.from(atob(body), c => c.charCodeAt(0));
 }
 async function googleAccessToken(env) {
@@ -88,7 +88,7 @@ async function googleAccessToken(env) {
 }
 function csvCell(value) {
   const text = value == null ? "" : String(value);
-  return /[",\\r\\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+  return /[",\r\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
 }
 async function fetchPrivateSheet(tab, env) {
   const sheetName = SHEET_TABS[tab];
@@ -103,7 +103,7 @@ async function fetchPrivateSheet(tab, env) {
   }
   const data = await response.json();
   const rows = Array.isArray(data.values) ? data.values : [];
-  const csv = rows.map(row => row.map(csvCell).join(",")).join("\\r\\n");
+  const csv = rows.map(row => row.map(csvCell).join(",")).join("\r\n");
   return new Response(csv, { status: 200, headers: { "Content-Type": "text/csv; charset=utf-8", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } });
 }
 
