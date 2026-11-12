@@ -53,6 +53,61 @@ async function verifyTurnstile(token, secret, ip) {
 }
 
 const DASHBOARD_UPSTREAM = "https://raw.githubusercontent.com/shadabwaseembackup/inspection-dashboard/main/index.html";
+
+const GOOGLE_SHEETS_ID = "1mmvLq7GbnX935I4-EzTnZXA-K2nccotRJYS8PppVqOc";
+const SHEET_TABS = { fpsp: "FP SP Inspection", dt: "DT Inspection" };
+let googleTokenCache = { token: "", expiresAt: 0 };
+
+function base64urlText(value) {
+  return btoa(unescape(encodeURIComponent(value))).replace(/\\+/g, "-").replace(/\\//g, "_").replace(/=+$/g, "");
+}
+function pemBytes(pem) {
+  const body = String(pem || "").replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\\s/g, "");
+  return Uint8Array.from(atob(body), c => c.charCodeAt(0));
+}
+async function googleAccessToken(env) {
+  if (googleTokenCache.token && googleTokenCache.expiresAt > Date.now() + 60000) return googleTokenCache.token;
+  if (!env.GOOGLE_SERVICE_ACCOUNT_JSON) throw new Error("Google service-account credential is not configured.");
+  let account;
+  try { account = JSON.parse(env.GOOGLE_SERVICE_ACCOUNT_JSON); } catch { throw new Error("Google service-account credential is invalid JSON."); }
+  if (!account.client_email || !account.private_key) throw new Error("Google service-account credential is missing required fields.");
+  const now = Math.floor(Date.now() / 1000);
+  const header = base64urlText(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const claim = base64urlText(JSON.stringify({ iss: account.client_email, scope: "https://www.googleapis.com/auth/spreadsheets.readonly", aud: "https://oauth2.googleapis.com/token", iat: now, exp: now + 3600 }));
+  const unsigned = header + "." + claim;
+  const key = await crypto.subtle.importKey("pkcs8", pemBytes(account.private_key), { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["sign"]);
+  const signature = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, new TextEncoder().encode(unsigned));
+  const assertion = unsigned + "." + base64url(new Uint8Array(signature));
+  const form = new URLSearchParams({ grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion });
+  const response = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: form });
+  if (!response.ok) throw new Error("Google OAuth token exchange failed (" + response.status + ").");
+  const data = await response.json();
+  if (!data.access_token) throw new Error("Google OAuth did not return an access token.");
+  googleTokenCache = { token: data.access_token, expiresAt: Date.now() + Number(data.expires_in || 3600) * 1000 };
+  return data.access_token;
+}
+function csvCell(value) {
+  const text = value == null ? "" : String(value);
+  return /[",\\r\\n]/.test(text) ? '"' + text.replace(/"/g, '""') + '"' : text;
+}
+async function fetchPrivateSheet(tab, env) {
+  const sheetName = SHEET_TABS[tab];
+  if (!sheetName) return json({ error: "Unknown inspection dataset." }, 400);
+  const token = await googleAccessToken(env);
+  const range = "'" + sheetName.replace(/'/g, "''") + "'!A:ZZ";
+  const endpoint = "https://sheets.googleapis.com/v4/spreadsheets/" + GOOGLE_SHEETS_ID + "/values/" + encodeURIComponent(range) + "?valueRenderOption=FORMATTED_VALUE&dateTimeRenderOption=FORMATTED_STRING";
+  const response = await fetch(endpoint, { headers: { Authorization: "Bearer " + token, Accept: "application/json" } });
+  if (!response.ok) {
+    const detail = await response.text();
+    // Do not return upstream response bodies, which may contain operational metadata.
+    return json({ error: "Google Sheets read failed (" + response.status + "). Check service-account spreadsheet access and API configuration." }, 502);
+  }
+  const data = await response.json();
+  const rows = Array.isArray(data.values) ? data.values : [];
+  const csv = rows.map(row => row.map(csvCell).join(",")).join("\\r\\n");
+  return new Response(csv, { status: 200, headers: { "Content-Type": "text/csv; charset=utf-8", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } });
+}
+
 const SESSION_COOKIE = "__Host-dashboard_session";
 const SESSION_TTL_SECONDS = 12 * 60 * 60;
 const encoder = new TextEncoder();
@@ -102,6 +157,17 @@ export default {
     if(url.pathname==="/logout"&&request.method==="POST")return json({ok:true},200,{...headers,"Set-Cookie":SESSION_COOKIE+"=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax"});
     const authenticated=await validSession(request,env);
     if(url.pathname==="/session"&&request.method==="GET")return json({authenticated},200,headers);
+    if(url.pathname==="/sheets"&&request.method==="GET"){
+      if(!authenticated)return json({error:"Sign in to access inspection data."},401,headers);
+      try {
+        const response = await fetchPrivateSheet(url.searchParams.get("tab"), env);
+        const responseHeaders = new Headers(response.headers);
+        Object.entries(headers).forEach(([key,value])=>responseHeaders.set(key,value));
+        return new Response(response.body,{status:response.status,headers:responseHeaders});
+      } catch(error) {
+        return json({error:"Private Google Sheets gateway error: "+cleanText(error?.message||"Unknown error",220)},502,headers);
+      }
+    }
     if(url.pathname==="/ask"&&!authenticated)return json({error:"Sign in to use the inspection assistant."},401,headers);
     if(!authenticated)return loginPage(headers);
     if (url.pathname !== "/ask" || request.method !== "POST") {
