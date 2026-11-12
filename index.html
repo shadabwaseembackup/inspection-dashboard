@@ -546,6 +546,19 @@ header .hd{min-width:0}
 .date-summary-team{font-size:11px;line-height:1.45;color:var(--mut);overflow-wrap:anywhere}
 .date-summary-count{font-size:13px;font-weight:750;color:var(--ink);text-align:right;min-width:24px}
 .date-summary .date-summary-help{font-size:10.5px;line-height:1.4;color:var(--mut);margin:6px 0 0}
+
+/* Compact single-row progress cards matching the supplied reference */
+.progress-compact{padding:10px 14px 9px;margin:0 0 10px;overflow:hidden}
+.progress-compact h3{margin:0 0 8px;font-size:12px}
+.progress-compact .progress-compact-body{display:grid;grid-template-columns:auto minmax(120px,1fr) auto;align-items:center;gap:14px;min-width:0}
+.progress-compact .progress-compact-pct{font-size:42px;line-height:1;font-weight:850;letter-spacing:-1.5px;color:var(--pri);white-space:nowrap}
+.progress-compact .progress-compact-mid{min-width:0}
+.progress-compact .progress-compact-mid .note{font-size:10px;margin:0 0 6px;white-space:nowrap}
+.progress-compact .progress-compact-stats{display:flex;align-items:center;gap:8px;min-width:0}
+.progress-compact .progress-compact-stats .stat{min-width:142px;padding:9px 11px;margin:0}
+.progress-compact .progress-compact-stats .stat b{font-size:17px}
+@media(max-width:720px){.progress-compact .progress-compact-body{grid-template-columns:auto minmax(90px,1fr);gap:10px}.progress-compact .progress-compact-pct{font-size:36px}.progress-compact .progress-compact-stats{grid-column:1/-1}.progress-compact .progress-compact-stats .stat{flex:1;min-width:0}}
+@media(max-width:420px){.progress-compact .progress-compact-stats{gap:6px}.progress-compact .progress-compact-stats .stat{padding:8px 7px}.progress-compact .progress-compact-stats .stat span{font-size:9px}}
 </style>
 </head>
 <body>
@@ -855,7 +868,7 @@ function viewProgress(D){
     const dtRows=rows.filter(r=>r.grp!=='RMU'),rmuRows=rows.filter(r=>r.grp==='RMU');
     const progressPart=(label,list)=>{
       const inspected=list.filter(r=>r.done).length,total=list.length,percent=pct(inspected,total);
-      return '<section class="card"><h3>'+label+'</h3><div class="hero"><div class="big">'+percent+'%</div><div style="flex:1"><div class="note" style="margin:0 0 6px">'+num(total)+' total assets · '+num(inspected)+' inspection done</div>'+bar(percent)+'</div></div><div class="grid">'+stat('Total assets',num(total))+stat('Inspection done',num(inspected),'g')+'</div></section>';
+      return '<section class="card progress-compact"><h3>'+label+'</h3><div class="progress-compact-body"><div class="progress-compact-pct">'+percent+'%</div><div class="progress-compact-mid"><div class="note">'+num(total)+' total assets · '+num(inspected)+' inspection done</div>'+bar(percent)+'</div><div class="progress-compact-stats">'+stat('Total assets',num(total))+stat('Inspection done',num(inspected),'g')+'</div></div></section>';
     };
     h+=progressPart('DT Inspection',dtRows)+progressPart('RMU Inspection',rmuRows);
     h+='<div class="grid">'+stat('Total assets',num(tot))+stat('Inspected',num(dn),'g')+stat('Pending',num(tot-dn),tot-dn?'w':'')+stat('With deficiency',num(dfc),dfc?'r':'')+'</div>';
