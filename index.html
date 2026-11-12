@@ -685,14 +685,21 @@ function parseCSV(t){
 }
 function mk(y,mon,d){const p=n=>('0'+n).slice(-2);return {key:y+'-'+p(mon)+'-'+p(d),label:d+' '+(MON[mon-1]||'?')+' '+y};}
 function pd(s){
-  s=norm(s); if(!s) return null; s=s.split(/[ T]/)[0]; let m;
+  s=norm(s); if(!s) return null;
+  // Google Sheets may emit ISO timestamps, locale dates, or Excel serial dates.
+  const raw=s;
+  s=s.split(/[ T]/)[0]; let m;
   if((m=s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})$/))) return mk(+m[1],+m[2],+m[3]);
   if((m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/))){
     let a=+m[1],b=+m[2],y=+m[3]; if(y<100) y+=2000;
-    if(a<=12&&b>12) return mk(y,a,b);
+    // Inspection sheets use Indian dd-mm-yyyy ordering.
     return mk(y,b,a);
   }
-  return {key:'y'+s,label:s};
+  if(/^\d{5}(?:\.\d+)?$/.test(s)){
+    const serial=Number(s),date=new Date(Date.UTC(1899,11,30)+serial*86400000);
+    if(Number.isFinite(date.getTime())) return mk(date.getUTCFullYear(),date.getUTCMonth()+1,date.getUTCDate());
+  }
+  return {key:'y'+raw,label:raw};
 }
 function isBad(s){
   s=norm(s).toLowerCase(); if(!s) return false;
@@ -885,7 +892,10 @@ function viewProgress(D){
   const typeBreakdown=groupBy(rows,r=>r.grp).map(g=>({...g,k:g.k==='Transformer'?'DT (Transformer)':g.k}));
   h+=groupList(S.main==='dt'?'DT / RMU breakup':'Pole / Pillar',typeBreakdown);
   const dm=new Map();
-  done.forEach(r=>{
+  // For DT/RMU, aggregate the latest retained visit date per equipment ID.
+  // Keep date grouping independent of the asset-type progress calculations.
+  const dateRows=S.main==='dt'?rows.filter(r=>r.done):done;
+  dateRows.forEach(r=>{
     const k=r.dk||'zz';let g=dm.get(k);
     if(!g){g={l:r.dl||'No date',n:0,lm:{},types:{DT:{n:0,lm:{}},RMU:{n:0,lm:{}}}};dm.set(k,g);}
     g.n++;const q=r.lm||'—';g.lm[q]=(g.lm[q]||0)+1;
