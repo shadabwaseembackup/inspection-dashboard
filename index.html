@@ -882,7 +882,8 @@ function viewProgress(D){
     h+='<div class="grid">'+stat('Total assets',num(tot))+stat('Inspected',num(dn),'g')+stat('Pending',num(tot-dn),tot-dn?'w':'')+stat('With deficiency',num(dfc),dfc?'r':'')+'</div>';
   }
   h+='<div class="insight-strip"><div class="insight-tile"><b>'+num(open)+'</b><span>Open / unclear deficiencies</span></div><div class="insight-tile"><b>'+num(rect)+'</b><span>Marked rectified</span></div><div class="insight-tile"><b>'+num(groupBy(rows,r=>r.sub).length)+'</b><span>Substations represented</span></div></div>';
-  h+=groupList(S.main==='dt'?'Asset type':'Pole / Pillar',groupBy(rows,r=>r.grp));
+  const typeBreakdown=groupBy(rows,r=>r.grp).map(g=>({...g,k:g.k==='Transformer'?'DT (Transformer)':g.k}));
+  h+=groupList(S.main==='dt'?'DT / RMU breakup':'Pole / Pillar',typeBreakdown);
   const dm=new Map();
   done.forEach(r=>{const k=r.dk||'zz';let g=dm.get(k);if(!g){g={l:r.dl||'No date',n:0,lm:{}};dm.set(k,g);}g.n++;const q=r.lm||'—';g.lm[q]=(g.lm[q]||0)+1;});
   const keys=[...dm.keys()].sort((a,b)=>a==='zz'?1:b==='zz'?-1:b.localeCompare(a)).slice(0,30);
