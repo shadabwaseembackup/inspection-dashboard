@@ -559,6 +559,11 @@ header .hd{min-width:0}
 .progress-compact .progress-compact-stats .stat b{font-size:17px}
 @media(max-width:720px){.progress-compact .progress-compact-body{grid-template-columns:auto minmax(90px,1fr);gap:10px}.progress-compact .progress-compact-pct{font-size:36px}.progress-compact .progress-compact-stats{grid-column:1/-1}.progress-compact .progress-compact-stats .stat{flex:1;min-width:0}}
 @media(max-width:420px){.progress-compact .progress-compact-stats{gap:6px}.progress-compact .progress-compact-stats .stat{padding:8px 7px}.progress-compact .progress-compact-stats .stat span{font-size:9px}}
+
+.progress-compact .progress-compact-body.progress-compact-simple{grid-template-columns:auto minmax(0,1fr);gap:14px}
+.progress-compact .progress-compact-simple .progress-compact-pct{font-size:46px}
+.progress-compact .progress-compact-simple .progress-compact-mid .note{font-size:11px;margin:0 0 7px}
+@media(max-width:720px){.progress-compact .progress-compact-body.progress-compact-simple{grid-template-columns:auto minmax(0,1fr)}}
 </style>
 </head>
 <body>
@@ -868,7 +873,7 @@ function viewProgress(D){
     const dtRows=rows.filter(r=>r.grp!=='RMU'),rmuRows=rows.filter(r=>r.grp==='RMU');
     const progressPart=(label,list)=>{
       const inspected=list.filter(r=>r.done).length,total=list.length,percent=pct(inspected,total);
-      return '<section class="card progress-compact"><h3>'+label+'</h3><div class="progress-compact-body"><div class="progress-compact-pct">'+percent+'%</div><div class="progress-compact-mid"><div class="note">'+num(total)+' total assets · '+num(inspected)+' inspection done</div>'+bar(percent)+'</div><div class="progress-compact-stats">'+stat('Total assets',num(total))+stat('Inspection done',num(inspected),'g')+'</div></div></section>';
+      return '<section class="card progress-compact"><h3>'+label+'</h3><div class="progress-compact-body progress-compact-simple"><div class="progress-compact-pct">'+percent+'%</div><div class="progress-compact-mid"><div class="note">'+num(inspected)+' of '+num(total)+' inspected</div>'+bar(percent)+'</div></div></section>';
     };
     h+=progressPart('DT Inspection',dtRows)+progressPart('RMU Inspection',rmuRows);
     h+='<div class="grid">'+stat('Total assets',num(tot))+stat('Inspected',num(dn),'g')+stat('Pending',num(tot-dn),tot-dn?'w':'')+stat('With deficiency',num(dfc),dfc?'r':'')+'</div>';
