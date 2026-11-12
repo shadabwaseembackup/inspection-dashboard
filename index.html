@@ -693,8 +693,8 @@ function parseCSV(t){
   if(f.length||r.length){r.push(f);rows.push(r);}
   return rows;
 }
-function mk(y,mon,d){const p=n=>('0'+n).slice(-2);return {key:y+'-'+p(mon)+'-'+p(d),label:d+' '+(MON[mon-1]||'?')+' '+y};}
-function pd(s){
+function mk(y,mon,d){const p=n=>('0'+n).slice(-2);return {key:y+'-'+p(mon)+'-'+p(d),label:p(d)+'-'+(MON[mon-1]||'?')+'-'+String(y).slice(-2)};}
+function pd(s,yearSource){
   s=norm(s); if(!s) return null;
   const raw=s;
   // Google Visualization date serialization: Date(YYYY, zeroBasedMonth, DD[, ...]).
@@ -713,6 +713,18 @@ function pd(s){
     let y=+m[3];if(y<100)y+=2000;
     const mon=months[m[2].toLowerCase()];
     if(mon)return mk(y,mon,+m[1]);
+  }
+  // Normalize locale-rendered month abbreviations from Column A to English.
+  // Existing Column A formulas may omit the year; recover it from Date of Visit (Column K).
+  if((m=s.match(/^(\d{1,2})[-\/. ]+([^\d\s]+)[-\/. ]*(\d{2,4})?$/))){
+    const months={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,sept:9,oct:10,nov:11,dec:12,
+      'जनवरी':1,'फ़रवरी':2,'फरवरी':2,'मार्च':3,'अप्रैल':4,'मई':5,'जून':6,'जुलाई':7,'अगस्त':8,'सितंबर':9,'सितम्बर':9,'अक्टूबर':10,'नवंबर':11,'नव॰':11,'दिसंबर':12,'दिसम्बर':12};
+    const mon=months[m[2].toLowerCase()];
+    if(mon){
+      let y=m[3]?+m[3]:NaN;if(y<100)y+=2000;
+      if(!Number.isFinite(y)&&yearSource){const yd=pd(yearSource);if(yd&&/^\d{4}-\d{2}-\d{2}$/.test(yd.key))y=+yd.key.slice(0,4);}
+      if(Number.isFinite(y))return mk(y,mon,+m[1]);
+    }
   }
   if(/^\d{5}(?:\.\d+)?$/.test(s)){
     const serial=Number(s),date=new Date(Date.UTC(1899,11,30)+serial*86400000);
@@ -796,7 +808,7 @@ function buildDT(rows){
   // Column A is the workbook's formula-generated DD-MMM-YY inspection date.
   const dateCol=0;
   const ci={typ:c(/^asset type$/i),sub:c(/^substation_?name$/i),eq:c(/^sapequipmentid$/i),kva:c(/^kvarating$/i),
-    code:c(/^asset_code$/i),fl:c(/^fl code$/i),date:dateCol,lm:c(/लाइनमैन/),rem:c(/आई कमी/),fix:c(/दूर की/)};
+    code:c(/^asset_code$/i),fl:c(/^fl code$/i),date:dateCol,visitDate:c(/^date of visit$/i),lm:c(/लाइनमैन/),rem:c(/आई कमी/),fix:c(/दूर की/)};
   if(ci.eq<0) throw new Error('Columns not recognised – expected the DT Inspection tab');
   if(ci.date<0) throw new Error('Column A (No.) not found in DT Inspection.');
   const rules=prep(DT_RULES,H),checkCols=[...new Set(rules.reduce((a,r)=>a.concat(r.cols),[]))];
@@ -804,7 +816,7 @@ function buildDT(rows){
   for(let i=1;i<rows.length;i++){
     const row=rows[i],eq=v(row,ci.eq),code=v(row,ci.code);
     if(!eq&&!code){orphan++;continue;}
-    const d=pd(v(row,ci.date),v(row,ci.year)),lm=v(row,ci.lm);
+    const d=pd(v(row,ci.date),v(row,ci.visitDate)),lm=v(row,ci.lm);
     const done=!!(d||lm||checkCols.some(k=>v(row,k)));
     if(done&&d) visitEvents.push({grp:/rmu/i.test(v(row,ci.typ))?'RMU':'DT',lm,dk:d.key,dl:d.label,done:true});
     const f=done?finish(row,ci,evalRules(row,H,rules),done):{defs:[],remark:'',fix:'',fixRaw:''};
