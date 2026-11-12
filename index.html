@@ -752,7 +752,11 @@ function buildDT(rows){
     const o={name:code||eq,eq,sub:v(row,ci.sub)||'—',fl:v(row,ci.fl),typ,grp:/rmu/i.test(typ)?'RMU':'Transformer',
       kva:v(row,ci.kva),lm,dk:d&&d.key,dl:d&&d.label,done,defs:f.defs,remark:f.remark,fix:f.fix,fixRaw:f.fixRaw};
     const key=eq||code,old=map.get(key);
-    if(!old||(!old.done&&o.done)) map.set(key,o);
+    // Keep the latest dated inspection for each equipment ID. A later row
+    // with no visit date must not replace an existing dated inspection.
+    const newDate=/^\d{4}-\d{2}-\d{2}$/.test(String(o.dk||''))?o.dk:'';
+    const oldDate=old&&/^\d{4}-\d{2}-\d{2}$/.test(String(old.dk||''))?old.dk:'';
+    if(!old || (!old.done&&o.done) || (newDate && (!oldDate || newDate>oldDate)) || (!oldDate && !newDate && !old.done && o.done)) map.set(key,o);
   }
   const fields=[];rules.forEach(r=>r.cols.forEach(ci2=>{const label=H[ci2]||r.l,group=r.hdr?'RMU':'DT';if(!fields.some(x=>x.key===label))fields.push({key:label,label,group});}));
   map.forEach(o=>{o.dtAnomalies={};const raw=rows.find(row=>v(row,ci.eq)===o.eq||v(row,ci.code)===o.name);if(!raw)return;rules.forEach(r=>r.cols.forEach(ci2=>{const val=norm(raw[ci2]);if(!val)return;const bad=r.t==='no'?FIX_NO.test(val):isBad(val);if(bad)o.dtAnomalies[H[ci2]||r.l]=1;}));});
@@ -883,7 +887,7 @@ function viewLineman(D){
 }
 function viewAnalytics(D){
  const rows=D.rows,done=rows.filter(r=>r.done),deficient=defRows(rows),pending=rows.filter(r=>!r.done),rect=deficient.filter(r=>r.fix==='rect'),open=deficient.filter(r=>r.fix!=='rect'),rate=pct(done.length,rows.length);
- const monthly=new Map();done.forEach(r=>{const k=r.dk&&/^\\d{4}-\\d{2}/.test(r.dk)?r.dk.slice(0,7):'';if(k)monthly.set(k,(monthly.get(k)||0)+1);});
+ const monthly=new Map();done.forEach(r=>{const k=r.dk&&/^\d{4}-\d{2}/.test(r.dk)?r.dk.slice(0,7):'';if(k)monthly.set(k,(monthly.get(k)||0)+1);});
  const months=[...monthly.entries()].sort((a,b)=>a[0].localeCompare(b[0])).slice(-8),mx=Math.max(1,...months.map(x=>x[1]));
  const trend=months.length?'<div class="trend-bars">'+months.map(([k,n])=>'<div class="trend-col"><small>'+n+'</small><i style="height:'+Math.max(3,n/mx*100)+'%"></i><b>'+esc(k.slice(5))+'</b></div>').join('')+'</div>':'<p class="note">Date-wise monthly trend will appear when inspection dates are available.</p>';
  const bySub=new Map();rows.forEach(r=>{const k=r.sub||'—';let g=bySub.get(k);if(!g){g={name:k,total:0,done:0,pending:0,affected:0,open:0,rectified:0};bySub.set(k,g);}g.total++;if(r.done)g.done++;else g.pending++;});
@@ -1218,7 +1222,7 @@ function defActionId(r){return JSON.stringify([S.main,String(r.eq||r.name||''),S
 function defActionPanel(rows){
  const all=readDefActions(),keys=new Set(rows.map(defActionId)),items=Object.entries(all).filter(([k])=>keys.has(k)).map(x=>x[1]);
  const activeItems=items.filter(x=>x.status!=='Completed'),active=activeItems.length,completed=items.length-active;
- const today=localDateKey(),dayNo=s=>{if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(s||'')))return null;const [y,m,d]=s.split('-').map(Number),t=Date.UTC(y,m-1,d),v=new Date(t);return v.getUTCFullYear()===y&&v.getUTCMonth()===m-1&&v.getUTCDate()===d?Math.floor(t/86400000):null;};
+ const today=localDateKey(),dayNo=s=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(String(s||'')))return null;const [y,m,d]=s.split('-').map(Number),t=Date.UTC(y,m-1,d),v=new Date(t);return v.getUTCFullYear()===y&&v.getUTCMonth()===m-1&&v.getUTCDate()===d?Math.floor(t/86400000):null;};
  const todayNo=dayNo(today),overdue=activeItems.filter(x=>{const n=dayNo(x.due);return n!==null&&n<todayNo;}).length;
  const dueSoon=activeItems.filter(x=>{const n=dayNo(x.due);return n!==null&&n>=todayNo&&n<=todayNo+7;}).length;
  const noDue=activeItems.filter(x=>dayNo(x.due)===null).length;
@@ -1228,8 +1232,8 @@ function defActionPanel(rows){
 function exportDefActions(){const all=readDefActions(),rows=[['Inspection type','Asset / Equipment ID','Substation','Feeder','Responsible team / person','Follow-up date','Action status','Action remarks','Last updated']];Object.values(all).forEach(x=>rows.push([x.main,x.asset,x.sub,x.feeder,x.owner,x.due,x.status,x.note,x.updated]));const cell=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"',csv=rows.map(r=>r.map(cell).join(',')).join('\r\n'),blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Deficiency_Action_Tracker_'+localDateKey()+'.csv';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);}
 function deficiencyActionPriority(r,a){
  const today=localDateKey(),status=String(a.status||'Pending'),due=String(a.due||'');
- if(status!=='Completed'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(due)&&due<today)return {label:'Follow-up overdue',cls:'overdue'};
- if(status!=='Completed'&&/^\\d{4}-\\d{2}-\\d{2}$/.test(due)){
+ if(status!=='Completed'&&/^\d{4}-\d{2}-\d{2}$/.test(due)&&due<today)return {label:'Follow-up overdue',cls:'overdue'};
+ if(status!=='Completed'&&/^\d{4}-\d{2}-\d{2}$/.test(due)){
   const [y,m,d]=today.split('-').map(Number),base=new Date(y,m-1,d);base.setDate(base.getDate()+7);
   const limit=[base.getFullYear(),String(base.getMonth()+1).padStart(2,'0'),String(base.getDate()).padStart(2,'0')].join('-');
   if(due<=limit)return {label:'Due within 7 days',cls:'due-soon'};
