@@ -839,6 +839,46 @@ a{color:var(--pri)}
 }
 </style>
 
+<style id="operations-control-centre-v2-final">
+/* Final layout corrections: load after all legacy and feature styles. */
+.top,.hd{max-width:1440px!important}
+main{width:100%;max-width:1440px!important;margin-inline:auto!important;padding-left:clamp(16px,3vw,36px)!important;padding-right:clamp(16px,3vw,36px)!important}
+#view{width:100%;max-width:none}
+.grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:12px!important}
+.stat{min-width:0;min-height:88px!important;padding:14px 15px!important;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:8px!important;border-radius:14px!important}
+.stat b{order:0;font-size:clamp(22px,2.2vw,28px)!important;line-height:1.05!important;letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+.stat span{order:1!important;font-size:10px!important;line-height:1.3!important;font-weight:750;letter-spacing:.035em;text-transform:uppercase;color:var(--mut)}
+.export-toolbar{padding:10px 14px!important;border-radius:13px!important}
+.export-summary{min-height:40px;align-items:center!important;gap:12px}
+.export-copy{gap:2px!important}
+.export-copy b{font-size:12px!important}
+.export-copy span{font-size:10px!important;line-height:1.35}
+.export-toggle{width:28px;height:28px;flex-basis:28px}
+.card h3,.analytics-panel h3{letter-spacing:-.02em}
+@media(min-width:1200px){
+ main{padding-top:26px!important}
+ .grid{gap:14px!important}
+ .stat{min-height:96px!important;padding:16px 17px!important}
+}
+@media(max-width:1050px){
+ main{max-width:100%!important}
+ .grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:650px){
+ main{padding:16px 12px 52px!important}
+ .grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+ .stat{min-height:76px!important;padding:11px!important;gap:6px!important}
+ .stat b{font-size:22px!important}
+ .stat span{font-size:9px!important}
+ .export-toolbar{padding:9px 11px!important}
+ .export-copy span{max-width:34ch}
+}
+@media(max-width:360px){
+ .grid{gap:6px!important}
+ .stat{padding:9px!important;min-height:70px!important}
+ .stat b{font-size:19px!important}
+}
+</style>
 </head>
 <body>
 <header>
@@ -1560,46 +1600,7 @@ function printDeficiencyReviewReport(){
  '<div class="kpis"><div class="kpi">Total matching assets<b>'+records.length+'</b></div><div class="kpi">Open / not rectified<b>'+open+'</b></div><div class="kpi">Rectified<b>'+rectified+'</b></div><div class="kpi">Overdue follow-ups<b>'+overdue+'</b></div></div>'+
  '<b>Applied filters</b><div class="filters">'+filters+'</div><table><thead><tr><th>Substation</th><th>Asset / ID</th><th>Feeder</th><th>Lineman</th><th>Visit date</th><th>Deficiency items</th><th>Rectification</th><th>Follow-up status</th><th>Due date</th><th>Action remarks</th></tr></thead><tbody>'+rows+'</tbody></table>'+
  '<div class="foot">Prepared from the currently loaded inspection records. Follow-up details are local to this browser/device and may not be shared with other users. Verify records before operational decisions.</div><p class="no-print"><button onclick="window.print()">Print / Save as PDF</button></p>
-<style id="operations-control-centre-v2-final">
-/* Final layout corrections: load after all legacy and feature styles. */
-.top,.hd{max-width:1440px!important}
-main{width:100%;max-width:1440px!important;margin-inline:auto!important;padding-left:clamp(16px,3vw,36px)!important;padding-right:clamp(16px,3vw,36px)!important}
-#view{width:100%;max-width:none}
-.grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:12px!important}
-.stat{min-width:0;min-height:88px!important;padding:14px 15px!important;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:8px!important;border-radius:14px!important}
-.stat b{order:0;font-size:clamp(22px,2.2vw,28px)!important;line-height:1.05!important;letter-spacing:-.045em;font-variant-numeric:tabular-nums}
-.stat span{order:1!important;font-size:10px!important;line-height:1.3!important;font-weight:750;letter-spacing:.035em;text-transform:uppercase;color:var(--mut)}
-.export-toolbar{padding:10px 14px!important;border-radius:13px!important}
-.export-summary{min-height:40px;align-items:center!important;gap:12px}
-.export-copy{gap:2px!important}
-.export-copy b{font-size:12px!important}
-.export-copy span{font-size:10px!important;line-height:1.35}
-.export-toggle{width:28px;height:28px;flex-basis:28px}
-.card h3,.analytics-panel h3{letter-spacing:-.02em}
-@media(min-width:1200px){
- main{padding-top:26px!important}
- .grid{gap:14px!important}
- .stat{min-height:96px!important;padding:16px 17px!important}
-}
-@media(max-width:1050px){
- main{max-width:100%!important}
- .grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
-}
-@media(max-width:650px){
- main{padding:16px 12px 52px!important}
- .grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
- .stat{min-height:76px!important;padding:11px!important;gap:6px!important}
- .stat b{font-size:22px!important}
- .stat span{font-size:9px!important}
- .export-toolbar{padding:9px 11px!important}
- .export-copy span{max-width:34ch}
-}
-@media(max-width:360px){
- .grid{gap:6px!important}
- .stat{padding:9px!important;min-height:70px!important}
- .stat b{font-size:19px!important}
-}
-</style>
+
 
 </body></html>');
  popup.document.close();
