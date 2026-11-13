@@ -760,7 +760,7 @@ const FIX_YES=/^(ok|okay|0k|yes|y|done|हाँ|हां|ठीक|fixed|recti
 const FIX_NO=/^(no|n|nahi|nhi|नहीं|नही)$/i;
 
 /* ================= STATE ================= */
-const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',cat:'',dateFrom:'',dateTo:'',substation:'',defAge:'',defSort:'oldest',aiQuery:'',lmSort:'inspections',open:new Set(),lmMap:new Map(),
+const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',cat:'',dateFrom:'',dateTo:'',substation:'',defAge:'',defSort:'oldest',aiQuery:'',lmSort:'inspections',analyticsRange:'all',open:new Set(),lmMap:new Map(),
   data:{fpsp:null,dt:null},src:{fpsp:{s:'none'},dt:{s:'none'}}};
 const RAW={fpsp:'',dt:''};
 let lastLoad=0,qTimer=0,busy=0,turnstileWidget=null;
@@ -1123,7 +1123,8 @@ function viewAnalytics(D){
  const cats=new Map();deficient.forEach(r=>r.defs.forEach(d=>{const k=d.t==='remark'?'Team remark':d.label.replace(/ \(\d+\)$/,'');cats.set(k,(cats.get(k)||0)+1);}));
  const ca=[...cats.entries()].sort((a,b)=>b[1]-a[1]).slice(0,7),cm=Math.max(1,...ca.map(x=>x[1]));
  const rectRate=pct(rect.length,deficient.length);
- return '<div class="page-intro"><div><h2>Operational analytics</h2><p>Performance trends, inspection workload and substation risk signals calculated from the selected records.</p></div><span class="page-tag">LIVE DATA VIEW</span></div>'+
+ const rangeLabel=S.analyticsRange==='all'?'All available records':S.analyticsRange==='365'?'Last 12 months':'Last '+S.analyticsRange+' days';
+ return '<div class="page-intro"><div><h2>Operational analytics</h2><p>Performance trends, inspection workload and substation risk signals calculated from the selected records.</p></div><span class="page-tag">LIVE DATA VIEW</span></div><div class="analytics-range-tools"><label for="analyticsPeriod">Analysis period</label><select id="analyticsPeriod"><option value="all"'+(S.analyticsRange==='all'?' selected':'')+'>All available records</option><option value="30"'+(S.analyticsRange==='30'?' selected':'')+'>Last 30 days</option><option value="90"'+(S.analyticsRange==='90'?' selected':'')+'>Last 90 days</option><option value="365"'+(S.analyticsRange==='365'?' selected':'')+'>Last 12 months</option></select><span>'+esc(rangeLabel)+' · '+num(rows.length)+' records included</span></div>'+
  '<div class="analytics-kpis"><div class="analytics-kpi"><strong>'+rate+'%</strong><span>Inspection coverage</span></div><div class="analytics-kpi"><strong>'+num(pending.length)+'</strong><span>Pending assets</span></div><div class="analytics-kpi"><strong>'+num(deficient.length)+'</strong><span>Assets with deficiency</span></div><div class="analytics-kpi"><strong>'+num(rect.length)+'</strong><span>Assets marked rectified</span></div></div>'+
  '<div class="insight-strip"><div class="insight-tile"><b>'+num(open.length)+'</b><span>Open / unclear affected assets</span></div><div class="insight-tile"><b>'+rectRate+'%</b><span>Deficient assets rectified</span></div><div class="insight-tile"><b>'+num(subs.length)+'</b><span>Substations represented</span></div></div>'+
  '<div class="analytics-grid"><section class="analytics-panel"><h3>Monthly inspection trend</h3><p class="note">Completed inspections · latest 8 available months</p>'+trend+'</section><section class="analytics-panel"><h3>Substation inspection coverage</h3><p class="note">Highest coverage first · completed / total</p>'+sh+'</section><section class="analytics-panel"><h3>Substations needing attention</h3><p class="note">Prioritised by open deficiencies, then pending workload. Not a safety-risk score.</p>'+(rh||'<p class="note">No substation records available.</p>')+'</section><section class="analytics-panel analytics-hierarchy"><h3>Substation → Feeder hierarchy</h3><p class="note">Search by substation or feeder, then sort by pending workload, open deficiencies or coverage. Select a feeder to inspect source records.</p><div class="hierarchy-tools"><input type="search" id="hierarchySearch" placeholder="Search substation or feeder…" aria-label="Search substation or feeder"><select id="hierarchySort" aria-label="Sort substations and feeders"><option value="pending">Sort: Highest pending</option><option value="open">Sort: Highest open deficiencies</option><option value="coverage">Sort: Lowest coverage</option><option value="name">Sort: Name A–Z</option></select><span id="hierarchyCount" class="note" aria-live="polite"></span></div><div id="hierarchyList">'+(hierarchyHtml||'<p class="note">No substation / feeder data available.</p>')+'</div></section><section class="analytics-panel"><h3>Lineman activity</h3><table class="analytics-table"><thead><tr><th>Lineman</th><th>Inspected</th><th>Affected</th><th>Deficiency items</th></tr></thead><tbody>'+la.map(([k,x])=>'<tr class="analytics-drill-target" role="button" tabindex="0" data-drill-kind="lineman" data-drill-key="'+esc(k)+'" title="View lineman inspection records"><td>'+esc(k)+'</td><td>'+x.n+'</td><td>'+x.d+'</td><td>'+x.items+'</td></tr>').join('')+'</tbody></table></section><section class="analytics-panel"><h3>Frequent deficiency categories</h3>'+ca.map(([k,n])=>'<div class="metric-line analytics-drill-target" role="button" tabindex="0" data-drill-kind="category" data-drill-key="'+esc(k)+'" title="View matching deficiency records"><div class="metric-label">'+esc(k)+'</div><div class="metric-track red"><i style="width:'+(n/cm*100)+'%"></i></div><div class="metric-value">'+n+'</div></div>').join('')+'</section></div><section class="analytics-panel analytics-drilldown" id="analyticsDrilldown" hidden></section>';
@@ -1518,7 +1519,12 @@ function render(keepScroll){
   document.querySelectorAll('[data-main]').forEach(b=>b.classList.toggle('on',b.dataset.main===S.main));
   document.querySelectorAll('[data-sub]').forEach(b=>b.classList.toggle('on',b.dataset.sub===S.sub));
   renderStatus();
-  const D=S.data[S.main],el=$('#view');
+  let D=S.data[S.main];const el=$('#view');
+  if(D&&S.sub==='analytics'&&S.analyticsRange!=='all'){
+    const days=Number(S.analyticsRange),cutoff=new Date();cutoff.setHours(0,0,0,0);cutoff.setDate(cutoff.getDate()-days+1);
+    const rangedRows=D.rows.filter(r=>{const k=String(r.dk||'');if(!/^\d{4}-\d{2}-\d{2}$/.test(k))return false;const d=new Date(k+'T00:00:00');return Number.isFinite(d.getTime())&&d>=cutoff;});
+    D={...D,rows:rangedRows};
+  }
   if(turnstileWidget!==null&&window.turnstile){try{window.turnstile.remove(turnstileWidget);}catch(e){}turnstileWidget=null;}
   if(!D){
     const s=S.src[S.main];
@@ -1532,6 +1538,7 @@ function render(keepScroll){
   $('#exportCsv').onclick=exportDatasetCSV;
   $('#printView').onclick=()=>window.print();
   if(S.sub==='analytics'){
+    const period=$('#analyticsPeriod');if(period)period.onchange=e=>{S.analyticsRange=e.target.value;render(true);};
     const hs=$('#hierarchySearch'),sorter=$('#hierarchySort'),list=$('#hierarchyList'),counter=$('#hierarchyCount');
     const applyHierarchy=()=>{if(!list)return;const q=(hs?.value||'').trim().toLowerCase(),mode=sorter?.value||'pending',groups=[...list.querySelectorAll('.hierarchy-substation')];groups.forEach(g=>{const subMatch=(g.dataset.substationName||'').includes(q),feeders=[...g.querySelectorAll('.hierarchy-feeder')];let matches=0;feeders.forEach(f=>{const show=!q||subMatch||(f.dataset.feederName||'').includes(q);f.hidden=!show;if(show)matches++;});feeders.sort((a,b)=>mode==='name'?(a.dataset.feederName||'').localeCompare(b.dataset.feederName||''):mode==='open'?Number(b.dataset.open)-Number(a.dataset.open):mode==='coverage'?Number(a.dataset.coverage)-Number(b.dataset.coverage):Number(b.dataset.pending)-Number(a.dataset.pending)).forEach(f=>f.parentElement.appendChild(f));g.hidden=!!q&&!subMatch&&!matches;});groups.sort((a,b)=>mode==='name'?(a.dataset.substationName||'').localeCompare(b.dataset.substationName||''):mode==='open'?Number(b.dataset.open)-Number(a.dataset.open):mode==='coverage'?Number(a.dataset.coverage)-Number(b.dataset.coverage):Number(b.dataset.pending)-Number(a.dataset.pending)).forEach(g=>list.appendChild(g));if(counter)counter.textContent=groups.filter(g=>!g.hidden).length+' of '+groups.length+' substations';};
     if(hs)hs.oninput=applyHierarchy;if(sorter)sorter.onchange=applyHierarchy;applyHierarchy();
@@ -1769,4 +1776,8 @@ button,.btn,summary{ -webkit-tap-highlight-color:transparent}
 @media(prefers-reduced-motion:reduce){
  *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
+</style>
+
+<style>
+.analytics-range-tools{display:grid;grid-template-columns:auto minmax(150px,220px) 1fr;gap:9px;align-items:center;padding:11px 13px;margin:0 0 12px;border:1px solid var(--line);border-radius:13px;background:var(--card)}.analytics-range-tools label{font-size:12px;font-weight:700}.analytics-range-tools select{min-width:0}.analytics-range-tools span{font-size:11px;color:var(--mut);text-align:right}@media(max-width:520px){.analytics-range-tools{grid-template-columns:1fr 1fr}.analytics-range-tools label{grid-column:1/-1}.analytics-range-tools span{grid-column:1/-1;text-align:left}}
 </style>
