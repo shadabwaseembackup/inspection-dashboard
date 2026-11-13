@@ -1599,10 +1599,7 @@ function printDeficiencyReviewReport(){
  '</style></head><body><div class="meta"><div><h1>Distribution Inspection</h1><div class="sub">Deficiency Management Review · '+(S.main==='dt'?'DT':'FP / SP')+' inspection</div></div><div><b>Report date:</b> '+escHtml(today)+'<br><b>Records:</b> '+records.length+'</div></div>'+
  '<div class="kpis"><div class="kpi">Total matching assets<b>'+records.length+'</b></div><div class="kpi">Open / not rectified<b>'+open+'</b></div><div class="kpi">Rectified<b>'+rectified+'</b></div><div class="kpi">Overdue follow-ups<b>'+overdue+'</b></div></div>'+
  '<b>Applied filters</b><div class="filters">'+filters+'</div><table><thead><tr><th>Substation</th><th>Asset / ID</th><th>Feeder</th><th>Lineman</th><th>Visit date</th><th>Deficiency items</th><th>Rectification</th><th>Follow-up status</th><th>Due date</th><th>Action remarks</th></tr></thead><tbody>'+rows+'</tbody></table>'+
- '<div class="foot">Prepared from the currently loaded inspection records. Follow-up details are local to this browser/device and may not be shared with other users. Verify records before operational decisions.</div><p class="no-print"><button onclick="window.print()">Print / Save as PDF</button></p>
-
-
-</body></html>');
+ '<div class="foot">Prepared from the currently loaded inspection records. Follow-up details are local to this browser/device and may not be shared with other users. Verify records before operational decisions.</div><p class="no-print"><button onclick="window.print()">Print / Save as PDF</button></p></body></html>');
  popup.document.close();
 }
 
