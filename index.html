@@ -971,7 +971,7 @@ const FIX_YES=/^(ok|okay|0k|yes|y|done|हाँ|हां|ठीक|fixed|recti
 const FIX_NO=/^(no|n|nahi|nhi|नहीं|नही)$/i;
 
 /* ================= STATE ================= */
-const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',cat:'',dateFrom:'',dateTo:'',substation:'',defAge:'',defSort:'oldest',aiQuery:'',lmSort:'inspections',open:new Set(),lmMap:new Map(),
+const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',cat:'',dateFrom:'',dateTo:'',substation:'',defAge:'',defSort:'oldest',aiQuery:'',analyticsRange:'all',lmSort:'inspections',open:new Set(),lmMap:new Map(),
   data:{fpsp:null,dt:null},src:{fpsp:{s:'none'},dt:{s:'none'}}};
 const RAW={fpsp:'',dt:''};
 let lastLoad=0,qTimer=0,busy=0,turnstileWidget=null;
@@ -1308,8 +1308,20 @@ function viewLineman(D){
   h+='</div>';
   return h;
 }
+function filterAnalyticsRows(rows){
+ const days=Number(S.analyticsRange);
+ if(!days)return rows;
+ const today=new Date();today.setHours(0,0,0,0);
+ const cutoff=new Date(today);cutoff.setDate(cutoff.getDate()-(days-1));
+ return rows.filter(r=>{
+  const key=String(r.dk||'');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(key))return false;
+  const date=new Date(key+'T00:00:00');
+  return !Number.isNaN(date.getTime())&&date>=cutoff&&date<=today;
+ });
+}
 function viewAnalytics(D){
- const rows=D.rows,done=rows.filter(r=>r.done),deficient=defRows(rows),pending=rows.filter(r=>!r.done),rect=deficient.filter(r=>r.fix==='rect'),open=deficient.filter(r=>r.fix!=='rect'),rate=pct(done.length,rows.length);
+ const rows=filterAnalyticsRows(D.rows),done=rows.filter(r=>r.done),deficient=defRows(rows),pending=rows.filter(r=>!r.done),rect=deficient.filter(r=>r.fix==='rect'),open=deficient.filter(r=>r.fix!=='rect'),rate=pct(done.length,rows.length);
  const monthly=new Map();done.forEach(r=>{const k=r.dk&&/^\d{4}-\d{2}/.test(r.dk)?r.dk.slice(0,7):'';if(k)monthly.set(k,(monthly.get(k)||0)+1);});
  const months=[...monthly.entries()].sort((a,b)=>a[0].localeCompare(b[0])).slice(-8),mx=Math.max(1,...months.map(x=>x[1]));
  const trend=months.length?'<div class="trend-bars">'+months.map(([k,n])=>'<div class="trend-col"><small>'+n+'</small><i style="height:'+Math.max(3,n/mx*100)+'%"></i><b>'+esc(k.slice(5))+'</b></div>').join('')+'</div>':'<p class="note">Date-wise monthly trend will appear when inspection dates are available.</p>';
@@ -1335,6 +1347,8 @@ function viewAnalytics(D){
  const ca=[...cats.entries()].sort((a,b)=>b[1]-a[1]).slice(0,7),cm=Math.max(1,...ca.map(x=>x[1]));
  const rectRate=pct(rect.length,deficient.length);
  return '<div class="page-intro"><div><h2>Operational analytics</h2><p>Performance trends, inspection workload and substation risk signals calculated from the selected records.</p></div><span class="page-tag">LIVE DATA VIEW</span></div>'+
+ '<div class="analytics-rangebar"><div><b>Analysis period</b><span>Filter all KPIs, trends, rankings and drill-down records by recorded inspection date.</span></div><select id="analyticsRange" aria-label="Analytics date range"><option value="7" '+(S.analyticsRange==='7'?'selected':'')+'>Last 7 days</option><option value="30" '+(S.analyticsRange==='30'?'selected':'')+'>Last 30 days</option><option value="90" '+(S.analyticsRange==='90'?'selected':'')+'>Last 90 days</option><option value="all" '+(S.analyticsRange==='all'?'selected':'')+'>All available records</option></select></div>'+
+ (S.analyticsRange!=='all'?'<p class="note analytics-range-note">Showing '+num(rows.length)+' of '+num(D.rows.length)+' records with valid visit dates in the selected period. Undated records are excluded from this filtered view.</p>':'<p class="note analytics-range-note">Showing all '+num(rows.length)+' loaded records. Date-based trends use recorded inspection dates only.</p>')+
  '<div class="analytics-kpis"><div class="analytics-kpi"><strong>'+rate+'%</strong><span>Inspection coverage</span></div><div class="analytics-kpi"><strong>'+num(pending.length)+'</strong><span>Pending assets</span></div><div class="analytics-kpi"><strong>'+num(deficient.length)+'</strong><span>Assets with deficiency</span></div><div class="analytics-kpi"><strong>'+num(rect.length)+'</strong><span>Assets marked rectified</span></div></div>'+
  '<div class="insight-strip"><div class="insight-tile"><b>'+num(open.length)+'</b><span>Open / unclear affected assets</span></div><div class="insight-tile"><b>'+rectRate+'%</b><span>Deficient assets rectified</span></div><div class="insight-tile"><b>'+num(subs.length)+'</b><span>Substations represented</span></div></div>'+
  '<div class="analytics-grid"><section class="analytics-panel"><h3>Monthly inspection trend</h3><p class="note">Completed inspections · latest 8 available months</p>'+trend+'</section><section class="analytics-panel"><h3>Substation inspection coverage</h3><p class="note">Highest coverage first · completed / total</p>'+sh+'</section><section class="analytics-panel"><h3>Substations needing attention</h3><p class="note">Prioritised by open deficiencies, then pending workload. Not a safety-risk score.</p>'+(rh||'<p class="note">No substation records available.</p>')+'</section><section class="analytics-panel analytics-hierarchy"><h3>Substation → Feeder hierarchy</h3><p class="note">Search by substation or feeder, then sort by pending workload, open deficiencies or coverage. Select a feeder to inspect source records.</p><div class="hierarchy-tools"><input type="search" id="hierarchySearch" placeholder="Search substation or feeder…" aria-label="Search substation or feeder"><select id="hierarchySort" aria-label="Sort substations and feeders"><option value="pending">Sort: Highest pending</option><option value="open">Sort: Highest open deficiencies</option><option value="coverage">Sort: Lowest coverage</option><option value="name">Sort: Name A–Z</option></select><span id="hierarchyCount" class="note" aria-live="polite"></span></div><div id="hierarchyList">'+(hierarchyHtml||'<p class="note">No substation / feeder data available.</p>')+'</div></section><section class="analytics-panel"><h3>Lineman activity</h3><table class="analytics-table"><thead><tr><th>Lineman</th><th>Inspected</th><th>Affected</th><th>Deficiency items</th></tr></thead><tbody>'+la.map(([k,x])=>'<tr class="analytics-drill-target" role="button" tabindex="0" data-drill-kind="lineman" data-drill-key="'+esc(k)+'" title="View lineman inspection records"><td>'+esc(k)+'</td><td>'+x.n+'</td><td>'+x.d+'</td><td>'+x.items+'</td></tr>').join('')+'</tbody></table></section><section class="analytics-panel"><h3>Frequent deficiency categories</h3>'+ca.map(([k,n])=>'<div class="metric-line analytics-drill-target" role="button" tabindex="0" data-drill-kind="category" data-drill-key="'+esc(k)+'" title="View matching deficiency records"><div class="metric-label">'+esc(k)+'</div><div class="metric-track red"><i style="width:'+(n/cm*100)+'%"></i></div><div class="metric-value">'+n+'</div></div>').join('')+'</section></div><section class="analytics-panel analytics-drilldown" id="analyticsDrilldown" hidden></section>';
@@ -1743,11 +1757,13 @@ function render(keepScroll){
   $('#exportCsv').onclick=exportDatasetCSV;
   $('#printView').onclick=()=>window.print();
   if(S.sub==='analytics'){
+    const range=$('#analyticsRange');if(range)range.onchange=()=>{S.analyticsRange=range.value;render(true);};
+    const analyticsD={...D,rows:filterAnalyticsRows(D.rows)};
     const hs=$('#hierarchySearch'),sorter=$('#hierarchySort'),list=$('#hierarchyList'),counter=$('#hierarchyCount');
     const applyHierarchy=()=>{if(!list)return;const q=(hs?.value||'').trim().toLowerCase(),mode=sorter?.value||'pending',groups=[...list.querySelectorAll('.hierarchy-substation')];groups.forEach(g=>{const subMatch=(g.dataset.substationName||'').includes(q),feeders=[...g.querySelectorAll('.hierarchy-feeder')];let matches=0;feeders.forEach(f=>{const show=!q||subMatch||(f.dataset.feederName||'').includes(q);f.hidden=!show;if(show)matches++;});feeders.sort((a,b)=>mode==='name'?(a.dataset.feederName||'').localeCompare(b.dataset.feederName||''):mode==='open'?Number(b.dataset.open)-Number(a.dataset.open):mode==='coverage'?Number(a.dataset.coverage)-Number(b.dataset.coverage):Number(b.dataset.pending)-Number(a.dataset.pending)).forEach(f=>f.parentElement.appendChild(f));g.hidden=!!q&&!subMatch&&!matches;});groups.sort((a,b)=>mode==='name'?(a.dataset.substationName||'').localeCompare(b.dataset.substationName||''):mode==='open'?Number(b.dataset.open)-Number(a.dataset.open):mode==='coverage'?Number(a.dataset.coverage)-Number(b.dataset.coverage):Number(b.dataset.pending)-Number(a.dataset.pending)).forEach(g=>list.appendChild(g));if(counter)counter.textContent=groups.filter(g=>!g.hidden).length+' of '+groups.length+' substations';};
     if(hs)hs.oninput=applyHierarchy;if(sorter)sorter.onchange=applyHierarchy;applyHierarchy();
     document.querySelectorAll('[data-drill-kind]').forEach(el=>{
-      const open=()=>showAnalyticsDrilldown(el.dataset.drillKind,el.dataset.drillKey,D);
+      const open=()=>showAnalyticsDrilldown(el.dataset.drillKind,el.dataset.drillKey,analyticsD);
       el.onclick=open;el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}};
     });
   }
@@ -1980,4 +1996,14 @@ button,.btn,summary{ -webkit-tap-highlight-color:transparent}
 @media(prefers-reduced-motion:reduce){
  *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
+
+/* Analytics period controls */
+.analytics-rangebar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 15px;margin:0 0 8px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.analytics-rangebar>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.analytics-rangebar b{font-size:12px;font-weight:750}
+.analytics-rangebar span{font-size:11px;color:var(--mut);line-height:1.4}
+.analytics-rangebar select{min-width:180px;max-width:100%;padding:9px 11px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:12px}
+.analytics-range-note{margin:0 0 12px}
+@media(max-width:560px){.analytics-rangebar{align-items:stretch;flex-direction:column;gap:9px}.analytics-rangebar select{width:100%;min-width:0}}
+
 </style>
