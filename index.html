@@ -1431,8 +1431,8 @@ function finish(row,ci,defs,done){
 /* ================= BUILDERS ================= */
 function buildFP(rows){
   const H=rows[0].map(norm),c=re=>H.findIndex(h=>re.test(h));
-  const ci={st:c(/^inspection_?sta/i),sub:c(/^substation_?name$/i),fdr:c(/^feedername$/i),pole:c(/^pole-?pillar ?no/i),
-    cat:c(/^asset-final$/i),dt:c(/^dt_code$/i),date:c(/^date of visit$/i),lm:c(/लाइनमैन/),rem:c(/आई कमी/),fix:c(/दूर की/)};
+  const ci={st:c(/^inspection_?sta/i),sub:c(/^substation_?name$/i),fdr:c(/^feedername$/i),pole:c(/^pole-?pillar ?no/i),fl:c(/^fl ?code$/i),
+    cat:c(/^asset-final$/i),dt:c(/^dt_code$/i),date:c(/^date of visit$/i),lm:c(/लाइनमैन/),rem:c(/आई कमी/),fix:c(/दूर की/),leak:c(/current.*leakage|leakage/i)};
   if(ci.pole<0) throw new Error('Columns not recognised – expected the FP SP Inspection tab');
   const rules=prep(FP_RULES,H),map=new Map();
   const fpFields=[];
@@ -1443,7 +1443,7 @@ function buildFP(rows){
     const done=!!(d||lm||(st&&!/pending/i.test(st)));
     const f=done?finish(row,ci,evalRules(row,H,rules),done):{defs:[],remark:'',fix:'',fixRaw:''};
     const cat=v(row,ci.cat)||'Pole';
-    const o={name:pole,sub:v(row,ci.sub)||'—',fdr:v(row,ci.fdr),dt:v(row,ci.dt),cat,
+    const o={rawRow:row,fl:v(row,ci.fl),leak:v(row,ci.leak),name:pole,sub:v(row,ci.sub)||'—',fdr:v(row,ci.fdr),dt:v(row,ci.dt),cat,
       grp:/pole/i.test(cat)?'Pole':'Pillar',lm,dk:d&&d.key,dl:d&&d.label,done,
       defs:f.defs,remark:f.remark,fix:f.fix,fixRaw:f.fixRaw,fpAnomalies:{}};
     rules.forEach(r=>r.cols.forEach(ci2=>{const val=norm(row[ci2]);if(!val)return;const n=parseFloat(val);let bad=false;
@@ -1457,7 +1457,7 @@ function buildFP(rows){
     const key=o.dt+'|'+o.fdr+'|'+o.name,old=map.get(key);
     if(!old||(!old.done&&o.done)||(old.done&&o.done&&o.defs.length>old.defs.length)) map.set(key,o);
   }
-  return {rows:[...map.values()],fpFields:fpFields,note:''};
+  return {rows:[...map.values()],fpFields:fpFields,fpHeaders:H,note:''};
 }
 function buildDT(rows){
   const H=rows[0].map(norm),c=re=>H.findIndex(h=>re.test(h));
@@ -1811,16 +1811,21 @@ function viewDTDeficiencySummary(D){
  };
  return '<div class="dt-summary-note">Net deficiency counts aggregate all substations by FL Code and Asset Type; detailed tables below retain substation-wise grouping. Count cells show completed inspections meeting each parameter condition. Pending / not checked assets are excluded from parameter deficiency counts.</div>'+make('Deficiency in DT','DT','DT',true)+make('Deficiency in RMU','RMU','RMU',true)+make('Deficiency in DT (Substation wise)','DT','DT',false)+make('Deficiency in RMU (Substation wise)','RMU','RMU',false);
 }
+
 function viewFPDeficiencySummary(D){
- const fields=D.fpFields||[];
- const make=(title,group,net)=>{const cols=fields.filter(f=>f.group===group),groups=new Map();
-  D.rows.filter(r=>group==='Pole'?r.grp==='Pole':r.grp!=='Pole').forEach(r=>{const key=net?(group==='Pole'?'Pole':r.cat||'Asset'):[r.sub||'—',r.cat||'Asset'].join('||');let g=groups.get(key);if(!g){g=net?{cat:key,counts:{}}:{sub:r.sub||'—',cat:r.cat||'Asset',counts:{}};groups.set(key,g);}if(r.done)cols.forEach(c=>{g.counts[c.key]=(g.counts[c.key]||0)+(r.fpAnomalies&&r.fpAnomalies[c.key]?1:0);});});
-  const list=[...groups.values()].filter(g=>!net||Object.values(g.counts).reduce((s,n)=>s+n,0)>0).sort((a,b)=>net?a.cat.localeCompare(b.cat):a.sub.localeCompare(b.sub)||a.cat.localeCompare(b.cat));
-  const th=(net?'':'<th>Substation_NAME</th>')+'<th>Asset-Final</th>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('');
-  const body=list.map(g=>'<tr>'+(net?'':'<td>'+esc(g.sub)+'</td>')+'<td>'+esc(g.cat)+'</td>'+cols.map(c=>'<td class="dt-count">'+(g.counts[c.key]||0)+'</td>').join('')+'</tr>').join('');
-  return '<section class="card dt-summary"><h3>'+title+'</h3><div class="dt-table-wrap"><table class="dt-table"><thead><tr>'+th+'</tr></thead><tbody>'+(body||'<tr><td colspan="'+(cols.length+(net?1:2))+'">'+(net?'No deficiencies found.':'No '+group+' assets found.')+'</td></tr>')+'</tbody></table></div></section>';};
- return '<div class="dt-summary-note">Net deficiency counts aggregate all substations; detailed tables below retain substation-wise grouping. Count cells show completed assets meeting each parameter condition. Yellow source fields use numeric thresholds (earthing below 2; HRC quantities above 0).</div>'+make('Deficiency : Feeder Pillar / Service Pillar','Pillar',true)+make('Deficiency : Pole','Pole',true)+make('Deficiency : Feeder Pillar / Service Pillar (Substation wise)','Pillar',false)+make('Deficiency : Pole (Substation wise)','Pole',false);
+ const fields=D.fpFields||[],pillar=fields.filter(f=>f.group!=='Pole'),pole=fields.filter(f=>f.group==='Pole');
+ const records=defRows(D.rows.filter(r=>r.done));
+ const leakLabel=(D.fpHeaders||[]).find(h=>/current.*leakage|leakage/i.test(h))||'Current Leakage';
+ const val=(r,key)=>{const i=(D.fpHeaders||[]).indexOf(key);return i>=0?norm((r.rawRow||[])[i]):'';};
+ const fieldCell=(r,f)=>{const value=val(r,f.key),bad=!!(r.fpAnomalies&&r.fpAnomalies[f.key]);return '<td class="fpsp-matrix-value'+(bad?' is-deficient':'')+'" title="'+(bad?'Flagged deficiency':'Recorded source value')+'">'+(value?esc(value):'—')+'</td>';};
+ const headGroup=(items)=>items.map(f=>'<th>'+esc(f.label)+'</th>').join('');
+ const body=records.map(r=>'<tr><td>'+esc(r.sub||'—')+'</td><td>'+esc(r.fl||'—')+'</td><td>'+esc(r.name||'—')+'</td>'+pillar.map(f=>fieldCell(r,f)).join('')+pole.map(f=>fieldCell(r,f)).join('')+'<td>'+esc(r.leak||'—')+'</td><td class="fpsp-matrix-remark">'+esc(r.remark||'—')+'</td></tr>').join('');
+ let h='<section class="card fpsp-deficiency-matrix"><div class="def-control-head"><div><h3>FP / SP deficiency detail matrix</h3><p class="note">One row per inspected asset with recorded deficiencies. Source values are retained; highlighted cells identify values flagged by the existing deficiency rules.</p></div><span class="page-tag">'+num(records.length)+' assets</span></div>';
+ if(!records.length)return h+'<p class="note">No inspected FP / SP assets with recorded deficiencies in this selection.</p></section>';
+ h+='<div class="scorecard-wrap fpsp-matrix-wrap"><table class="fpsp-matrix"><thead><tr><th rowspan="2">Substation_NAME</th><th rowspan="2">FL Code</th><th rowspan="2">Asset / Pillar No.</th>'+(pillar.length?'<th colspan="'+pillar.length+'">Feeder Pillar / Service Pillar</th>':'')+(pole.length?'<th colspan="'+pole.length+'">Pole</th>':'')+'<th rowspan="2">Current Leakage</th><th rowspan="2">Other Remark</th></tr><tr>'+headGroup(pillar)+headGroup(pole)+'</tr></thead><tbody>'+body+'</tbody></table></div><p class="note">Horizontal scrolling is available for the full inspection matrix. Amber cells indicate an existing rule-based deficiency; the original recorded value is shown in the cell.</p></section>';
+ return h;
 }
+
 function filterDefRows(rows){return rows.filter(r=>{if(S.dateFrom&&(!r.dk||r.dk<S.dateFrom))return false;if(S.dateTo&&(!r.dk||r.dk>S.dateTo))return false;if(S.substation&&(r.sub||'—')!==S.substation)return false;return true;});}
 function localDateKey(date=new Date()){return [date.getFullYear(),String(date.getMonth()+1).padStart(2,'0'),String(date.getDate()).padStart(2,'0')].join('-');}
 function deficiencyAgeing(rows){
@@ -3015,6 +3020,18 @@ main{padding-top:12px!important}
 .def-hotspots .scorecard-table{min-width:700px}
 @media(max-width:760px){.def-category-row{grid-template-columns:minmax(100px,1fr) 42px minmax(115px,.8fr)}.def-category-track{display:none}.def-quality-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:420px){.def-category-row{grid-template-columns:minmax(0,1fr) 34px}.def-category-split{grid-column:1/-1;justify-content:flex-start;padding-left:2px}.def-quality-item{padding:10px}}
+
+.fpsp-matrix-wrap{overflow-x:auto;max-width:100%;overscroll-behavior-x:contain}
+.fpsp-matrix{border-collapse:separate;border-spacing:0;min-width:1100px;width:max-content;max-width:none;font-size:11px}
+.fpsp-matrix th,.fpsp-matrix td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:7px 8px;text-align:center;vertical-align:middle;max-width:150px;white-space:normal;overflow-wrap:anywhere}
+.fpsp-matrix thead th{position:sticky;top:0;background:#d8edf7;color:#18354a;font-weight:800;min-width:76px}
+.fpsp-matrix thead tr:first-child th{font-size:12px}
+.fpsp-matrix thead tr:nth-child(2) th{font-size:10px;min-width:90px}
+.fpsp-matrix tbody tr:nth-child(even){background:var(--surface-2)}
+.fpsp-matrix td:first-child,.fpsp-matrix td:nth-child(2){text-align:left;white-space:nowrap}
+.fpsp-matrix .is-deficient{background:#fff0d6;color:#8a4b00;font-weight:800;box-shadow:inset 0 0 0 1px #e6b65b}
+.fpsp-matrix-remark{min-width:180px;text-align:left!important;white-space:normal}
+@media(max-width:650px){.fpsp-matrix th,.fpsp-matrix td{padding:6px;font-size:10px}.fpsp-matrix{min-width:1000px}}
 </style>
 </body>
 </html>
