@@ -2005,14 +2005,14 @@ function viewDef(D){
   if(S.main==='fpsp') h+=viewFPDeficiencySummary(D);
   h+=deficiencyControlPanel(D.rows);
   h+=deficiencyCategoryAnalysis(D.rows);
-  h+=deficiencyCategorySubstationMatrix(D.rows);
+  if(S.main!=='fpsp') h+=deficiencyCategorySubstationMatrix(D.rows);
   if(S.main!=='fpsp') h+=deficiencyFeederHotspots(D.rows);
-  h+=deficiencyDataQuality(D.rows);
+  if(S.main!=='fpsp') h+=deficiencyDataQuality(D.rows);
   h+=substationPerformanceScorecard(D.rows);
   if(S.main!=='fpsp') h+=linemanPerformanceScorecard(D.rows);
   if(S.main!=='fpsp') h+=deficiencyMonitoringMatrix(D.rows);
   if(S.main!=='fpsp') h+=defActionPanel(defRows(D.rows.filter(r=>r.done)));
-  h+=deficiencyTrendPanel(D.rows);
+  if(S.main!=='fpsp') h+=deficiencyTrendPanel(D.rows);
   h+='<section class="card"><h3>Deficiency summary</h3><p class="drill-hint">Recorded category frequency · counts are affected assets; one asset may have several categories</p>'+(tk.length?tk.map((k,i)=>'<div class="row summary-drill'+(i?'':' first')+(S.cat===k?' active':'')+'" data-defcat="'+esc(k)+'" role="button" tabindex="0"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],Math.max(1,items)),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
   if(S.main==='dt') h+=viewDTDeficiencySummary(D);
   const subs=[...new Set(D.rows.map(r=>r.sub||'—'))].sort();
@@ -2146,6 +2146,15 @@ function renderDefActiveFilters(){
 }
 function renderDefList(){
   const D=S.data[S.main],el=$('#deflist'); if(!D||!el) return;
+  if(S.main==='fpsp'&&S.fpDrill){
+    const list=getFilteredDeficiencyRows(),Dfields=D.fpFields||[];
+    const field=Dfields.find(f=>f.key===S.fpDrill);
+    const deficiencyType=S.fpDrill==='__remark__'?'Other Remark':S.fpDrill==='__leak__'?'Current Leakage':(field?field.label:S.fpDrill);
+    const rows=list.map(r=>'<tr><td>'+esc(r.sub||'—')+'</td><td>'+esc(r.fl||'—')+'</td><td>'+esc(r.grp||'—')+'</td><td>'+esc(r.name||'—')+'</td><td>'+esc(deficiencyType)+'</td></tr>').join('');
+    el.innerHTML='<section class="card fpsp-drill-table-card"><div class="def-control-head"><div><h3>Matching FP / SP deficiency assets</h3><p class="note">Substation: '+esc(S.substation||'All substations')+' · Deficiency: '+esc(deficiencyType)+'</p></div><span class="page-tag">'+num(list.length)+' records</span></div><div class="fpsp-drill-table-wrap"><table class="fpsp-drill-table"><thead><tr><th>Substation name</th><th>FL Code</th><th>Asset type</th><th>Pole/Pillar no.</th><th>Deficiency type</th></tr></thead><tbody>'+(rows||'<tr><td colspan="5">No matching assets found.</td></tr>')+'</tbody></table></div><button type="button" class="btn" id="clearFpDrillTable">← Back to substation summary</button></section>';
+    const back=$('#clearFpDrillTable');if(back)back.onclick=()=>{S.fpDrill='';S.substation='';render(true);};
+    return;
+  }
   const q=S.q.toLowerCase();
   const filteredRows=filterDefRows(D.rows);
   const sourceRows=S.main==='dt'?filteredRows.filter(r=>String(r.lm||'').trim()!==''):filteredRows;
@@ -3073,6 +3082,19 @@ main{padding-top:12px!important}
  .fpsp-count-matrix .fpsp-substation-name{font-size:7px}
  .fpsp-count-matrix .fpsp-count-btn{min-width:19px;min-height:21px;font-size:8px;padding:2px}
 }
+
+.fpsp-drill-table-wrap{width:100%;overflow-x:auto}
+.fpsp-drill-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:12px}
+.fpsp-drill-table th,.fpsp-drill-table td{border:1px solid var(--line);padding:8px 7px;text-align:left;white-space:normal;overflow-wrap:anywhere;vertical-align:top}
+.fpsp-drill-table thead th{background:#d8edf7;color:#18354a;font-weight:800}
+.fpsp-drill-table tbody tr,.fpsp-drill-table tbody tr:nth-child(even){background:#fff}
+.fpsp-drill-table th:nth-child(1){width:25%}
+.fpsp-drill-table th:nth-child(2){width:12%}
+.fpsp-drill-table th:nth-child(3){width:13%}
+.fpsp-drill-table th:nth-child(4){width:20%}
+.fpsp-drill-table th:nth-child(5){width:30%}
+.fpsp-drill-table-card>.btn{margin-top:12px}
+@media(max-width:650px){.fpsp-drill-table{font-size:10px}.fpsp-drill-table th,.fpsp-drill-table td{padding:6px 4px}}
 </style>
 </body>
 </html>
