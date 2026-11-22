@@ -2662,5 +2662,51 @@ main{padding-top:12px!important}
  #view .row .rn{font-size:10px!important}
 }
 </style>
+
+<style>
+/* Operations density refinement: preserve complete status labels and surface key breakdowns above the fold. */
+@media(min-width:1161px){
+ .hd{
+  grid-template-columns:max-content max-content minmax(0,1fr)!important;
+  grid-template-areas:"status dataset sections"!important;
+  column-gap:12px!important
+ }
+ #status{width:max-content!important;max-width:none!important;min-width:0!important;overflow:visible!important;flex-wrap:nowrap!important;gap:5px!important}
+ #status .sp{flex:0 0 auto!important;max-width:none!important;overflow:visible!important;text-overflow:clip!important;font-size:8.5px!important;padding:4px 6px!important}
+ .tabs{width:max-content!important;min-width:0!important;gap:4px!important}
+ .tabs button{padding-inline:9px!important;font-size:10px!important}
+ .subs{min-width:0!important;width:100%!important;overflow:visible!important;justify-content:flex-end!important;gap:0!important}
+ .subs button{padding-inline:7px!important;font-size:9.5px!important}
+}
+/* Two compact breakdown tiles instead of two full-width rows. */
+#view .insight-strip + section.card:has(>.row){
+ display:grid!important;
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ column-gap:16px!important;
+ row-gap:0!important;
+ align-items:center!important;
+ padding:10px 14px!important
+}
+#view .insight-strip + section.card:has(>.row)>h3{grid-column:1/-1!important;margin:0 0 5px!important}
+#view .insight-strip + section.card:has(>.row)>.row{
+ display:grid!important;
+ grid-template-columns:minmax(58px,78px) minmax(45px,1fr) minmax(64px,78px)!important;
+ gap:8px!important;min-height:31px!important;padding:4px 0!important;border:0!important
+}
+#view .insight-strip + section.card:has(>.row)>.row .rn{font-size:10px!important}
+#view .insight-strip + section.card:has(>.row)>.row .rv{font-size:10px!important}
+#view .insight-strip + section.card:has(>.row)>.row .rv small{font-size:8px!important}
+#view .insight-strip + section.card:has(>.row)>.row .bar{height:6px!important}
+#view .insight-strip + section.card:has(>.row)>.row:not(:last-child){border-bottom:1px solid #edf1f6!important}
+@media(max-width:1160px){
+ #status{flex-wrap:wrap!important;overflow:visible!important}
+ #status .sp{flex:0 1 auto!important;max-width:100%!important}
+}
+@media(max-width:700px){
+ #view .insight-strip + section.card:has(>.row){grid-template-columns:1fr!important;padding:10px 12px!important}
+ #view .insight-strip + section.card:has(>.row)>h3{grid-column:1!important}
+ #view .insight-strip + section.card:has(>.row)>.row{grid-template-columns:minmax(68px,90px) minmax(60px,1fr) 70px!important}
+}
+</style>
 </body>
 </html>
