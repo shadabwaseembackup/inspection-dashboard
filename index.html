@@ -1847,9 +1847,55 @@ function deficiencyControlPanel(rows){
  const bands=[{key:'0-7',label:'0–7 days',test:d=>d!==null&&d<=7},{key:'8-30',label:'8–30 days',test:d=>d!==null&&d>=8&&d<=30},{key:'31-90',label:'31–90 days',test:d=>d!==null&&d>=31&&d<=90},{key:'90+',label:'Over 90 days',test:d=>d!==null&&d>90},{key:'undated',label:'Visit date missing',test:d=>d===null}];
  const subMap=new Map();open.forEach(r=>{const k=r.sub||'—';subMap.set(k,(subMap.get(k)||0)+1);});
  const top=[...subMap.entries()].sort((a,b)=>b[1]-a[1]).slice(0,6);
- let h='<section class="card def-control"><div class="def-control-head"><div><h3>Rectification control centre</h3><p class="note">Follow-up priority uses recorded visit age and rectification status only. It is not an electrical safety severity rating.</p></div><span class="page-tag">Live source data</span></div>';
+ const datedCount=dated.filter(x=>x.days!==null).length,undatedCount=dated.length-datedCount,oldest=dated.reduce((m,x)=>x.days===null?m:Math.max(m,x.days),0);
+ let h='<section class="card def-control"><div class="def-control-head"><div><h3>Rectification control centre</h3><p class="note">Age is measured from the recorded Date of Visit, not the confirmed date the defect arose. Use it as a follow-up indicator, not an electrical safety severity rating.</p></div><span class="page-tag">Live source data</span></div>';
+ h+='<div class="grid">'+stat('Open / unclear',num(open.length),open.length?'r':'g')+stat('With dated visit',num(datedCount),'n')+stat('Visit date missing',num(undatedCount),undatedCount?'w':'g')+stat('Oldest recorded visit',datedCount?num(oldest)+' days':'—',oldest>30?'w':'')+'</div>';
  h+='<div class="def-priority-grid">'+bands.map(b=>'<button type="button" class="def-priority-tile '+(S.defAge===b.key?'active':'')+'" data-defage="'+b.key+'"><b>'+num(dated.filter(x=>b.test(x.days)).length)+'</b><span>'+b.label+'</span><small>Open items</small></button>').join('')+'</div>';
  h+='<div class="def-sub-grid"><div><h4>Open deficiencies by substation</h4><p class="note">Top substations by open asset count</p></div><div class="def-sub-list">'+(top.length?top.map(([name,n])=>'<button type="button" data-defsub="'+esc(name)+'"><span>'+esc(name)+'</span><b>'+num(n)+'</b></button>').join(''):'<p class="note">No open deficiencies in the selected data.</p>')+'</div></div></section>';return h;
+}
+
+function deficiencyCategoryAnalysis(rows){
+ const groups=new Map(),assets=defRows(rows.filter(r=>r.done));
+ assets.forEach(r=>{
+  const labels=[...new Set(r.defs.map(d=>d.t==='remark'?'Team remark':String(d.label||'').replace(/ \\(\\d+\\)$/,'')))].filter(Boolean);
+  labels.forEach(label=>{
+   if(!groups.has(label))groups.set(label,{label,assets:0,open:0,rectified:0});
+   const g=groups.get(label);g.assets++;if(r.fix==='rect')g.rectified++;else g.open++;
+  });
+ });
+ const list=[...groups.values()].sort((a,b)=>b.assets-a.assets||a.label.localeCompare(b.label)),max=Math.max(1,...list.map(x=>x.assets));
+ let h='<section class="card def-category-analysis"><div class="def-control-head"><div><h3>Deficiency category analysis</h3><p class="note">Each category counts affected assets once per category. An asset can appear in multiple categories, so percentages may add to more than 100%.</p></div><span class="page-tag">'+num(assets.length)+' affected assets</span></div>';
+ if(!list.length)return h+'<p class="note">No recorded deficiency categories in this selection.</p></section>';
+ h+='<div class="def-category-list">'+list.slice(0,12).map(g=>'<button type="button" class="def-category-row" data-defcat="'+esc(g.label)+'"><span class="def-category-name">'+esc(g.label)+'</span><span class="def-category-track"><i style="width:'+(g.assets/max*100)+'%"></i></span><span class="def-category-count">'+num(g.assets)+'</span><span class="def-category-split"><b>'+num(g.open)+' open</b><span>·</span><span>'+num(g.rectified)+' rectified</span></span></button>').join('')+'</div><p class="note">Select a category to filter the asset register. Counts represent affected assets, not electrical severity.</p></section>';
+ return h;
+}
+function deficiencyFeederHotspots(rows){
+ const groups=new Map();
+ defRows(rows.filter(r=>r.done)).forEach(r=>{
+  const sub=String(r.sub||'—'),feeder=String(r.fdr||'Not recorded').trim()||'Not recorded',key=JSON.stringify([sub,feeder]);
+  if(!groups.has(key))groups.set(key,{sub,feeder,total:0,open:0,rectified:0,aged:0,undated:0});
+  const g=groups.get(key);g.total++;
+  if(r.fix==='rect')g.rectified++;
+  else{g.open++;const days=deficiencyDays(r);if(days===null)g.undated++;else if(days>30)g.aged++;}
+ });
+ const list=[...groups.values()].sort((a,b)=>b.open-a.open||b.total-a.total||a.sub.localeCompare(b.sub)).slice(0,10);
+ let h='<section class="card def-hotspots"><div class="def-control-head"><div><h3>Feeder-level deficiency hotspots</h3><p class="note">Ranked by open / not-yet-rectified affected assets, then total deficient assets. This is a workload concentration view, not a safety-risk ranking.</p></div><span class="page-tag">Top 10</span></div>';
+ if(!list.length)return h+'<p class="note">No feeder-level deficiency records are available.</p></section>';
+ h+='<div class="scorecard-wrap"><table class="scorecard-table"><thead><tr><th>Substation</th><th>Feeder</th><th>Deficient assets</th><th>Open</th><th>Rectified</th><th>Open &gt;30d</th><th>Undated open</th><th>Action</th></tr></thead><tbody>';
+ h+=list.map(g=>'<tr><td>'+esc(g.sub)+'</td><td>'+esc(g.feeder)+'</td><td>'+num(g.total)+'</td><td><b>'+num(g.open)+'</b></td><td>'+num(g.rectified)+'</td><td>'+num(g.aged)+'</td><td>'+num(g.undated)+'</td><td><button type="button" class="scorecard-sub-link" data-def-hotspot="'+esc(JSON.stringify([g.sub,g.feeder]))+'">View assets</button></td></tr>').join('');
+ return h+'</tbody></table></div></section>';
+}
+function deficiencyDataQuality(rows){
+ const assets=defRows(rows.filter(r=>r.done)),missing={date:0,sub:0,feeder:0,status:0};
+ assets.forEach(r=>{
+  if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(r.dk||'')))missing.date++;
+  if(!String(r.sub||'').trim()||r.sub==='—')missing.sub++;
+  if(!String(r.fdr||'').trim())missing.feeder++;
+  if(!String(r.fix||'').trim())missing.status++;
+ });
+ const total=assets.length;
+ const checks=[['Visit date missing',missing.date,'Required for reliable ageing'],['Substation missing',missing.sub,'Limits location-based follow-up'],['Feeder missing',missing.feeder,'Limits feeder-level grouping'],['Rectification status blank',missing.status,'Needs status verification']];
+ return '<section class="card def-data-quality"><div class="def-control-head"><div><h3>Deficiency data-quality checks</h3><p class="note">Checks are limited to inspected assets with recorded deficiencies in the current date / substation selection.</p></div><span class="page-tag">'+num(total)+' checked</span></div><div class="def-quality-grid">'+checks.map(x=>'<div class="def-quality-item"><b>'+num(x[1])+'</b><span>'+esc(x[0])+'</span><small>'+esc(x[2])+'</small></div>').join('')+'</div><p class="note">Blank or missing fields are reported as data-quality gaps; no severity or fault cause is inferred.</p></section>';
 }
 function substationPerformanceScorecard(rows){
  const groups=new Map();
@@ -1923,14 +1969,16 @@ function viewDef(D){
   const lms=[...new Set(D.rows.map(r=>r.lm||'—'))].sort();
   let h='<div class="grid">'+stat('Assets with deficiency',wd.length,'r')+stat('Deficiency items',items,'w')+stat('From team remark',rem,'w')+stat('Not yet rectified',open,open?'r':'g')+stat('Pending / not checked',num(pending.length),pending.length?'w':'g')+'</div>';
   h+='<nav class="def-quick-actions" aria-label="Deficiency quick actions"><button type="button" data-def-jump="def-filter-card">⌕ Filters &amp; asset list</button><button type="button" data-def-jump="def-action-summary">✓ Follow-up tracker</button><button type="button" data-def-export-quick>↓ Export filtered CSV</button></nav>';
-  h+=deficiencyAgeing(D.rows);
   h+=deficiencyControlPanel(D.rows);
+  h+=deficiencyCategoryAnalysis(D.rows);
+  h+=deficiencyFeederHotspots(D.rows);
+  h+=deficiencyDataQuality(D.rows);
   h+=substationPerformanceScorecard(D.rows);
   h+=linemanPerformanceScorecard(D.rows);
   h+=deficiencyMonitoringMatrix(D.rows);
   h+=defActionPanel(defRows(D.rows.filter(r=>r.done)));
   h+=deficiencyTrendPanel(D.rows);
-  h+='<section class="card"><h3>Deficiency summary</h3><p class="drill-hint">Select a category to view matching assets below</p>'+(tk.length?tk.map((k,i)=>'<div class="row summary-drill'+(i?'':' first')+(S.cat===k?' active':'')+'" data-defcat="'+esc(k)+'" role="button" tabindex="0"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],wd.length),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
+  h+='<section class="card"><h3>Deficiency summary</h3><p class="drill-hint">Recorded category frequency · counts are affected assets; one asset may have several categories</p>'+(tk.length?tk.map((k,i)=>'<div class="row summary-drill'+(i?'':' first')+(S.cat===k?' active':'')+'" data-defcat="'+esc(k)+'" role="button" tabindex="0"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],Math.max(1,items)),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
   if(S.main==='dt') h+=viewDTDeficiencySummary(D);
   if(S.main==='fpsp') h+=viewFPDeficiencySummary(D);
   const subs=[...new Set(D.rows.map(r=>r.sub||'—'))].sort();
@@ -2159,6 +2207,7 @@ function render(keepScroll){
     const exportMatrix=$('#exportDefMatrix');if(exportMatrix)exportMatrix.onclick=exportDeficiencyMatrix;
     const exportActions=$('#exportDefActions');if(exportActions)exportActions.onclick=exportDefActions;
     document.querySelectorAll('[data-matrix-drill]').forEach(b=>b.onclick=()=>{const [sub,feeder,lineman]=JSON.parse(b.dataset.matrixDrill);S.substation=sub==='Not recorded'?'—':sub;S.lm=lineman==='Not recorded'?'—':lineman;S.q=feeder==='Not recorded'?'':feeder;S.st='open';S.defAge='';S.cat='';render(true);document.querySelector('#deflist')?.scrollIntoView({behavior:'smooth',block:'start'});});
+    document.querySelectorAll('[data-def-hotspot]').forEach(b=>b.onclick=()=>{const [sub,feeder]=JSON.parse(b.dataset.defHotspot);S.substation=sub==='—'?'—':sub;S.q=feeder==='Not recorded'?'':feeder;S.lm='';S.st='open';S.defAge='';S.cat='';render(true);document.querySelector('#deflist')?.scrollIntoView({behavior:'smooth',block:'start'});});
     if(q) q.oninput=e=>{S.q=e.target.value;clearTimeout(qTimer);qTimer=setTimeout(renderDefList,150);};
     if(sort)sort.onchange=e=>{S.defSort=e.target.value;renderDefList();};
     document.querySelectorAll('[data-defage]').forEach(b=>b.onclick=()=>{S.defAge=S.defAge===b.dataset.defage?'':b.dataset.defage;S.st=S.defAge?'open':'';render(true);});
@@ -2920,6 +2969,27 @@ main{padding-top:12px!important}
 .intel-brief-btn:hover:not(:disabled){filter:brightness(.97);box-shadow:0 4px 14px #2563eb18}
 .intel-brief-btn:disabled{opacity:.48;cursor:not-allowed}
 @media(max-width:520px){.intel-brief-btn{min-height:44px}.progress-drilldown{scroll-margin-top:130px}}
+</style>
+
+<style>
+/* Deficiency analysis centre */
+.def-category-list{display:flex;flex-direction:column;gap:7px;margin-top:12px}
+.def-category-row{display:grid;grid-template-columns:minmax(150px,1.25fr) minmax(80px,1fr) 42px minmax(135px,.9fr);align-items:center;gap:10px;width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--text);text-align:left;cursor:pointer}
+.def-category-row:hover,.def-category-row:focus-visible{background:var(--pri2);outline:2px solid var(--pri);outline-offset:1px}
+.def-category-name{font-size:12px;font-weight:650;overflow-wrap:anywhere}
+.def-category-track{height:8px;overflow:hidden;border-radius:99px;background:var(--line)}
+.def-category-track i{display:block;height:100%;border-radius:99px;background:var(--pri)}
+.def-category-count{font-size:13px;font-weight:750;text-align:right;font-variant-numeric:tabular-nums}
+.def-category-split{display:flex;gap:5px;justify-content:flex-end;align-items:center;color:var(--mut);font-size:10px;white-space:nowrap}
+.def-category-split b{color:var(--danger,var(--text));font-weight:650}
+.def-quality-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:12px}
+.def-quality-item{display:flex;flex-direction:column;gap:4px;min-width:0;padding:12px;border:1px solid var(--line);border-radius:11px;background:var(--bg2,var(--card))}
+.def-quality-item>b{font-size:22px;font-variant-numeric:tabular-nums}
+.def-quality-item>span{font-size:12px;font-weight:650}
+.def-quality-item>small{font-size:10px;color:var(--mut);line-height:1.35}
+.def-hotspots .scorecard-table{min-width:700px}
+@media(max-width:760px){.def-category-row{grid-template-columns:minmax(100px,1fr) 42px minmax(115px,.8fr)}.def-category-track{display:none}.def-quality-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.def-category-row{grid-template-columns:minmax(0,1fr) 34px}.def-category-split{grid-column:1/-1;justify-content:flex-start;padding-left:2px}.def-quality-item{padding:10px}}
 </style>
 </body>
 </html>
