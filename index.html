@@ -1816,7 +1816,7 @@ function viewDTDeficiencySummary(D){
 
 
 function viewFPDeficiencySummary(D){
- const fields=D.fpFields||[],visibleFields=fields.filter(f=>!/(?:^|[-_ ])PILLAR\\s*No\\.?$/i.test(f.key)&&!/(?:Pole|Pillar)[-_ ]?Pillar\\s*No/i.test(f.key)),pillar=visibleFields.filter(f=>f.group!=='Pole'),pole=visibleFields.filter(f=>f.group==='Pole');
+ const fields=D.fpFields||[],visibleFields=fields.filter(f=>!/(?:^|[-_ ])PILLAR\s*No\\.?$/i.test(f.key)&&!/(?:Pole|Pillar)[-_ ]?Pillar\s*No/i.test(f.key)),pillar=visibleFields.filter(f=>f.group!=='Pole'),pole=visibleFields.filter(f=>f.group==='Pole');
  const records=defRows(D.rows.filter(r=>r.done));
  const leakLabel=(D.fpHeaders||[]).find(h=>/current.*leakage|leakage/i.test(h))||'Current Leakage';
  const groups=new Map();
