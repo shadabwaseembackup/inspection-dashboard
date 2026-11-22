@@ -2005,14 +2005,14 @@ function viewDef(D){
   if(S.main==='fpsp') h+=viewFPDeficiencySummary(D);
   h+=deficiencyControlPanel(D.rows);
   h+=deficiencyCategoryAnalysis(D.rows);
-  h+=deficiencyCategorySubstationMatrix(D.rows);
+  if(S.main!=='fpsp') h+=deficiencyCategorySubstationMatrix(D.rows);
   if(S.main!=='fpsp') h+=deficiencyFeederHotspots(D.rows);
-  h+=deficiencyDataQuality(D.rows);
+  if(S.main!=='fpsp') h+=deficiencyDataQuality(D.rows);
   h+=substationPerformanceScorecard(D.rows);
   if(S.main!=='fpsp') h+=linemanPerformanceScorecard(D.rows);
   if(S.main!=='fpsp') h+=deficiencyMonitoringMatrix(D.rows);
   if(S.main!=='fpsp') h+=defActionPanel(defRows(D.rows.filter(r=>r.done)));
-  h+=deficiencyTrendPanel(D.rows);
+  if(S.main!=='fpsp') h+=deficiencyTrendPanel(D.rows);
   h+='<section class="card"><h3>Deficiency summary</h3><p class="drill-hint">Recorded category frequency · counts are affected assets; one asset may have several categories</p>'+(tk.length?tk.map((k,i)=>'<div class="row summary-drill'+(i?'':' first')+(S.cat===k?' active':'')+'" data-defcat="'+esc(k)+'" role="button" tabindex="0"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],Math.max(1,items)),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
   if(S.main==='dt') h+=viewDTDeficiencySummary(D);
   const subs=[...new Set(D.rows.map(r=>r.sub||'—'))].sort();
