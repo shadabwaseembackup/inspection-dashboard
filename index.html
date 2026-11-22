@@ -1850,7 +1850,7 @@ function deficiencyControlPanel(rows){
  const datedCount=dated.filter(x=>x.days!==null).length,undatedCount=dated.length-datedCount,oldest=dated.reduce((m,x)=>x.days===null?m:Math.max(m,x.days),0);
  let h='<section class="card def-control"><div class="def-control-head"><div><h3>Rectification control centre</h3><p class="note">Age is measured from the recorded Date of Visit, not the confirmed date the defect arose. Use it as a follow-up indicator, not an electrical safety severity rating.</p></div><span class="page-tag">Live source data</span></div>';
  h+='<div class="grid">'+stat('Open / unclear',num(open.length),open.length?'r':'g')+stat('With dated visit',num(datedCount),'n')+stat('Visit date missing',num(undatedCount),undatedCount?'w':'g')+stat('Oldest recorded visit',datedCount?num(oldest)+' days':'—',oldest>30?'w':'')+'</div>';
- h+='<div class="def-priority-grid">'+bands.map(b=>'<button type="button" class="def-priority-tile '+(S.defAge===b.key?'active':'')+'" data-defage="'+b.key+'"><b>'+num(dated.filter(x=>b.test(x.days)).length)+'</b><span>'+b.label+'</span><small>Open items</small></button>').join('')+'</div>';
+ // Ageing-band KPI tiles removed per user request.
  h+='<div class="def-sub-grid"><div><h4>Open deficiencies by substation</h4><p class="note">Top substations by open asset count</p></div><div class="def-sub-list">'+(top.length?top.map(([name,n])=>'<button type="button" data-defsub="'+esc(name)+'"><span>'+esc(name)+'</span><b>'+num(n)+'</b></button>').join(''):'<p class="note">No open deficiencies in the selected data.</p>')+'</div></div></section>';return h;
 }
 
