@@ -2708,5 +2708,89 @@ main{padding-top:12px!important}
  #view .insight-strip + section.card:has(>.row)>.row{grid-template-columns:minmax(68px,90px) minmax(60px,1fr) 70px!important}
 }
 </style>
+
+<style>
+/* Header reliability fix: status indicators get a dedicated full-width row. */
+@media(min-width:1161px){
+ header .hd{
+  display:grid!important;
+  width:100%!important;
+  grid-template-columns:max-content minmax(0,1fr)!important;
+  grid-template-areas:"status status" "dataset sections"!important;
+  align-items:center!important;
+  column-gap:14px!important;
+  row-gap:5px!important
+ }
+ header #status{
+  grid-area:status!important;
+  display:flex!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  flex-wrap:nowrap!important;
+  justify-content:flex-start!important;
+  align-items:center!important;
+  gap:7px!important;
+  overflow:visible!important;
+  margin:0!important
+ }
+ header #status .sp{
+  display:inline-flex!important;
+  flex:0 0 auto!important;
+  width:max-content!important;
+  max-width:none!important;
+  min-width:max-content!important;
+  white-space:nowrap!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  overflow-wrap:normal!important;
+  font-size:9px!important;
+  padding:4px 8px!important
+ }
+ header .tabs{
+  grid-area:dataset!important;
+  width:max-content!important;
+  min-width:0!important;
+  padding:0!important;
+  gap:5px!important
+ }
+ header .subs{
+  grid-area:sections!important;
+  width:100%!important;
+  min-width:0!important;
+  justify-content:flex-end!important;
+  padding:0!important;
+  overflow:visible!important
+ }
+}
+@media(max-width:1160px){
+ header .hd{
+  grid-template-columns:1fr!important;
+  grid-template-areas:"status" "dataset" "sections"!important;
+  row-gap:5px!important
+ }
+ header #status{
+  display:flex!important;
+  width:100%!important;
+  flex-wrap:wrap!important;
+  overflow:visible!important;
+  margin:0!important
+ }
+ header #status .sp{
+  flex:0 1 auto!important;
+  width:auto!important;
+  max-width:100%!important;
+  min-width:0!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important
+ }
+ header .tabs{width:100%!important}
+ header .subs{width:100%!important;justify-content:flex-start!important}
+}
+@media(max-width:700px){
+ header #status{gap:5px!important}
+ header #status .sp{font-size:8px!important;padding:3px 6px!important}
+}
+</style>
 </body>
 </html>
