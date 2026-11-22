@@ -1951,7 +1951,70 @@ function printDeficiencyReviewReport(){
  '</style></head><body><div class="meta"><div><h1>Distribution Inspection</h1><div class="sub">Deficiency Management Review · '+(S.main==='dt'?'DT':'FP / SP')+' inspection</div></div><div><b>Report date:</b> '+escHtml(today)+'<br><b>Records:</b> '+records.length+'</div></div>'+
  '<div class="kpis"><div class="kpi">Total matching assets<b>'+records.length+'</b></div><div class="kpi">Open / not rectified<b>'+open+'</b></div><div class="kpi">Rectified<b>'+rectified+'</b></div><div class="kpi">Overdue follow-ups<b>'+overdue+'</b></div></div>'+
  '<b>Applied filters</b><div class="filters">'+filters+'</div><table><thead><tr><th>Substation</th><th>Asset / ID</th><th>Feeder</th><th>Lineman</th><th>Visit date</th><th>Deficiency items</th><th>Rectification</th><th>Follow-up status</th><th>Due date</th><th>Action remarks</th></tr></thead><tbody>'+rows+'</tbody></table>'+
- '<div class="foot">Prepared from the currently loaded inspection records. Follow-up details are local to this browser/device and may not be shared with other users. Verify records before operational decisions.</div><p class="no-print"><button onclick="window.print()">Print / Save as PDF</button></p></body></html>');
+ '<div class="foot">Prepared from the currently loaded inspection records. Follow-up details are local to this browser/device and may not be shared with other users. Verify records before operational decisions.</div><p class="no-print"><button onclick="window.print()">Print / Save as PDF</button></p>
+<style>
+/* Final responsive pass: predictable navigation and readable mobile KPIs */
+@media(max-width:700px){
+  header{min-width:0}
+  .hd,.top{min-width:0}
+  .tabs{
+    display:flex;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;
+    scrollbar-width:none;padding:2px 0 4px;scroll-snap-type:x proximity;
+  }
+  .tabs::-webkit-scrollbar,.subs::-webkit-scrollbar{display:none}
+  .tabs button{
+    flex:0 0 auto;min-width:max-content;min-height:40px;padding:9px 12px;
+    white-space:nowrap;scroll-snap-align:start;
+  }
+  .subs{
+    display:flex;flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-x:contain;
+    scrollbar-width:none;scroll-snap-type:x proximity;padding:7px 0 9px;
+  }
+  .subs button{
+    flex:0 0 auto;min-height:40px;min-width:max-content;padding:9px 13px;
+    white-space:nowrap;scroll-snap-align:start;
+  }
+  .page-intro{flex-wrap:wrap;align-items:center}
+  .page-intro>div{min-width:0;flex:1 1 220px}
+  .page-tag{max-width:100%;white-space:normal}
+  .lm-tools{flex-wrap:wrap}
+  .lm-tools input,.lm-tools select{flex:1 1 160px;min-width:0}
+  .lm-count{margin-left:auto}
+  .def-quick-actions{display:flex;flex-wrap:wrap;gap:6px}
+  .def-quick-actions button{flex:1 1 145px;min-height:40px}
+  .scorecard-wrap,.dt-table-wrap{max-width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+  .analytics-table{min-width:0}
+  .card,.analytics-panel,.intel-panel{overflow-wrap:anywhere}
+}
+@media(max-width:520px){
+  /* Two-column KPI cards keep labels and values legible on narrow phones. */
+  .grid,.grid:has(.stat:nth-child(5)),.grid:not(:has(.stat:nth-child(5))){
+    grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;
+  }
+  .stat{min-height:58px;padding:9px 10px;align-items:flex-start;justify-content:center;gap:5px}
+  .stat b{font-size:clamp(16px,4.8vw,20px);line-height:1.1}
+  .stat span{font-size:10px;line-height:1.2;white-space:normal;order:0}
+  .insight-strip{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  .insight-tile{padding:8px 6px}
+  .insight-tile b{font-size:clamp(13px,4vw,16px)}
+  .insight-tile span{font-size:9px;line-height:1.25;overflow-wrap:anywhere}
+  .hero{align-items:flex-start}
+  .hero .big{font-size:30px}
+  .export-actions{display:grid;grid-template-columns:1fr}
+  .def-sub-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:360px){
+  .insight-strip{grid-template-columns:1fr}
+  .insight-tile{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .insight-tile span{margin:0;text-align:right}
+  .stat{padding:8px}
+}
+@media(hover:none){
+  .tabs button,.subs button,.btn,.def-quick-actions button{touch-action:manipulation}
+}
+</style>
+
+</body></html>');
  popup.document.close();
 }
 
