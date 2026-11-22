@@ -2003,12 +2003,10 @@ function viewDef(D){
   let h='<div class="grid">'+stat('Assets with deficiency',wd.length,'r')+stat('Deficiency items',items,'w')+stat('From team remark',rem,'w')+stat('Not yet rectified',open,open?'r':'g')+stat('Pending / not checked',num(pending.length),pending.length?'w':'g')+'</div>';
   h+='<nav class="def-quick-actions" aria-label="Deficiency quick actions"><button type="button" data-def-jump="def-filter-card">⌕ Filters &amp; asset list</button><button type="button" data-def-jump="def-action-summary">✓ Follow-up tracker</button><button type="button" data-def-export-quick>↓ Export filtered CSV</button></nav>';
   if(S.main==='fpsp') h+=viewFPDeficiencySummary(D);
-  h+=deficiencyControlPanel(D.rows);
   h+=deficiencyCategoryAnalysis(D.rows);
   if(S.main!=='fpsp') h+=deficiencyCategorySubstationMatrix(D.rows);
   if(S.main!=='fpsp') h+=deficiencyFeederHotspots(D.rows);
   if(S.main!=='fpsp') h+=deficiencyDataQuality(D.rows);
-  h+=substationPerformanceScorecard(D.rows);
   if(S.main!=='fpsp') h+=linemanPerformanceScorecard(D.rows);
   if(S.main!=='fpsp') h+=deficiencyMonitoringMatrix(D.rows);
   if(S.main!=='fpsp') h+=defActionPanel(defRows(D.rows.filter(r=>r.done)));
