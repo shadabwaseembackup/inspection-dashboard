@@ -1475,7 +1475,11 @@ function buildDT(rows){
   for(let i=1;i<rows.length;i++){
     const row=rows[i],eq=v(row,ci.eq),code=v(row,ci.code);
     if(!eq&&!code){orphan++;continue;}
-    const d=pd(v(row,ci.date),v(row,ci.visitDate)),lm=v(row,ci.lm);
+    // Reject spreadsheet error strings and any unrecognised date key.
+    // Prefer Column A, then fall back to the actual Date of Visit field.
+    const primaryDate=pd(v(row,ci.date),v(row,ci.visitDate));
+    const fallbackDate=primaryDate&&/^\\d{4}-\\d{2}-\\d{2}$/.test(primaryDate.key)?primaryDate:pd(v(row,ci.visitDate));
+    const d=fallbackDate&&/^\\d{4}-\\d{2}-\\d{2}$/.test(fallbackDate.key)?fallbackDate:null,lm=v(row,ci.lm);
     const done=!!(d||lm||checkCols.some(k=>v(row,k)));
     if(done&&d) visitEvents.push({grp:/rmu/i.test(v(row,ci.typ))?'RMU':'DT',lm,dk:d.key,dl:d.label,done:true});
     const f=done?finish(row,ci,evalRules(row,H,rules),done):{defs:[],remark:'',fix:'',fixRaw:''};
