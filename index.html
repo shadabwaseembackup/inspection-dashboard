@@ -2150,7 +2150,20 @@ function renderDefList(){
     const list=getFilteredDeficiencyRows(),Dfields=D.fpFields||[];
     const field=Dfields.find(f=>f.key===S.fpDrill);
     const deficiencyType=S.fpDrill==='__remark__'?'Other Remark':S.fpDrill==='__leak__'?'Current Leakage':(field?field.label:S.fpDrill);
-    const rows=list.map(r=>'<tr><td>'+esc(r.sub||'—')+'</td><td>'+esc(r.fl||'—')+'</td><td>'+esc(r.grp||'—')+'</td><td>'+esc(r.name||'—')+'</td><td>'+esc(deficiencyType)+'</td></tr>').join('');
+    const rows=list.map(r=>{
+      let observed=deficiencyType;
+      if(S.fpDrill==='__remark__') observed=r.remark||'Other Remark';
+      else if(S.fpDrill==='__leak__') observed=r.leak?'Current Leakage: '+r.leak:'Current Leakage';
+      else {
+        const rule=FP_RULES.find(x=>x.re.test(S.fpDrill));
+        observed=rule?rule.l:deficiencyType;
+        if(rule&&rule.t==='need'){
+          const rawIndex=(D.fpHeaders||[]).indexOf(S.fpDrill),rawValue=rawIndex>=0?norm((r.rawRow||[])[rawIndex]):'';
+          if(rawValue) observed+=' ('+rawValue+')';
+        }
+      }
+      return '<tr><td>'+esc(r.sub||'—')+'</td><td>'+esc(r.fl||'—')+'</td><td>'+esc(r.grp||'—')+'</td><td>'+esc(r.name||'—')+'</td><td>'+esc(observed)+'</td></tr>';
+    }).join('');
     el.innerHTML='<section class="card fpsp-drill-table-card"><div class="def-control-head"><div><h3>Matching FP / SP deficiency assets</h3><p class="note">Substation: '+esc(S.substation||'All substations')+' · Deficiency: '+esc(deficiencyType)+'</p></div><span class="page-tag">'+num(list.length)+' records</span></div><div class="fpsp-drill-table-wrap"><table class="fpsp-drill-table"><thead><tr><th>Substation name</th><th>FL Code</th><th>Asset type</th><th>Pole/Pillar no.</th><th>Deficiency type</th></tr></thead><tbody>'+(rows||'<tr><td colspan="5">No matching assets found.</td></tr>')+'</tbody></table></div><button type="button" class="btn" id="clearFpDrillTable">← Back to substation summary</button></section>';
     const back=$('#clearFpDrillTable');if(back)back.onclick=()=>{S.fpDrill='';S.substation='';render(true);};
     return;
