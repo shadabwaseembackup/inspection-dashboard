@@ -657,7 +657,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
  .card,.analytics-panel{padding:10px}
 }
 
-</style>
+\n.def-matrix-wrap{overflow-x:auto;overscroll-behavior-x:contain}.def-category-matrix{min-width:620px}.def-category-matrix th:first-child{min-width:155px;max-width:220px}.def-category-matrix td{text-align:center}.def-matrix-cell{min-width:42px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--mut);padding:6px 5px;font:700 12px/1.1 inherit;cursor:pointer}.def-matrix-cell.has-open{background:var(--pri2);color:var(--pri);border-color:color-mix(in srgb,var(--pri) 28%,var(--line))}.def-matrix-cell small{display:block;font-size:9px;font-weight:500;color:var(--mut);margin-top:3px}.def-matrix-cell:focus-visible{outline:2px solid var(--pri);outline-offset:2px}\n</style>
 <style>
 .def-quick-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 14px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
 .def-quick-actions button{flex:1 1 160px;min-height:40px;padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:var(--pri2);color:var(--ink);font:inherit;font-size:12px;font-weight:750;cursor:pointer}
@@ -1869,6 +1869,29 @@ function deficiencyCategoryAnalysis(rows){
  h+='<div class="def-category-list">'+list.slice(0,12).map(g=>'<button type="button" class="def-category-row" data-defcat="'+esc(g.label)+'"><span class="def-category-name">'+esc(g.label)+'</span><span class="def-category-track"><i style="width:'+(g.assets/max*100)+'%"></i></span><span class="def-category-count">'+num(g.assets)+'</span><span class="def-category-split"><b>'+num(g.open)+' open</b><span>·</span><span>'+num(g.rectified)+' rectified</span></span></button>').join('')+'</div><p class="note">Select a category to filter the asset register. Counts represent affected assets, not electrical severity.</p></section>';
  return h;
 }
+
+function deficiencyCategorySubstationMatrix(rows){
+ const bySub=new Map(),byCat=new Map(),cells=new Map();
+ const assets=defRows(rows.filter(r=>r.done));
+ assets.forEach(r=>{
+  const sub=String(r.sub||'—'),labels=[...new Set(r.defs.map(d=>d.t==='remark'?'Team remark':String(d.label||'').replace(/ \\(\\d+\\)$/,'')))].filter(Boolean);
+  if(!bySub.has(sub))bySub.set(sub,{total:0,open:0});bySub.get(sub).total++;if(r.fix!=='rect')bySub.get(sub).open++;
+  labels.forEach(cat=>{
+   if(!byCat.has(cat))byCat.set(cat,{total:0,open:0});
+   const c=byCat.get(cat);c.total++;if(r.fix!=='rect')c.open++;
+   const key=JSON.stringify([sub,cat]);if(!cells.has(key))cells.set(key,{total:0,open:0});
+   const v=cells.get(key);v.total++;if(r.fix!=='rect')v.open++;
+  });
+ });
+ const subs=[...bySub.entries()].sort((a,b)=>b[1].open-a[1].open||b[1].total-a[1].total||a[0].localeCompare(b[0])).slice(0,8);
+ const cats=[...byCat.entries()].sort((a,b)=>b[1].open-a[1].open||b[1].total-a[1].total||a[0].localeCompare(b[0])).slice(0,8);
+ let h='<section class="card def-category-substation"><div class="def-control-head"><div><h3>Category × substation analysis</h3><p class="note">Open affected assets by deficiency category and substation. Each asset is counted once per category; a cell is workload concentration, not an electrical-risk score.</p></div><span class="page-tag">Top 8 × 8</span></div>';
+ if(!assets.length||!subs.length||!cats.length)return h+'<p class="note">No category and substation combinations are available in this selection.</p></section>';
+ h+='<div class="scorecard-wrap def-matrix-wrap"><table class="scorecard-table def-category-matrix"><thead><tr><th>Deficiency category</th>'+subs.map(([sub])=>'<th>'+esc(sub)+'</th>').join('')+'</tr></thead><tbody>';
+ h+=cats.map(([cat])=>'<tr><th>'+esc(cat)+'</th>'+subs.map(([sub])=>{const v=cells.get(JSON.stringify([sub,cat]))||{total:0,open:0};return '<td><button type="button" class="def-matrix-cell'+(v.open?' has-open':'')+'" data-def-matrix="'+esc(JSON.stringify([sub,cat]))+'" title="'+num(v.open)+' open / '+num(v.total)+' total">'+num(v.open)+'<small>/ '+num(v.total)+'</small></button></td>';}).join('')+'</tr>').join('');
+ return h+'</tbody></table></div><p class="note">Cell format: open / total deficient assets. Select a cell to filter the asset register to that substation, category and open status. Rows and columns show the eight largest groups in the current date/substation selection.</p></section>';
+}
+
 function deficiencyFeederHotspots(rows){
  const groups=new Map();
  defRows(rows.filter(r=>r.done)).forEach(r=>{
@@ -1971,6 +1994,7 @@ function viewDef(D){
   h+='<nav class="def-quick-actions" aria-label="Deficiency quick actions"><button type="button" data-def-jump="def-filter-card">⌕ Filters &amp; asset list</button><button type="button" data-def-jump="def-action-summary">✓ Follow-up tracker</button><button type="button" data-def-export-quick>↓ Export filtered CSV</button></nav>';
   h+=deficiencyControlPanel(D.rows);
   h+=deficiencyCategoryAnalysis(D.rows);
+  h+=deficiencyCategorySubstationMatrix(D.rows);
   h+=deficiencyFeederHotspots(D.rows);
   h+=deficiencyDataQuality(D.rows);
   h+=substationPerformanceScorecard(D.rows);
@@ -2220,6 +2244,7 @@ function render(keepScroll){
     if(sub) sub.onchange=e=>{S.substation=e.target.value;render();};
     if(cat) cat.onchange=e=>{S.cat=e.target.value;render(true);};
     if(clear) clear.onclick=()=>{S.cat='';render();};
+    document.querySelectorAll('[data-def-matrix]').forEach(b=>b.onclick=()=>{const [sub,category]=JSON.parse(b.dataset.defMatrix);S.substation=sub;S.cat=category;S.st='open';S.lm='';S.defAge='';render(true);document.querySelector('#deflist')?.scrollIntoView({behavior:'smooth',block:'start'});});
     document.querySelectorAll('[data-defcat]').forEach(row=>{const choose=()=>{S.cat=row.dataset.defcat;S.st='';render(true);document.querySelector('#deflist')?.scrollIntoView({behavior:'smooth',block:'start'});};row.onclick=choose;row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();choose();}};});
   }
   if(keepScroll) window.scrollTo(0,y);
