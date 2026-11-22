@@ -2613,5 +2613,54 @@ main{padding-top:14px!important;padding-bottom:42px!important}
  #view .insight-tile span{text-align:right!important}
 }
 </style>
+
+<style>
+/* Desktop operations bar: status, dataset and section controls share one row. */
+header{padding-top:9px!important}
+.top{padding-bottom:6px!important}
+.top h1{font-size:19px!important}
+.top p{font-size:10px!important;margin-top:1px!important}
+.hd{
+ display:grid!important;
+ grid-template-columns:minmax(220px,1fr) auto minmax(0,1.65fr)!important;
+ grid-template-areas:"status dataset sections"!important;
+ align-items:center!important;gap:10px!important
+}
+#status{grid-area:status;min-width:0;display:flex!important;flex-wrap:nowrap!important;align-items:center!important;gap:5px!important;margin:0!important;overflow:hidden}
+#status .sp{flex:0 1 auto!important;min-width:0!important;max-width:100%;padding:4px 7px!important;font-size:9px!important;white-space:nowrap!important;overflow:hidden;text-overflow:ellipsis}
+.tabs{grid-area:dataset;display:flex!important;flex-wrap:nowrap!important;gap:5px!important;width:auto!important;min-width:0!important;padding:0!important}
+.tabs button{min-height:34px!important;min-width:0!important;padding:7px 10px!important;font-size:10px!important}
+.subs{grid-area:sections;display:flex!important;justify-content:flex-end!important;flex-wrap:nowrap!important;gap:1px!important;padding:0!important;min-width:0!important;overflow-x:auto!important;scrollbar-width:none}
+.subs button{min-height:34px!important;padding:6px 8px!important;font-size:10px!important;white-space:nowrap!important}
+main{padding-top:12px!important}
+.page-intro{margin-bottom:8px!important;padding-bottom:7px!important}
+#view .card:has(.row){padding:12px 15px!important}
+#view .card:has(.row)>h3{margin:0 0 5px!important;font-size:12px!important}
+#view .row{
+ display:grid!important;grid-template-columns:minmax(100px,145px) minmax(100px,1fr) minmax(76px,88px)!important;
+ align-items:center!important;gap:12px!important;padding:6px 0!important;min-height:34px!important;
+ border-bottom:1px solid #edf1f6!important
+}
+#view .row:first-of-type{padding-top:5px!important}
+#view .row .rn{font-size:11px!important;font-weight:650!important;line-height:1.25!important}
+#view .row .rv{font-size:11px!important;line-height:1.1!important;text-align:right!important;white-space:nowrap!important}
+#view .row .rv small{display:block!important;font-size:9px!important;margin-top:2px!important;color:#8793a3!important}
+#view .row .bar{height:7px!important}
+#view .card:has(.row) .row:last-child{border-bottom:0!important}
+@media(max-width:1160px){
+ .hd{grid-template-columns:minmax(0,1fr) auto!important;grid-template-areas:"status dataset" "sections sections"!important;row-gap:6px!important}
+ .subs{justify-content:flex-start!important}
+}
+@media(max-width:700px){
+ header{padding:9px 12px 0!important}
+ .top h1{font-size:17px!important}
+ .hd{grid-template-columns:1fr!important;grid-template-areas:"status" "dataset" "sections"!important;gap:5px!important}
+ #status{overflow-x:auto!important}
+ .tabs button{flex:1 1 0!important}
+ .subs{justify-content:flex-start!important}
+ #view .row{grid-template-columns:minmax(72px,100px) minmax(70px,1fr) 72px!important;gap:8px!important;padding:7px 0!important}
+ #view .row .rn{font-size:10px!important}
+}
+</style>
 </body>
 </html>
