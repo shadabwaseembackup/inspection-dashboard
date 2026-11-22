@@ -1582,13 +1582,24 @@ function viewProgress(D){
       const inspected=list.filter(r=>r.done).length,total=list.length,percent=pct(inspected,total);
       return '<section class="card progress-compact"><h3>'+label+'</h3><div class="progress-compact-body progress-compact-simple"><div class="progress-compact-pct">'+percent+'%</div><div class="progress-compact-mid"><div class="note">'+num(inspected)+' of '+num(total)+' inspected</div>'+bar(percent)+'</div></div></section>';
     };
-    h+=progressPart('DT Inspection',dtRows)+progressPart('RMU Inspection',rmuRows);
+    h+='<div class="dt-rmu-coverage">'+progressPart('DT Inspection',dtRows)+progressPart('RMU Inspection',rmuRows)+'</div>';
     h+='<div class="grid">'+stat('Total assets',num(tot))+stat('Inspected',num(dn),'g')+stat('Pending',num(tot-dn),tot-dn?'w':'')+stat('With deficiency',num(dfc),dfc?'r':'')+'</div>';
   }else{
     h+='<section class="card"><div class="hero"><div class="big">'+pct(dn,tot)+'%</div><div style="flex:1"><div class="note" style="margin:0 0 6px">'+num(dn)+' of '+num(tot)+' inspected</div>'+bar(pct(dn,tot))+'</div></div></section>';
     h+='<div class="grid">'+stat('Total assets',num(tot))+stat('Inspected',num(dn),'g')+stat('Pending',num(tot-dn),tot-dn?'w':'')+stat('With deficiency',num(dfc),dfc?'r':'')+'</div>';
   }
   h+='<div class="insight-strip"><div class="insight-tile"><b>'+num(open)+'</b><span>Open / unclear deficiencies</span></div><div class="insight-tile"><b>'+num(rect)+'</b><span>Marked rectified</span></div><div class="insight-tile"><b>'+num(groupBy(rows,r=>r.sub).length)+'</b><span>Substations represented</span></div></div>';
+  if(S.main!=='dt'&&S.data.dt){
+    const source=S.data.dt,dtAll=source.rows.filter(r=>r.grp!=='RMU'),rmuAll=source.rows.filter(r=>r.grp==='RMU');
+    const compactPart=(label,list)=>{
+      const inspected=list.filter(r=>r.done).length,total=list.length,rate=pct(inspected,total);
+      return '<div class="cross-coverage-item"><div class="cross-coverage-head"><b>'+label+'</b><strong>'+rate+'%</strong></div><div class="cross-coverage-count">'+num(inspected)+' inspected <span>·</span> '+num(total-inspected)+' pending <span>·</span> '+num(total)+' assets</div>'+bar(rate)+'</div>';
+    };
+    const diagnostics=source.dateDiagnostics;
+    h+='<section class="card cross-coverage"><div class="cross-coverage-title"><div><h3>DT / RMU coverage</h3><p class="note">Live summary from the DT Inspection dataset</p></div><span class="cross-coverage-badge">CROSS-DATASET</span></div><div class="cross-coverage-grid">'+compactPart('DT transformers',dtAll)+compactPart('RMU',rmuAll)+'</div>';
+    if(diagnostics)h+='<div class="cross-coverage-foot"><span>Latest dated record: <b>'+esc(diagnostics.latestLabel||'Not available')+'</b></span><span>DT sheet dates: <b>'+num(diagnostics.dated)+'</b> dated · <b>'+num(diagnostics.undated)+'</b> missing / unrecognised</span></div>';
+    h+='</section>';
+  }
   const typeBreakdown=groupBy(rows,r=>r.grp).map(g=>({...g,k:g.k==='Transformer'?'DT (Transformer)':g.k}));
   h+=groupList(S.main==='dt'?'DT / RMU breakup':'Pole / Pillar',typeBreakdown);
   if(S.main==='dt'){
@@ -1615,6 +1626,11 @@ function viewProgress(D){
       return out;
     };
     h+='<div class="date-summary-grid">'+renderType('DT')+renderType('RMU')+'</div>';
+    const dd=D.dateDiagnostics;
+    if(dd){
+      const datedPct=pct(dd.dated,dd.total);
+      h+='<section class="card date-quality"><div class="date-quality-title"><h3>Date coverage quality</h3><span>'+datedPct+'% dated</span></div><div class="date-quality-track">'+bar(datedPct)+'</div><div class="date-quality-stats"><div><b>'+num(dd.dated)+'</b><small>Rows with recognised date</small></div><div><b>'+num(dd.undated)+'</b><small>Missing / unrecognised date</small></div><div><b>'+num(dd.datedRMU)+'</b><small>RMU rows with date</small></div><div><b>'+num(dd.undatedRMU)+'</b><small>RMU rows without date</small></div></div><p class="note">Latest recognised inspection date: <b>'+esc(dd.latestLabel||'Not available')+'</b>. Counts are based on source rows; date-wise timelines show recorded inspection events.</p></section>';
+    }
     if(byType.DT.has('zz')||byType.RMU.has('zz'))h+='<p class="date-summary-help">"No date" records are listed separately in the relevant DT or RMU column because Date of Visit is blank or unrecognised.</p>';
   }else{
     const dm=new Map();
@@ -2791,6 +2807,47 @@ main{padding-top:12px!important}
  header #status{gap:5px!important}
  header #status .sp{font-size:8px!important;padding:3px 6px!important}
 }
+</style>
+
+<style>
+/* DT/RMU operational overview: compact cross-dataset coverage and date-quality diagnostics. */
+.dt-rmu-coverage{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 0 10px}
+.dt-rmu-coverage .progress-compact{margin:0!important;padding:12px 14px!important;min-width:0}
+.dt-rmu-coverage .progress-compact h3{font-size:12px!important;margin:0 0 5px!important}
+.dt-rmu-coverage .progress-compact-body.progress-compact-simple{grid-template-columns:auto minmax(0,1fr)!important;gap:12px!important;align-items:center}
+.dt-rmu-coverage .progress-compact-simple .progress-compact-pct{font-size:29px!important;line-height:1!important}
+.dt-rmu-coverage .progress-compact-simple .progress-compact-mid .note{font-size:10px!important;margin:0 0 5px!important}
+.cross-coverage{padding:12px 15px!important;margin:0 0 10px!important}
+.cross-coverage-title,.date-quality-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.cross-coverage-title h3,.date-quality-title h3{margin:0!important;font-size:12px!important}
+.cross-coverage-title .note{margin:2px 0 0!important;font-size:10px!important}
+.cross-coverage-badge{font-size:8px;font-weight:800;letter-spacing:.06em;color:#55709a;background:#f0f4fa;border:1px solid #e2e9f3;padding:4px 7px;border-radius:6px;white-space:nowrap}
+.cross-coverage-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.cross-coverage-item{min-width:0}
+.cross-coverage-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11px}
+.cross-coverage-head strong{font-size:14px;color:var(--pri);font-variant-numeric:tabular-nums}
+.cross-coverage-count{font-size:9px;color:var(--mut);margin:3px 0 6px}
+.cross-coverage-count span{padding:0 3px;color:#a0aabc}
+.cross-coverage-foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:5px 14px;margin-top:9px;padding-top:8px;border-top:1px solid var(--line);font-size:9px;color:var(--mut)}
+.cross-coverage-foot b{color:var(--ink);font-variant-numeric:tabular-nums}
+.date-quality{padding:12px 14px!important;margin:10px 0!important}
+.date-quality-title{margin-bottom:7px}
+.date-quality-title>span{font-size:10px;font-weight:800;color:var(--ok)}
+.date-quality-track .bar{height:6px!important}
+.date-quality-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:9px 0}
+.date-quality-stats>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.date-quality-stats b{font-size:17px;line-height:1.1;font-variant-numeric:tabular-nums}
+.date-quality-stats small{font-size:9px;line-height:1.3;color:var(--mut)}
+.date-quality>.note{font-size:9px!important;margin:5px 0 0!important}
+@media(max-width:700px){
+ .dt-rmu-coverage{grid-template-columns:1fr;gap:7px}
+ .dt-rmu-coverage .progress-compact{padding:9px 11px!important}
+ .cross-coverage{padding:10px 11px!important}
+ .cross-coverage-grid{gap:9px}
+ .cross-coverage-foot{font-size:8px}
+ .date-quality-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+}
+@media(max-width:360px){.cross-coverage-grid{grid-template-columns:1fr}}
 </style>
 </body>
 </html>
