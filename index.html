@@ -2303,6 +2303,30 @@ loadAll();
   .tabs button,.subs button,.btn,.def-quick-actions button{touch-action:manipulation}
 }
 </style>
+<style>
+/* Desktop refinement: use the available canvas without changing data or workflow logic. */
+@media(min-width:701px){
+  main{max-width:1000px;padding:16px 18px 68px}
+  .card{padding:15px 17px;margin-bottom:14px}
+  .card h3{font-size:15px;margin-bottom:10px}
+  .grid{gap:12px;margin-bottom:14px}
+  .stat{min-height:54px;padding:9px 12px;border-radius:11px}
+  .stat b{font-size:20px}
+  .stat span{font-size:11px;line-height:1.25}
+  .row{gap:12px;padding:9px 0}
+  .analytics-table{font-size:13px}
+  .analytics-table th,.analytics-table td{padding:10px 9px}
+  .page-intro{margin:5px 0 15px}
+  .page-intro h2{font-size:21px}
+}
+@media(min-width:1100px){
+  main{max-width:1180px;padding:19px 22px 76px}
+  .card{padding:17px 19px;margin-bottom:15px}
+  .grid{gap:13px}
+  .stat{min-height:60px;padding:10px 13px}
+  .stat b{font-size:22px}
+  .row{padding:10px 0}
+}
+</style>
 </body>
-</html>
 </html>
