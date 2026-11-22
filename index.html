@@ -2004,17 +2004,11 @@ function viewDef(D){
   const tk=Object.keys(tc).sort((a,b)=>tc[b]-tc[a]);
   const lms=[...new Set(D.rows.map(r=>r.lm||'—'))].sort();
   let h='<div class="grid">'+stat('Assets with deficiency',wd.length,'r')+stat('Deficiency items',items,'w')+stat('From team remark',rem,'w')+stat('Not yet rectified',open,open?'r':'g')+stat('Pending / not checked',num(pending.length),pending.length?'w':'g')+'</div>';
-  h+='<nav class="def-quick-actions" aria-label="Deficiency quick actions"><button type="button" data-def-jump="def-filter-card">⌕ Filters &amp; asset list</button>'+(S.main!=='fpsp'?'<button type="button" data-def-jump="def-action-summary">✓ Follow-up tracker</button>':'')+'<button type="button" data-def-export-quick>↓ Export filtered CSV</button></nav>';
+  h+='<nav class="def-quick-actions" aria-label="Deficiency quick actions"><button type="button" data-def-jump="def-filter-card">⌕ Filters &amp; asset list</button>'+'<button type="button" data-def-export-quick>↓ Export filtered CSV</button></nav>';
   if(S.main==='fpsp') h+=viewFPDeficiencySummary(D);
   if(S.main==='dt'&&S.dtDrill) h+='<div class="drill-active"><span>DT / RMU deficiency: <b>'+esc(S.dtDrill[0]+' · '+S.dtDrill[1]+' · '+S.dtDrill[2]+' · '+S.dtDrill[3])+'</b></span><button type="button" id="clearDtDrill">Clear ×</button></div>';
   h+=deficiencyCategoryAnalysis(D.rows);
-  if(S.main!=='fpsp') h+=deficiencyCategorySubstationMatrix(D.rows);
-  if(S.main!=='fpsp') h+=deficiencyFeederHotspots(D.rows);
   if(S.main!=='fpsp') h+=deficiencyDataQuality(D.rows);
-  if(S.main!=='fpsp') h+=linemanPerformanceScorecard(D.rows);
-  if(S.main!=='fpsp') h+=deficiencyMonitoringMatrix(D.rows);
-  if(S.main!=='fpsp') h+=defActionPanel(defRows(D.rows.filter(r=>r.done)));
-  if(S.main!=='fpsp') h+=deficiencyTrendPanel(D.rows);
   h+='<section class="card"><h3>Deficiency summary</h3><p class="drill-hint">Recorded category frequency · counts are affected assets; one asset may have several categories</p>'+(tk.length?tk.map((k,i)=>'<div class="row summary-drill'+(i?'':' first')+(S.cat===k?' active':'')+'" data-defcat="'+esc(k)+'" role="button" tabindex="0"><div class="rn">'+esc(k)+'</div><div>'+bar(pct(tc[k],Math.max(1,items)),true)+'</div><div class="rv"><b>'+tc[k]+'</b></div></div>').join(''):'<p class="note">No deficiencies recorded.</p>')+'</section>';
   if(S.main==='dt') h+=viewDTDeficiencySummary(D);
   const subs=[...new Set(D.rows.map(r=>r.sub||'—'))].sort();
