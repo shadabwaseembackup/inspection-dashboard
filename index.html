@@ -1323,7 +1323,7 @@ const FIX_YES=/^(ok|okay|0k|yes|y|done|हाँ|हां|ठीक|fixed|recti
 const FIX_NO=/^(no|n|nahi|nhi|नहीं|नही)$/i;
 
 /* ================= STATE ================= */
-const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',cat:'',dateFrom:'',dateTo:'',substation:'',defAge:'',defSort:'oldest',aiQuery:'',lmSort:'inspections',open:new Set(),lmMap:new Map(),
+const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',cat:'',dateFrom:'',dateTo:'',substation:'',subProgressQuery:'',subProgressSort:'priority',defAge:'',defSort:'oldest',aiQuery:'',lmSort:'inspections',open:new Set(),lmMap:new Map(),
   data:{fpsp:null,dt:null},src:{fpsp:{s:'none'},dt:{s:'none'}}};
 const RAW={fpsp:'',dt:''};
 let lastLoad=0,qTimer=0,busy=0,turnstileWidget=null;
@@ -1572,6 +1572,15 @@ function groupBy(rows,fn){
   rows.forEach(r=>{const k=fn(r)||'—';let g=m.get(k);if(!g){g={k,t:0,d:0};m.set(k,g);}g.t++;if(r.done)g.d++;});
   return [...m.values()];
 }
+
+function substationProgress(rows){
+  const query=norm(S.subProgressQuery).toLocaleLowerCase();
+  const all=groupBy(rows,r=>r.sub),groups=all.filter(g=>!query||g.k.toLocaleLowerCase().includes(query));
+  const sortGroups=items=>items.sort((a,b)=>S.subProgressSort==='az'?a.k.localeCompare(b.k):S.subProgressSort==='pending'?(b.t-b.d)-(a.t-a.d)||a.k.localeCompare(b.k):pct(a.d,a.t)-pct(b.d,b.t)||(b.t-b.d)-(a.t-a.d)||a.k.localeCompare(b.k));
+  sortGroups(groups);
+  const items=groups.map(g=>'<div class="sub-progress-row"><div class="sub-progress-name" title="'+esc(g.k)+'">'+esc(g.k)+'</div><div class="sub-progress-bar">'+bar(pct(g.d,g.t))+'</div><div class="sub-progress-value"><b>'+num(g.d)+'</b>/'+num(g.t)+'<small>'+num(g.t-g.d)+' pending</small></div></div>').join('');
+  return '<section class="card substation-progress" aria-label="Substation-wise inspection progress"><div class="sub-progress-head"><div><h3>Substation-wise progress</h3><p class="note">Find substations and prioritise pending inspection work</p></div><span class="page-tag">'+num(groups.length)+' / '+num(all.length)+' substations</span></div><div class="sub-progress-tools"><label class="sub-progress-search"><span class="sr-only">Search substation</span><input id="subProgressSearch" type="search" value="'+esc(S.subProgressQuery)+'" placeholder="Search substation…" autocomplete="off"></label><label class="sub-progress-sort"><span class="sr-only">Sort substations</span><select id="subProgressSort"><option value="priority"'+(S.subProgressSort==='priority'?' selected':'')+'>Lowest completion first</option><option value="pending"'+(S.subProgressSort==='pending'?' selected':'')+'>Most pending first</option><option value="az"'+(S.subProgressSort==='az'?' selected':'')+'>Name A–Z</option></select></label></div><div class="sub-progress-results" id="subProgressResults" aria-live="polite">'+(groups.length?'Showing '+num(groups.length)+' substations':'No matching substations')+'</div><div class="sub-progress-list" id="subProgressList">'+(items||'<p class="note">No substations match this search.</p>')+'</div></section>';
+}
 const defRows=rows=>rows.filter(r=>r.done&&r.defs.length);
 const byDateDesc=(a,b)=>(b.dk||'').localeCompare(a.dk||'')||a.name.localeCompare(b.name);
 
@@ -1650,7 +1659,7 @@ function viewProgress(D){
     if(dm.has('zz'))h+='<p class="date-summary-help">"No date": Date of Visit is blank on those rows – ask the team to fill it in.</p>';
     h+='</section>';
   }
-  h+=groupList('Substation-wise (done / total)',groupBy(rows,r=>r.sub));
+  h+=substationProgress(rows);
   return h;
 }
 
@@ -2169,6 +2178,21 @@ $('#view').addEventListener('toggle',e=>{
   if(d.open){S.open.add(d.dataset.k);const b=d.querySelector('.body');if(b&&!b.firstChild)b.innerHTML=lmBody(d.dataset.k);}
   else S.open.delete(d.dataset.k);
 },true);
+$('#view').addEventListener('input',e=>{
+  if(e.target&&e.target.id==='subProgressSearch'){S.subProgressQuery=e.target.value;updateSubstationProgress();}
+});
+$('#view').addEventListener('change',e=>{
+  if(e.target&&e.target.id==='subProgressSort'){S.subProgressSort=e.target.value;updateSubstationProgress();}
+});
+function updateSubstationProgress(){
+  const D=S.data[S.main],list=$('#subProgressList'),results=$('#subProgressResults'),head=$('.substation-progress .page-tag');
+  if(!D||!list||!results)return;
+  const q=norm(S.subProgressQuery).toLocaleLowerCase(),all=groupBy(D.rows,r=>r.sub),groups=all.filter(g=>!q||g.k.toLocaleLowerCase().includes(q));
+  groups.sort((a,b)=>S.subProgressSort==='az'?a.k.localeCompare(b.k):S.subProgressSort==='pending'?(b.t-b.d)-(a.t-a.d)||a.k.localeCompare(b.k):pct(a.d,a.t)-pct(b.d,b.t)||(b.t-b.d)-(a.t-a.d)||a.k.localeCompare(b.k));
+  list.innerHTML=groups.length?groups.map(g=>'<div class="sub-progress-row"><div class="sub-progress-name" title="'+esc(g.k)+'">'+esc(g.k)+'</div><div class="sub-progress-bar">'+bar(pct(g.d,g.t))+'</div><div class="sub-progress-value"><b>'+num(g.d)+'</b>/'+num(g.t)+'<small>'+num(g.t-g.d)+' pending</small></div></div>').join(''):'<p class="note">No substations match this search.</p>';
+  results.textContent=groups.length?'Showing '+num(groups.length)+' substations':'No matching substations';
+  if(head)head.textContent=num(groups.length)+' / '+num(all.length)+' substations';
+}
 document.querySelectorAll('[data-main]').forEach(b=>b.onclick=()=>{S.main=b.dataset.main;S.q='';S.lm='';S.st='';S.dateFrom='';S.dateTo='';S.substation='';S.defAge='';S.defSort='oldest';S.open.clear();render();window.scrollTo(0,0);});
 document.querySelectorAll('[data-sub]').forEach(b=>b.onclick=()=>{S.sub=b.dataset.sub;render();window.scrollTo(0,0);});
 $('#rf').onclick=()=>loadAll(true);
@@ -2852,6 +2876,26 @@ main{padding-top:12px!important}
  .date-quality-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
 }
 @media(max-width:360px){.cross-coverage-grid{grid-template-columns:1fr}}
+</style>
+
+<style>
+/* Searchable, prioritised substation workload without a full dashboard rerender. */
+.substation-progress{padding:13px 15px!important;margin:10px 0!important}
+.sub-progress-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.sub-progress-head h3{margin:0!important;font-size:13px}
+.sub-progress-head .note{margin:3px 0 0!important;font-size:10px}
+.sub-progress-tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(190px,.45fr);gap:8px;margin:10px 0 5px}
+.sub-progress-tools input,.sub-progress-tools select{width:100%;min-width:0;height:36px;padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font:inherit;font-size:11px}
+.sub-progress-results{font-size:10px;color:var(--mut);margin:4px 0 3px}
+.sub-progress-list{display:grid;grid-template-columns:1fr 1fr;column-gap:18px}
+.sub-progress-row{display:grid;grid-template-columns:minmax(100px,1.05fr) minmax(55px,2fr) auto;align-items:center;gap:9px;padding:8px 1px;border-top:1px solid var(--line);min-width:0}
+.sub-progress-name{font-size:10px;font-weight:700;line-height:1.3;overflow-wrap:anywhere;min-width:0}
+.sub-progress-bar{min-width:0}.sub-progress-bar .bar{height:7px!important}
+.sub-progress-value{text-align:right;white-space:nowrap;font-size:11px;font-variant-numeric:tabular-nums}
+.sub-progress-value small{display:block;font-size:9px;color:var(--mut)}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:760px){.sub-progress-list{grid-template-columns:1fr}.sub-progress-tools{grid-template-columns:1fr minmax(130px,.65fr)}.sub-progress-row{grid-template-columns:minmax(95px,1fr) minmax(50px,1.4fr) auto;gap:7px}}
+@media(max-width:420px){.substation-progress{padding:10px!important}.sub-progress-head{display:block}.sub-progress-head .page-tag{display:inline-block;margin-top:6px}.sub-progress-tools{grid-template-columns:1fr}}
 </style>
 </body>
 </html>
