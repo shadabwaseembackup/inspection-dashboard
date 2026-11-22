@@ -1437,6 +1437,8 @@ function buildFP(rows){
   const rules=prep(FP_RULES,H),map=new Map();
   const fpFields=[];
   rules.forEach(r=>r.cols.forEach(ci2=>{const label=H[ci2];if(!fpFields.some(x=>x.key===label))fpFields.push({key:label,label,group:/^Pole/i.test(label)?'Pole':'Pillar',ruleType:r.t});}));
+  // Include all source inspection parameters in the grouped table, even when a field is not part of the existing alert rules.
+  H.forEach(label=>{if(/^(Pillar|Pole)\\b/i.test(label)&&!/^Pole[- ]?Pillar ?No$/i.test(label)&&!fpFields.some(x=>x.key===label))fpFields.push({key:label,label:label.replace(/^(Pillar|Pole)\\s*/i,''),group:/^Pole/i.test(label)?'Pole':'Pillar',ruleType:'source'});});
   for(let i=1;i<rows.length;i++){
     const row=rows[i],pole=v(row,ci.pole); if(!pole) continue;
     const st=v(row,ci.st),d=pd(v(row,ci.date)),lm=v(row,ci.lm);
