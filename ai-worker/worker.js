@@ -171,7 +171,7 @@ export default {
     if(!authenticated)return loginPage(headers);
     if (url.pathname !== "/ask" || request.method !== "POST") {
       if (url.pathname !== "/" && url.pathname !== "/index.html") return json({ error: "Not found" }, 404, headers);
-      const upstream = await fetch(DASHBOARD_UPSTREAM, { headers: { "Accept": "text/html" }, cf: { cacheTtl: 0, cacheEverything: false } });
+      const upstream = await fetch(DASHBOARD_UPSTREAM, { headers: { "Accept": "text/html" }, cf: { cacheTtl: 120, cacheEverything: true } });
       if (!upstream.ok) return json({ error: "Dashboard source is temporarily unavailable." }, 502, headers);
       return new Response(await upstream.text(), { status: 200, headers: { ...headers, "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } });
     }
