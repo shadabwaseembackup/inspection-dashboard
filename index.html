@@ -1757,6 +1757,7 @@ async function askCloudflareAI(question,D){
  const result=$('#intelAiResult'),button=$('#intelAsk'),token=turnstileWidget!==null&&window.turnstile?window.turnstile.getResponse(turnstileWidget):'';
  if(!token){if(result)result.textContent='Complete the Cloudflare verification check first.';return;}
  if(button){button.disabled=true;button.textContent='Thinking…';}
+ const briefingButton=$('#intelBrief');if(briefingButton)briefingButton.disabled=true;
  if(result)result.textContent='Analysing aggregate inspection data…';
  try{
   const response=await fetch('https://waseem.shadab-waseem.workers.dev/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,summary:buildAiSummary(D),turnstileToken:token})});
@@ -2915,7 +2916,7 @@ main{padding-top:12px!important}
 .sub-progress-row[role="button"]:hover,.sub-progress-row[role="button"]:focus-visible{background:var(--pri2);outline:2px solid var(--pri);outline-offset:-2px}
 .sub-progress-row[role="button"] .sub-progress-name:after{content:" ↗";color:var(--pri);font-size:10px;opacity:.7}
 .progress-drilldown{margin-top:12px}
-.intel-brief-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;width:100%;min-height:42px;margin-top:9px;padding:10px 14px;border:1px solid var(--pri);border-radius:11px;background:linear-gradient(110deg,var(--pri2),var(--card));color:var(--pri);font:700 12px inherit;cursor:pointer}
+.intel-brief-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;width:100%;min-height:42px;margin-top:9px;padding:10px 14px;border:1px solid var(--pri);border-radius:11px;background:linear-gradient(110deg,var(--pri2),var(--card));color:var(--pri);font:700 12px system-ui,-apple-system,'Segoe UI',sans-serif;cursor:pointer}
 .intel-brief-btn:hover:not(:disabled){filter:brightness(.97);box-shadow:0 4px 14px #2563eb18}
 .intel-brief-btn:disabled{opacity:.48;cursor:not-allowed}
 @media(max-width:520px){.intel-brief-btn{min-height:44px}.progress-drilldown{scroll-margin-top:130px}}
