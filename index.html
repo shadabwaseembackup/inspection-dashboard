@@ -3050,6 +3050,29 @@ main{padding-top:12px!important}
 .fpsp-count-btn.has-count:hover{background:#ffe2ae;transform:translateY(-1px)}
 .fpsp-count-btn:disabled{cursor:default;opacity:.65}
 .fpsp-count-btn:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+
+/* FP/SP count matrix: fit the page, wrap all labels, and use neutral rows */
+.fpsp-matrix-wrap{width:100%;max-width:100%;overflow-x:hidden}
+.fpsp-count-matrix{width:100%;min-width:0;max-width:100%;table-layout:fixed;border-collapse:collapse}
+.fpsp-count-matrix th,.fpsp-count-matrix td{white-space:normal!important;overflow-wrap:anywhere;word-break:normal;hyphens:auto;padding:5px 3px;font-size:clamp(8px,.72vw,10px);line-height:1.25}
+.fpsp-count-matrix thead th{background:#d8edf7!important;color:#18354a}
+.fpsp-count-matrix thead tr:first-child th{font-size:clamp(9px,.8vw,11px)}
+.fpsp-count-matrix thead tr:nth-child(2) th{min-width:0;font-size:clamp(8px,.68vw,9px)}
+.fpsp-count-matrix tbody tr,.fpsp-count-matrix tbody tr:nth-child(even),.fpsp-count-matrix tbody tr:nth-child(odd){background:#fff!important}
+.fpsp-count-matrix tbody th,.fpsp-count-matrix tbody td{background:#fff!important;color:var(--ink)}
+.fpsp-count-matrix .fpsp-substation-name{width:13%;min-width:0;white-space:normal!important;text-align:left;background:#fff!important;font-size:clamp(8px,.7vw,10px)}
+.fpsp-count-matrix .fpsp-count-cell{padding:3px 2px!important}
+.fpsp-count-matrix .fpsp-count-btn{min-width:27px;min-height:27px;padding:3px 5px;font-size:10px}
+.fpsp-count-matrix .fpsp-count-btn.has-count{background:#fff0d6!important;color:#8a4b00!important;border-color:#e6b65b}
+@media(max-width:900px){
+ .fpsp-count-matrix th,.fpsp-count-matrix td{padding:4px 2px;font-size:8px;line-height:1.2}
+ .fpsp-count-matrix .fpsp-count-btn{min-width:23px;min-height:24px;font-size:9px}
+}
+@media(max-width:560px){
+ .fpsp-count-matrix th,.fpsp-count-matrix td{padding:3px 1px;font-size:7px}
+ .fpsp-count-matrix .fpsp-substation-name{font-size:7px}
+ .fpsp-count-matrix .fpsp-count-btn{min-width:19px;min-height:21px;font-size:8px;padding:2px}
+}
 </style>
 </body>
 </html>
