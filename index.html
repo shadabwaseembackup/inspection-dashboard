@@ -1337,6 +1337,8 @@ const v=(row,i)=>i<0?'':norm(row[i]);
 const pct=(d,t)=>t?Math.round(d*1000/t)/10:0;
 const hm=d=>d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
 const num=n=>n.toLocaleString('en-IN');
+// The source question asks whether current leakage was found: affirmative answers are deficiencies.
+function isLeakDetected(value){const x=norm(value).toLowerCase();if(!x)return false;return /^(yes|y|true|1|हाँ|हां|हा|होय|found|leakage found)$/.test(x)||/करंट\s*लीकेज\s*(?:पाया\s*गया|है)/.test(x);}
 
 function parseCSV(t){
   const rows=[];let r=[],f='',q=false;
@@ -1432,7 +1434,7 @@ function finish(row,ci,defs,done){
 function buildFP(rows){
   const H=rows[0].map(norm),c=re=>H.findIndex(h=>re.test(h));
   const ci={st:c(/^inspection_?sta/i),sub:c(/^substation_?name$/i),fdr:c(/^feedername$/i),pole:c(/^pole-?pillar ?no/i),fl:c(/^fl ?code$/i),
-    cat:c(/^asset-final$/i),dt:c(/^dt_code$/i),date:c(/^date of visit$/i),lm:c(/लाइनमैन/),rem:c(/आई कमी/),fix:c(/दूर की/),leak:c(/current.*leakage|leakage/i)};
+    cat:c(/^asset-final$/i),dt:c(/^dt_code$/i),date:c(/^date of visit$/i),lm:c(/लाइनमैन/),rem:c(/आई कमी/),fix:c(/दूर की/),leak:c(/current.*leakage|leakage|संपत्ति\/उपकरण\s*पर\s*करंट\s*लीकेज\s*पाया\s*गया/i)};
   if(ci.pole<0) throw new Error('Columns not recognised – expected the FP SP Inspection tab');
   const rules=prep(FP_RULES,H),map=new Map();
   const fpFields=[];
@@ -1820,7 +1822,7 @@ function viewFPDeficiencySummary(D){
  const records=defRows(D.rows.filter(r=>r.done));
  const leakLabel=(D.fpHeaders||[]).find(h=>/current.*leakage|leakage/i.test(h))||'Current Leakage';
  const groups=new Map();
- records.forEach(r=>{const key=r.sub||'—';if(!groups.has(key))groups.set(key,{assets:0,counts:{},leak:0,remark:0});const g=groups.get(key);g.assets++;fields.forEach(f=>{if(r.fpAnomalies&&r.fpAnomalies[f.key])g.counts[f.key]=(g.counts[f.key]||0)+1;});if((r.fpAnomalies&&r.fpAnomalies[leakLabel])||isBad(r.leak))g.leak++;if(r.remark)g.remark++;});
+ records.forEach(r=>{const key=r.sub||'—';if(!groups.has(key))groups.set(key,{assets:0,counts:{},leak:0,remark:0});const g=groups.get(key);g.assets++;fields.forEach(f=>{if(r.fpAnomalies&&r.fpAnomalies[f.key])g.counts[f.key]=(g.counts[f.key]||0)+1;});if(isLeakDetected(r.leak))g.leak++;if(r.remark)g.remark++;});
  const subs=[...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
  const countCell=(sub,key,count)=>'<td class="fpsp-count-cell"><button type="button" class="fpsp-count-btn'+(count?' has-count':'')+'" data-fpsp-count="'+esc(JSON.stringify([sub,key]))+'" '+(count?'':'disabled')+' aria-label="'+esc(sub+' '+key+' '+count+' deficiencies')+'">'+num(count)+'</button></td>';
  const headGroup=items=>items.map(f=>'<th>'+esc(f.label)+'</th>').join('');
@@ -2025,7 +2027,7 @@ function getFilteredDeficiencyRows(){
  const filteredRows=filterDefRows(D.rows),sourceRows=S.main==='dt'?filteredRows.filter(r=>String(r.lm||'').trim()!==''):filteredRows,q=String(S.q||'').toLowerCase();
  return (S.st==='pending'?sourceRows.filter(r=>!r.done):defRows(sourceRows)).filter(r=>{
   if(S.cat&&!r.defs.some(d=>(d.t==='remark'?'Team remark':d.label.replace(/ \(\d+\)$/,''))===S.cat))return false;
-  if(S.main==='fpsp'&&S.fpDrill){if(S.fpDrill==='__remark__'){if(!r.remark)return false;}else if(S.fpDrill==='__leak__'){if(!(r.fpAnomalies&&r.fpAnomalies[S.fpDrill])&&!isBad(r.leak))return false;}else if(!(r.fpAnomalies&&r.fpAnomalies[S.fpDrill]))return false;}
+  if(S.main==='fpsp'&&S.fpDrill){if(S.fpDrill==='__remark__'){if(!r.remark)return false;}else if(S.fpDrill==='__leak__'){if(!isLeakDetected(r.leak))return false;}else if(!(r.fpAnomalies&&r.fpAnomalies[S.fpDrill]))return false;}
   if(S.lm&&(r.lm||'—')!==S.lm)return false;if(S.st==='rect'&&r.fix!=='rect')return false;if(S.st==='open'&&r.fix==='rect')return false;
   if(S.defAge){const days=deficiencyDays(r);if(S.defAge==='undated'&&days!==null)return false;if(S.defAge!=='undated'){if(days===null)return false;const range=S.defAge==='0-7'?[0,7]:S.defAge==='8-30'?[8,30]:S.defAge==='31-90'?[31,90]:[91,Infinity];if(days<range[0]||days>range[1])return false;}}
   if(q){const t=[r.name,r.eq,r.sub,r.fdr,r.lm,r.remark].concat(r.defs.map(d=>d.label)).join(' ').toLowerCase();if(!t.includes(q))return false;}return true;
@@ -2151,7 +2153,7 @@ function renderDefList(){
     const rows=list.map(r=>{
       let observed=deficiencyType;
       if(S.fpDrill==='__remark__') observed=r.remark||'Other Remark';
-      else if(S.fpDrill==='__leak__') observed=r.leak?'Current Leakage: '+r.leak:'Current Leakage';
+      else if(S.fpDrill==='__leak__') observed=r.leak?'Current Leakage detected: '+r.leak:'Current Leakage detected';
       else {
         const rule=FP_RULES.find(x=>x.re.test(S.fpDrill));
         observed=rule?rule.l:deficiencyType;
