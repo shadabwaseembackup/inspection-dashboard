@@ -1604,7 +1604,7 @@ function viewProgress(D){
     h+='<div class="grid">'+stat('Total assets',num(tot))+stat('Inspected',num(dn),'g')+stat('Pending',num(tot-dn),tot-dn?'w':'')+stat('With deficiency',num(dfc),dfc?'r':'')+'</div>';
   }
   h+='<div class="insight-strip"><div class="insight-tile"><b>'+num(open)+'</b><span>Open / unclear deficiencies</span></div><div class="insight-tile"><b>'+num(rect)+'</b><span>Marked rectified</span></div><div class="insight-tile"><b>'+num(groupBy(rows,r=>r.sub).length)+'</b><span>Substations represented</span></div></div>';
-  if(S.main!=='dt'&&S.data.dt){
+  if(S.main==='dt'&&S.data.dt){
     const source=S.data.dt,dtAll=source.rows.filter(r=>r.grp!=='RMU'),rmuAll=source.rows.filter(r=>r.grp==='RMU');
     const compactPart=(label,list)=>{
       const inspected=list.filter(r=>r.done).length,total=list.length,rate=pct(inspected,total);
