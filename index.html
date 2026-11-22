@@ -2328,5 +2328,57 @@ loadAll();
   .row{padding:10px 0}
 }
 </style>
+
+<style>
+/* Unified final design layer: full-width KPI layout, consistent cards and responsive tables. */
+main{width:100%;max-width:1480px!important;margin-inline:auto!important;padding-inline:clamp(14px,2.4vw,34px)!important}
+#view{width:100%;min-width:0}
+.grid{display:grid;width:100%;max-width:none;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(9px,1.1vw,14px);align-items:stretch}
+.grid>.stat{width:100%;min-width:0;min-height:68px;padding:12px 14px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:7px;border-radius:13px}
+.grid>.stat b{font-size:clamp(20px,1.8vw,25px);line-height:1.05;letter-spacing:-.025em}
+.grid>.stat span{order:0;font-size:11px;line-height:1.25;white-space:normal;overflow-wrap:anywhere}
+.card,.analytics-panel,.intel-panel{border-radius:16px}
+.card h3,.intel-panel h3{letter-spacing:-.015em}
+.scorecard-wrap,.dt-table-wrap{max-width:100%;overflow:auto;overscroll-behavior-x:contain}
+.scorecard-table thead th{position:sticky;top:0;z-index:2}
+.scorecard-table tbody tr:nth-child(even){background:color-mix(in srgb,var(--pri2) 35%,transparent)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+.intel-hero{border:1px solid color-mix(in srgb,var(--pri) 30%,var(--line));box-shadow:0 16px 38px rgba(12,30,65,.16);background:radial-gradient(circle at 88% 12%,rgba(125,164,255,.25),transparent 30%),linear-gradient(135deg,#142744 0%,#1b3b68 58%,#2458a5 100%)}
+.intel-search input{border-radius:12px;min-height:46px}
+.intel-search button{min-height:46px;transition:transform .15s,opacity .15s}
+.intel-search button:not(:disabled):hover,.intel-chip:hover{transform:translateY(-1px)}
+.intel-chip{border:1px solid color-mix(in srgb,var(--pri) 25%,var(--line));transition:transform .15s,border-color .15s}
+.intel-answer{border:1px solid color-mix(in srgb,var(--pri) 20%,var(--line));border-left:4px solid var(--pri);box-shadow:var(--shadow-soft)}
+.intel-grid{align-items:stretch}
+.intel-panel{height:100%}
+.intel-rank{gap:12px}
+.intel-rank span{font-variant-numeric:tabular-nums}
+@media(min-width:651px) and (max-width:899px){
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid>.stat{min-height:64px}
+  .intel-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:650px){
+  main{padding-inline:12px!important}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .grid>.stat{min-height:60px;padding:10px 11px}
+  .grid>.stat b{font-size:clamp(18px,5vw,22px)}
+  .intel-hero{padding:17px}
+  .intel-search{gap:9px}
+  .intel-search button{width:100%}
+  .intel-prompts{gap:6px}
+  .intel-chip{min-height:36px}
+  .intel-grid{grid-template-columns:1fr}
+  .scorecard-table th,.scorecard-table td{padding:9px 10px}
+}
+@media(max-width:360px){
+  main{padding-inline:9px!important}
+  .grid{grid-template-columns:1fr}
+  .grid>.stat{min-height:54px}
+}
+@media(prefers-reduced-motion:reduce){
+  .intel-search button,.intel-chip,.icon{transition:none!important}
+}
+</style>
 </body>
 </html>
