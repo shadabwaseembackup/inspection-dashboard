@@ -1323,7 +1323,7 @@ const FIX_YES=/^(ok|okay|0k|yes|y|done|हाँ|हां|ठीक|fixed|recti
 const FIX_NO=/^(no|n|nahi|nhi|नहीं|नही)$/i;
 
 /* ================= STATE ================= */
-const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',cat:'',dateFrom:'',dateTo:'',substation:'',fpDrill:'',subProgressQuery:'',subProgressSort:'priority',defAge:'',defSort:'oldest',aiQuery:'',lmSort:'inspections',open:new Set(),lmMap:new Map(),
+const S={main:'fpsp',sub:'progress',q:'',lm:'',st:'',cat:'',dateFrom:'',dateTo:'',substation:'',fpDrill:'',dtDrill:null,subProgressQuery:'',subProgressSort:'priority',defAge:'',defSort:'oldest',aiQuery:'',lmSort:'inspections',open:new Set(),lmMap:new Map(),
   data:{fpsp:null,dt:null},src:{fpsp:{s:'none'},dt:{s:'none'}}};
 const RAW={fpsp:'',dt:''};
 let lastLoad=0,qTimer=0,busy=0,turnstileWidget=null;
@@ -1802,20 +1802,21 @@ function viewIntelligence(D){
 }
 function viewDTDeficiencySummary(D){
  const fields=D.dtFields||[];
- const make=(title,group,label,net)=>{const cols=fields.filter(f=>f.group===group),groups=new Map();
+ const make=(title,group)=>{const cols=fields.filter(f=>f.group===group),groups=new Map();
   D.rows.filter(r=>r.grp===(group==='RMU'?'RMU':'Transformer')).forEach(r=>{
-   const key=net?[r.fl||'—',r.typ||'Asset'].join('||'):[r.sub||'—',r.fl||'—',r.typ||'Asset'].join('||');
-   let g=groups.get(key);if(!g){g={sub:r.sub||'—',fl:r.fl||'—',typ:r.typ||'Asset',assets:0,counts:{}};groups.set(key,g);}
-   g.assets++;if(r.done)cols.forEach(c=>{g.counts[c.key]=(g.counts[c.key]||0)+(r.dtAnomalies&&r.dtAnomalies[c.key]?1:0);});
+   const key=JSON.stringify([r.sub||'—',r.fl||'—',r.typ||'Asset']);
+   let g=groups.get(key);if(!g){g={sub:r.sub||'—',fl:r.fl||'—',typ:r.typ||'Asset',assets:0,inspected:0,counts:{}};groups.set(key,g);}
+   g.assets++;if(r.done){g.inspected++;cols.forEach(c=>{if(r.dtAnomalies&&r.dtAnomalies[c.key])g.counts[c.key]=(g.counts[c.key]||0)+1;});}
   });
-  const list=[...groups.values()].filter(g=>!net||Object.values(g.counts).reduce((s,n)=>s+n,0)>0).sort((a,b)=>(net?0:a.sub.localeCompare(b.sub))||a.fl.localeCompare(b.fl)||a.typ.localeCompare(b.typ));
-  const th=(net?'':'<th>Substation_NAME</th>')+'<th>FL Code</th><th>Asset Type</th><th>'+label+' Count</th>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('');
-  const body=list.map(g=>'<tr>'+(net?'':'<td>'+esc(g.sub)+'</td>')+'<td>'+esc(g.fl)+'</td><td>'+esc(g.typ)+'</td><td class="dt-total">'+g.assets+'</td>'+cols.map(c=>'<td class="dt-count">'+(g.counts[c.key]||0)+'</td>').join('')+'</tr>').join('');
-  return '<section class="card dt-summary"><h3>'+title+'</h3><div class="dt-table-wrap"><table class="dt-table"><thead><tr>'+th+'</tr></thead><tbody>'+(body||'<tr><td colspan="'+(3+(net?0:1)+cols.length)+'">'+(net?'No deficiencies found.':'No '+group+' records found.')+'</td></tr>')+'</tbody></table></div></section>';
+  const list=[...groups.values()].filter(g=>cols.some(c=>g.counts[c.key])).sort((a,b)=>a.sub.localeCompare(b.sub)||a.fl.localeCompare(b.fl)||a.typ.localeCompare(b.typ));
+  const countCell=(g,c)=>{const count=g.counts[c.key]||0,drill=[g.sub,g.fl,g.typ,c.key,group];return '<td class="dt-count-cell"><button type="button" class="dt-count-btn'+(count?' has-count':'')+'" data-dt-count="'+esc(JSON.stringify(drill))+'" '+(count?'':'disabled')+' aria-label="'+esc(g.sub+' '+g.fl+' '+g.typ+' '+c.label+' '+count+' deficiencies')+'">'+num(count)+'</button></td>';};
+  const head='<th>Substation_NAME</th><th>FL Code</th><th>Asset Type</th><th>Assets</th><th>Inspected</th>'+cols.map(c=>'<th>'+esc(c.label)+'</th>').join('');
+  const body=list.map(g=>'<tr><th scope="row">'+esc(g.sub)+'</th><td>'+esc(g.fl)+'</td><td>'+esc(g.typ)+'</td><td class="dt-total">'+num(g.assets)+'</td><td>'+num(g.inspected)+'</td>'+cols.map(c=>countCell(g,c)).join('')+'</tr>').join('');
+  const affected=list.reduce((n,g)=>n+cols.reduce((m,c)=>m+(g.counts[c.key]||0),0),0);
+  return '<section class="card dt-summary dt-deficiency-matrix"><div class="def-control-head"><div><h3>'+title+'</h3><p class="note">Grouped by substation, FL Code and asset type. Select a non-zero parameter count to view the matching inspected assets.</p></div><span class="page-tag">'+num(affected)+' deficiency counts</span></div><div class="dt-table-wrap"><table class="dt-table dt-count-matrix"><thead><tr>'+head+'</tr></thead><tbody>'+(body||'<tr><td colspan="'+(5+cols.length)+'">No recorded '+group+' deficiencies in this selection.</td></tr>')+'</tbody></table></div></section>';
  };
- return '<div class="dt-summary-note">Net deficiency counts aggregate all substations by FL Code and Asset Type; detailed tables below retain substation-wise grouping. Count cells show completed inspections meeting each parameter condition. Pending / not checked assets are excluded from parameter deficiency counts.</div>'+make('Deficiency in DT','DT','DT',true)+make('Deficiency in RMU','RMU','RMU',true)+make('Deficiency in DT (Substation wise)','DT','DT',false)+make('Deficiency in RMU (Substation wise)','RMU','RMU',false);
+ return '<div class="dt-summary-note">DT and RMU are shown separately. Asset totals include all records in the selected data; parameter counts include inspected assets with recorded deficiencies only. Select a non-zero count for asset-level details.</div>'+make('DT deficiency matrix by substation','DT')+make('RMU deficiency matrix by substation','RMU');
 }
-
 
 function viewFPDeficiencySummary(D){
  const fields=D.fpFields||[],visibleFields=fields.filter(f=>!/PILLAR\s*No/i.test(f.key)&&!/(?:Pole|Pillar)[-_ ]?Pillar\s*No/i.test(f.key)),pillar=visibleFields.filter(f=>f.group!=='Pole'),pole=visibleFields.filter(f=>f.group==='Pole');
@@ -2005,6 +2006,7 @@ function viewDef(D){
   let h='<div class="grid">'+stat('Assets with deficiency',wd.length,'r')+stat('Deficiency items',items,'w')+stat('From team remark',rem,'w')+stat('Not yet rectified',open,open?'r':'g')+stat('Pending / not checked',num(pending.length),pending.length?'w':'g')+'</div>';
   h+='<nav class="def-quick-actions" aria-label="Deficiency quick actions"><button type="button" data-def-jump="def-filter-card">⌕ Filters &amp; asset list</button>'+(S.main!=='fpsp'?'<button type="button" data-def-jump="def-action-summary">✓ Follow-up tracker</button>':'')+'<button type="button" data-def-export-quick>↓ Export filtered CSV</button></nav>';
   if(S.main==='fpsp') h+=viewFPDeficiencySummary(D);
+  if(S.main==='dt'&&S.dtDrill) h+='<div class="drill-active"><span>DT / RMU deficiency: <b>'+esc(S.dtDrill[0]+' · '+S.dtDrill[1]+' · '+S.dtDrill[2]+' · '+S.dtDrill[3])+'</b></span><button type="button" id="clearDtDrill">Clear ×</button></div>';
   h+=deficiencyCategoryAnalysis(D.rows);
   if(S.main!=='fpsp') h+=deficiencyCategorySubstationMatrix(D.rows);
   if(S.main!=='fpsp') h+=deficiencyFeederHotspots(D.rows);
@@ -2027,6 +2029,7 @@ function getFilteredDeficiencyRows(){
  const filteredRows=filterDefRows(D.rows),sourceRows=S.main==='dt'?filteredRows.filter(r=>String(r.lm||'').trim()!==''):filteredRows,q=String(S.q||'').toLowerCase();
  return (S.st==='pending'?sourceRows.filter(r=>!r.done):defRows(sourceRows)).filter(r=>{
   if(S.cat&&!r.defs.some(d=>(d.t==='remark'?'Team remark':d.label.replace(/ \(\d+\)$/,''))===S.cat))return false;
+  if(S.main==='dt'&&S.dtDrill){const [sub,fl,typ,key,group]=S.dtDrill;if((r.sub||'—')!==sub||(r.fl||'—')!==fl||(r.typ||'Asset')!==typ||r.grp!==(group==='RMU'?'RMU':'Transformer')||!(r.dtAnomalies&&r.dtAnomalies[key]))return false;}
   if(S.main==='fpsp'&&S.fpDrill){if(S.fpDrill==='__remark__'){if(!r.remark)return false;}else if(S.fpDrill==='__leak__'){if(!isLeakDetected(r.leak))return false;}else if(!(r.fpAnomalies&&r.fpAnomalies[S.fpDrill]))return false;}
   if(S.lm&&(r.lm||'—')!==S.lm)return false;if(S.st==='rect'&&r.fix!=='rect')return false;if(S.st==='open'&&r.fix==='rect')return false;
   if(S.defAge){const days=deficiencyDays(r);if(S.defAge==='undated'&&days!==null)return false;if(S.defAge!=='undated'){if(days===null)return false;const range=S.defAge==='0-7'?[0,7]:S.defAge==='8-30'?[8,30]:S.defAge==='31-90'?[31,90]:[91,Infinity];if(days<range[0]||days>range[1])return false;}}
@@ -2146,6 +2149,13 @@ function renderDefActiveFilters(){
 }
 function renderDefList(){
   const D=S.data[S.main],el=$('#deflist'); if(!D||!el) return;
+  if(S.main==='dt'&&S.dtDrill){
+    const list=getFilteredDeficiencyRows(),[sub,fl,typ,key,group]=S.dtDrill,field=(D.dtFields||[]).find(f=>f.key===key),label=field?field.label:key;
+    const rows=list.map(r=>'<tr><td>'+esc(r.sub||'—')+'</td><td>'+esc(r.fl||'—')+'</td><td>'+esc(r.typ||'—')+'</td><td>'+esc(r.name||'—')+'</td><td>'+esc(r.eq||'—')+'</td><td>'+esc(r.kva||'—')+'</td><td>'+esc(r.lm||'—')+'</td><td>'+esc(r.dl||'—')+'</td><td>'+esc(label)+'</td></tr>').join('');
+    el.innerHTML='<section class="card dt-drill-table-card"><div class="def-control-head"><div><h3>Matching '+esc(group)+' deficiency assets</h3><p class="note">'+esc(sub)+' · '+esc(fl)+' · '+esc(typ)+' · '+esc(label)+'</p></div><span class="page-tag">'+num(list.length)+' records</span></div><div class="dt-table-wrap"><table class="dt-table dt-drill-table"><thead><tr><th>Substation</th><th>FL Code</th><th>Asset Type</th><th>Asset Code</th><th>Equipment ID</th><th>kVA</th><th>Lineman</th><th>Date of Visit</th><th>Deficiency</th></tr></thead><tbody>'+(rows||'<tr><td colspan="9">No matching assets found.</td></tr>')+'</tbody></table></div><button type="button" class="btn" id="clearDtDrillTable">← Back to DT / RMU summary</button></section>';
+    const back=$('#clearDtDrillTable');if(back)back.onclick=()=>{S.dtDrill=null;render(true);};
+    return;
+  }
   if(S.main==='fpsp'&&S.fpDrill){
     const list=getFilteredDeficiencyRows(),Dfields=D.fpFields||[];
     const field=Dfields.find(f=>f.key===S.fpDrill);
@@ -2278,6 +2288,8 @@ function render(keepScroll){
     if(sub) sub.onchange=e=>{S.substation=e.target.value;render();};
     if(cat) cat.onchange=e=>{S.cat=e.target.value;render(true);};
     if(clear) clear.onclick=()=>{S.cat='';render();};
+    document.querySelectorAll('[data-dt-count]').forEach(b=>b.onclick=()=>{S.main='dt';S.sub='def';S.dtDrill=JSON.parse(b.dataset.dtCount);S.fpDrill='';S.cat='';S.st='';S.lm='';S.defAge='';S.q='';render(true);document.querySelector('#deflist')?.scrollIntoView({behavior:'smooth',block:'start'});});
+    const clearDt=$('#clearDtDrill');if(clearDt)clearDt.onclick=()=>{S.dtDrill=null;render(true);};
     document.querySelectorAll('[data-fpsp-count]').forEach(b=>b.onclick=()=>{const [sub,key]=JSON.parse(b.dataset.fpspCount);S.main='fpsp';S.sub='def';S.substation=sub;S.fpDrill=key;S.cat='';S.st='';S.lm='';S.defAge='';S.q='';render(true);document.querySelector('#deflist')?.scrollIntoView({behavior:'smooth',block:'start'});});
     const clearFp=$('#clearFpDrill');if(clearFp)clearFp.onclick=()=>{S.fpDrill='';S.substation='';render(true);};
     document.querySelectorAll('[data-def-matrix]').forEach(b=>b.onclick=()=>{const [sub,category]=JSON.parse(b.dataset.defMatrix);S.substation=sub;S.cat=category;S.st='open';S.lm='';S.defAge='';render(true);document.querySelector('#deflist')?.scrollIntoView({behavior:'smooth',block:'start'});});
@@ -2315,7 +2327,7 @@ function updateSubstationProgress(){
   results.textContent=groups.length?'Showing '+num(groups.length)+' substations':'No matching substations';
   if(head)head.textContent=num(groups.length)+' / '+num(all.length)+' substations';
 }
-document.querySelectorAll('[data-main]').forEach(b=>b.onclick=()=>{S.main=b.dataset.main;S.q='';S.lm='';S.st='';S.dateFrom='';S.dateTo='';S.substation='';S.defAge='';S.defSort='oldest';S.open.clear();render();window.scrollTo(0,0);});
+document.querySelectorAll('[data-main]').forEach(b=>b.onclick=()=>{S.main=b.dataset.main;S.q='';S.lm='';S.st='';S.dateFrom='';S.dateTo='';S.substation='';S.fpDrill='';S.dtDrill=null;S.defAge='';S.defSort='oldest';S.open.clear();render();window.scrollTo(0,0);});
 document.querySelectorAll('[data-sub]').forEach(b=>b.onclick=()=>{S.sub=b.dataset.sub;render();window.scrollTo(0,0);});
 $('#rf').onclick=()=>loadAll(true);
 document.querySelectorAll('[data-file]').forEach(inp=>inp.onchange=async e=>{
@@ -3109,6 +3121,6 @@ main{padding-top:12px!important}
 .fpsp-drill-table-card>.btn{margin-top:12px}
 @media(max-width:650px){.fpsp-drill-table{font-size:10px}.fpsp-drill-table th,.fpsp-drill-table td{padding:6px 4px}}
 .fpsp-count-matrix .fpsp-fl-code{width:7%;min-width:48px;white-space:normal!important;overflow-wrap:anywhere;text-align:center;font-weight:700}
-</style>
+.dt-count-cell{padding:4px!important}.dt-count-btn{min-width:30px;min-height:29px;border:0;border-radius:7px;background:transparent;color:var(--ink);font:inherit;font-weight:800;padding:4px 7px;cursor:pointer}.dt-count-btn.has-count{background:var(--pri2);color:var(--pri);text-decoration:underline;text-underline-offset:2px}.dt-count-btn:disabled{cursor:default;opacity:.7}.dt-drill-table-card{margin-top:10px}.dt-drill-table{min-width:760px;table-layout:auto}.dt-deficiency-matrix .dt-table-wrap{overflow-x:auto}</style>
 </body>
 </html>
