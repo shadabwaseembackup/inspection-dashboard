@@ -1236,6 +1236,7 @@ button,.btn,summary{touch-action:manipulation}
 <header>
   <div class="top">
     <div><h1>Alaknanda Division</h1><p>GK-2 · Inspection Dashboard</p></div>
+    <button type="button" class="icon" id="assetSearchBtn" title="Search Pole/Pillar No., SAP Equipment ID or FL Code" aria-label="Search assets">⌕</button>
     <button type="button" class="icon" id="rf" title="Refresh from Google Sheet" aria-label="Refresh from Google Sheet">⟳</button>
      <button type="button" class="btn" id="logout" title="End dashboard session" aria-label="Log out">Log out</button>
   </div>
@@ -2217,6 +2218,53 @@ function renderStatus(){
     return '<span class="sp">'+nm[k]+': no data loaded</span>';
   }).join('');
 }
+
+/* ================= GLOBAL ASSET SEARCH ================= */
+function assetSearchKey(value){return norm(value).toLocaleUpperCase().replace(/[^A-Z0-9]/g,'');}
+function assetSearchFields(r,key){
+ if(key==='fpsp')return [
+  ['Pole / Pillar No.',r.name],['DT Code',r.dt],['FL Code',r.fl]
+ ];
+ return [
+  ['SAP Equipment ID',r.eq],['Asset Code',r.name],['FL Code',r.fl]
+ ];
+}
+function openAssetSearch(){
+ let dlg=$('#assetSearchDialog');
+ if(!dlg){
+  dlg=document.createElement('dialog');dlg.id='assetSearchDialog';dlg.className='asset-search-dialog';
+  dlg.innerHTML='<div class="asset-search-head"><div><h2>Search inspection records</h2><p>Enter a full or partial Pole/Pillar No., SAP Equipment ID or FL Code.</p></div><button type="button" id="closeAssetSearch" aria-label="Close search">×</button></div><label class="asset-search-input-wrap"><span>Search identifier</span><input id="assetSearchInput" type="search" autocomplete="off" placeholder="e.g. pole number, SAP ID or FL code"></label><div id="assetSearchMeta" class="note">Searches both FP/SP and DT/RMU records currently loaded in the dashboard.</div><div id="assetSearchResults" class="asset-search-results"><div class="empty">Type an identifier to find matching cases.</div></div>';
+  document.body.appendChild(dlg);
+  $('#closeAssetSearch').onclick=()=>dlg.close();
+  $('#assetSearchInput').addEventListener('input',e=>renderAssetSearchResults(e.target.value));
+  dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close();});
+ }
+ if(typeof dlg.showModal==='function')dlg.showModal();else dlg.setAttribute('open','');
+ const input=$('#assetSearchInput');if(input){input.value='';renderAssetSearchResults('');setTimeout(()=>input.focus(),30);}
+}
+function renderAssetSearchResults(query){
+ const meta=$('#assetSearchMeta'),out=$('#assetSearchResults');if(!meta||!out)return;
+ const q=assetSearchKey(query);
+ if(!q){meta.textContent='Searches both FP/SP and DT/RMU records currently loaded in the dashboard.';out.innerHTML='<div class="empty">Type an identifier to find matching cases.</div>';return;}
+ const matches=[];
+ ['fpsp','dt'].forEach(key=>{
+  const D=S.data[key];if(!D||!Array.isArray(D.rows))return;
+  D.rows.forEach(r=>{
+   const fields=assetSearchFields(r,key),hit=fields.filter(([label,value])=>assetSearchKey(value).includes(q));
+   if(hit.length)matches.push({key,r,hit});
+  });
+ });
+ matches.sort((a,b)=>a.key.localeCompare(b.key)||(a.r.sub||'').localeCompare(b.r.sub||'')||(a.r.name||'').localeCompare(b.r.name||''));
+ const shown=matches.slice(0,100);
+ meta.textContent=matches.length?num(matches.length)+' matching record(s)'+(matches.length>100?' · showing first 100':''):'No matching records found.';
+ out.innerHTML=shown.length?shown.map(({key,r,hit})=>{
+  const fields=assetSearchFields(r,key),defs=(r.defs||[]).map(d=>'<span class="chip '+(d.t==='remark'?'w':'r')+'">'+esc(d.label)+'</span>').join('');
+  const data=fields.map(([label,value])=>'<div><small>'+esc(label)+'</small><b>'+esc(value||'—')+'</b></div>').join('');
+  const extra=[['Substation',r.sub],['Asset type',r.typ||r.cat||r.grp],['Feeder',r.fdr],['kVA',r.kva],['Lineman',r.lm],['Date of Visit',r.dl],['Inspection status',r.done?'Inspected':'Pending / not checked'],['Rectification',r.defs&&r.defs.length?(r.fix==='rect'?'Rectified':r.fix==='unclear'?'Unclear':'Not yet rectified'):'No deficiency']].filter(x=>x[1]).map(([label,value])=>'<div><small>'+esc(label)+'</small><b>'+esc(value)+'</b></div>').join('');
+  return '<article class="asset-search-result"><div class="asset-search-result-head"><b>'+(key==='dt'?'DT / RMU':'FP / SP')+' · '+esc(r.name||r.eq||'Asset')+'</b><span class="page-tag">'+(r.done?'INSPECTED':'PENDING')+'</span></div><div class="asset-search-match">Matched: '+hit.map(([label])=>esc(label)).join(', ')+'</div><div class="asset-search-identifiers">'+data+'</div><div class="asset-search-details">'+extra+'</div><div class="asset-search-defs">'+(defs||'<span class="chip g">No recorded deficiency</span>')+'</div>'+(r.remark?'<p class="asset-search-remark"><b>Team remark:</b> '+esc(r.remark)+'</p>':'')+'</article>';
+ }).join(''):'<div class="empty">No matching records. Check the identifier and try a shorter part.</div>';
+}
+
 function render(keepScroll){
   const y=keepScroll?window.scrollY:0;
   document.querySelectorAll('[data-main]').forEach(b=>{const active=b.dataset.main===S.main;b.classList.toggle('on',active);b.setAttribute('aria-pressed',String(active));});
@@ -2323,6 +2371,7 @@ function updateSubstationProgress(){
 }
 document.querySelectorAll('[data-main]').forEach(b=>b.onclick=()=>{S.main=b.dataset.main;S.q='';S.lm='';S.st='';S.dateFrom='';S.dateTo='';S.substation='';S.fpDrill='';S.dtDrill=null;S.defAge='';S.defSort='oldest';S.open.clear();render();window.scrollTo(0,0);});
 document.querySelectorAll('[data-sub]').forEach(b=>b.onclick=()=>{S.sub=b.dataset.sub;render();window.scrollTo(0,0);});
+$('#assetSearchBtn').onclick=openAssetSearch;
 $('#rf').onclick=()=>loadAll(true);
 document.querySelectorAll('[data-file]').forEach(inp=>inp.onchange=async e=>{
   const f=e.target.files[0],key=inp.dataset.file; if(!f) return;
@@ -3137,6 +3186,42 @@ main{padding-top:12px!important}
  #view .page-intro>div{flex:1 1 auto!important;min-width:0!important;width:auto!important}
  #view .page-intro .page-tag{flex:0 0 auto!important;align-self:flex-start!important;max-width:38%!important;margin:2px 0 0!important}
  #view .page-intro h2,#view .page-intro p{margin-top:0!important}
+}
+
+/* Global identifier search dialog */
+#assetSearchBtn{font-size:24px;font-weight:700;line-height:1}
+.asset-search-dialog{width:min(760px,calc(100vw - 24px));max-width:none;max-height:86vh;padding:0;border:1px solid var(--line);border-radius:18px;background:var(--card);color:var(--ink);box-shadow:0 24px 80px rgba(10,20,40,.28)}
+.asset-search-dialog::backdrop{background:rgba(13,24,43,.55);backdrop-filter:blur(3px)}
+.asset-search-head{position:sticky;top:0;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:17px 18px 12px;background:var(--card);border-bottom:1px solid var(--line)}
+.asset-search-head h2{font-size:18px;margin:0}.asset-search-head p{font-size:12px;color:var(--mut);margin:3px 0 0}
+#closeAssetSearch{flex:0 0 34px;width:34px;height:34px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:23px;cursor:pointer}
+.asset-search-input-wrap{display:block;padding:13px 18px 5px;font-size:11px;font-weight:750;color:var(--mut)}
+.asset-search-input-wrap input{display:block;margin-top:5px;width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:11px;background:var(--bg);color:var(--ink);font:inherit;font-size:15px}
+#assetSearchMeta{padding:0 18px 9px}
+.asset-search-results{max-height:58vh;overflow:auto;padding:0 18px 16px}
+.asset-search-result{padding:12px 0;border-top:1px solid var(--line)}
+.asset-search-result-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.asset-search-result-head>b{font-size:13px;overflow-wrap:anywhere}
+.asset-search-result-head .page-tag{font-size:8px;white-space:nowrap}
+.asset-search-match{font-size:10px;color:var(--pri);font-weight:700;margin:4px 0 8px}
+.asset-search-identifiers,.asset-search-details{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:7px}
+.asset-search-identifiers>div,.asset-search-details>div{min-width:0;padding:7px 8px;border-radius:8px;background:var(--bg)}
+.asset-search-identifiers small,.asset-search-details small{display:block;color:var(--mut);font-size:9px}
+.asset-search-identifiers b,.asset-search-details b{display:block;font-size:11px;overflow-wrap:anywhere;margin-top:2px}
+.asset-search-defs{margin-top:7px}
+.asset-search-remark{padding:8px 10px;margin:7px 0 0;border-radius:8px;background:var(--warnbg);font-size:11px;overflow-wrap:anywhere}
+@media(max-width:520px){
+ .top>div:first-child{min-width:0;flex:1}
+ .top h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ #assetSearchBtn{flex:0 0 34px;width:34px;height:34px}
+ .top #rf{flex:0 0 34px;width:34px;height:34px}
+ .top #logout{flex:0 0 auto;margin:0;padding:7px 8px;font-size:11px}
+ .asset-search-dialog{width:calc(100vw - 16px);max-height:90vh;border-radius:14px}
+ .asset-search-head{padding:13px 12px 10px}
+ .asset-search-input-wrap{padding:11px 12px 4px}
+ #assetSearchMeta{padding:0 12px 8px}
+ .asset-search-results{padding:0 12px 12px;max-height:60vh}
+ .asset-search-identifiers,.asset-search-details{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
 }
 </style>
 </body>
