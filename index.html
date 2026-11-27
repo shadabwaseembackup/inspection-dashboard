@@ -1338,6 +1338,42 @@ const v=(row,i)=>i<0?'':norm(row[i]);
 const pct=(d,t)=>t?Math.round(d*1000/t)/10:0;
 const hm=d=>d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
 const num=n=>n.toLocaleString('en-IN');
+function extractPhotoLinks(row,headers){
+  const out=[],seen=new Set();
+  (headers||[]).forEach((header,i)=>{
+    if(!/(photo|image|picture|attachment|upload|फोटो|तस्वीर|चित्र|छवि)/i.test(norm(header)))return;
+    const cell=String(row[i]||'');
+    const urls=cell.match(/https?:\/\/[^\s"'<>]+/gi)||[];
+    urls.forEach(raw=>{
+      const url=raw.replace(/[),.;\]}]+$/g,'');
+      try{
+        const parsed=new URL(url);
+        if((parsed.protocol!=='https:'&&parsed.protocol!=='http:')||seen.has(parsed.href))return;
+        seen.add(parsed.href);out.push({url:parsed.href,label:norm(header)||'Inspection photo'});
+      }catch(e){}
+    });
+  });
+  return out;
+}
+function mergePhotoLinks(first,second){
+  const all=[],seen=new Set();
+  (first||[]).concat(second||[]).forEach(photo=>{
+    if(!photo||!photo.url||seen.has(photo.url))return;
+    seen.add(photo.url);all.push(photo);
+  });
+  return all;
+}
+function photoPreviewUrl(url){
+  try{
+    const parsed=new URL(url);
+    if(parsed.hostname==='drive.google.com'||parsed.hostname==='docs.google.com'){
+      const id=parsed.searchParams.get('id')||(parsed.pathname.match(/\/d\/([A-Za-z0-9_-]+)/)||[])[1];
+      if(id)return 'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w1000';
+    }
+    return parsed.href;
+  }catch(e){return '';}
+}
+
 // The source question asks whether current leakage was found: affirmative answers are deficiencies.
 function isLeakDetected(value){const x=norm(value).toLowerCase();if(!x)return false;return /^(yes|y|true|1|हाँ|हां|हा|होय|found|leakage found)$/.test(x)||/करंट\s*लीकेज\s*(?:पाया\s*गया|है)/.test(x);}
 
@@ -1448,7 +1484,7 @@ function buildFP(rows){
     const done=!!(d||lm||(st&&!/pending/i.test(st)));
     const f=done?finish(row,ci,evalRules(row,H,rules),done):{defs:[],remark:'',fix:'',fixRaw:''};
     const cat=v(row,ci.cat)||'Pole';
-    const o={rawRow:row,fl:v(row,ci.fl),leak:v(row,ci.leak),name:pole,sub:v(row,ci.sub)||'—',fdr:v(row,ci.fdr),dt:v(row,ci.dt),cat,
+    const o={rawRow:row,photos:extractPhotoLinks(row,H),fl:v(row,ci.fl),leak:v(row,ci.leak),name:pole,sub:v(row,ci.sub)||'—',fdr:v(row,ci.fdr),dt:v(row,ci.dt),cat,
       grp:/pole/i.test(cat)?'Pole':'Pillar',lm,dk:d&&d.key,dl:d&&d.label,done,
       defs:f.defs,remark:f.remark,fix:f.fix,fixRaw:f.fixRaw,fpAnomalies:{}};
     rules.forEach(r=>r.cols.forEach(ci2=>{const val=norm(row[ci2]);if(!val)return;const n=parseFloat(val);let bad=false;
@@ -1460,7 +1496,9 @@ function buildFP(rows){
       if(bad)o.fpAnomalies[H[ci2]]=1;
     }));
     const key=o.dt+'|'+o.fdr+'|'+o.name,old=map.get(key);
+    if(old)o.photos=mergePhotoLinks(old.photos,o.photos);
     if(!old||(!old.done&&o.done)||(old.done&&o.done&&o.defs.length>old.defs.length)) map.set(key,o);
+    else if(old)old.photos=mergePhotoLinks(old.photos,o.photos);
   }
   return {rows:[...map.values()],fpFields:fpFields,fpHeaders:H,note:''};
 }
@@ -1489,14 +1527,16 @@ function buildDT(rows){
     if(done&&d) visitEvents.push({grp:/rmu/i.test(v(row,ci.typ))?'RMU':'DT',lm,dk:d.key,dl:d.label,done:true});
     const f=done?finish(row,ci,evalRules(row,H,rules),done):{defs:[],remark:'',fix:'',fixRaw:''};
     const typ=v(row,ci.typ)||'Asset';
-    const o={rawRow:row,name:code||eq,eq,sub:v(row,ci.sub)||'—',fl:v(row,ci.fl),typ,grp:/rmu/i.test(typ)?'RMU':'Transformer',
+    const o={rawRow:row,photos:extractPhotoLinks(row,H),name:code||eq,eq,sub:v(row,ci.sub)||'—',fl:v(row,ci.fl),typ,grp:/rmu/i.test(typ)?'RMU':'Transformer',
       kva:v(row,ci.kva),lm,dk:d&&d.key,dl:d&&d.label,done,defs:f.defs,remark:f.remark,fix:f.fix,fixRaw:f.fixRaw};
     const key=eq||code,old=map.get(key);
+    if(old)o.photos=mergePhotoLinks(old.photos,o.photos);
     // Keep the latest dated inspection for each equipment ID. A later row
     // with no visit date must not replace an existing dated inspection.
     const newDate=/^\d{4}-\d{2}-\d{2}$/.test(String(o.dk||''))?o.dk:'';
     const oldDate=old&&/^\d{4}-\d{2}-\d{2}$/.test(String(old.dk||''))?old.dk:'';
     if(!old || (!old.done&&o.done) || (newDate && (!oldDate || newDate>oldDate)) || (!oldDate && !newDate && !old.done && o.done)) map.set(key,o);
+    else if(old)old.photos=mergePhotoLinks(old.photos,o.photos);
   }
   const fields=[];rules.forEach(r=>r.cols.forEach(ci2=>{const label=H[ci2]||r.l,group=r.hdr?'RMU':'DT';if(!fields.some(x=>x.key===label))fields.push({key:label,label,group});}));
   const dateDiagnostics={header:(H[ci.date]||'Column A')+' (Column A: DD-MMM-YY)',total:0,dated:0,undated:0,rmus:0,datedRMU:0,undatedRMU:0,latestKey:'',latestLabel:'',latestRecords:[]};
@@ -2260,8 +2300,10 @@ function renderAssetSearchResults(query){
  out.innerHTML=shown.length?shown.map(({key,r,hit})=>{
   const fields=assetSearchFields(r,key),defs=(r.defs||[]).map(d=>'<span class="chip '+(d.t==='remark'?'w':'r')+'">'+esc(d.label)+'</span>').join('');
   const data=fields.map(([label,value])=>'<div><small>'+esc(label)+'</small><b>'+esc(value||'—')+'</b></div>').join('');
+   const photos=mergePhotoLinks([],r.photos).filter(p=>p.url&&(p.url.startsWith('https://')||p.url.startsWith('http://')));
+   const photoHtml=photos.length?'<div class="asset-search-photos"><b>Inspection photos · '+photos.length+'</b><div class="asset-search-photo-grid">'+photos.map((p,index)=>'<a class="asset-search-photo" href="'+esc(p.url)+'" target="_blank" rel="noopener noreferrer" title="Open original photo"><img src="'+esc(photoPreviewUrl(p.url))+'" alt="'+esc(p.label||'Inspection photo')+'" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.textContent=\'Preview unavailable · Open original ↗\'"><span>'+esc(p.label||('Photo '+(index+1)))+' · Open original ↗</span></a>').join('')+'</div></div>':'<div class="asset-search-no-photos">No photo link found in the loaded inspection record.</div>';
   const extra=[['Substation',r.sub],['Asset type',r.typ||r.cat||r.grp],['Feeder',r.fdr],['kVA',r.kva],['Lineman',r.lm],['Date of Visit',r.dl],['Inspection status',r.done?'Inspected':'Pending / not checked'],['Rectification',r.defs&&r.defs.length?(r.fix==='rect'?'Rectified':r.fix==='unclear'?'Unclear':'Not yet rectified'):'No deficiency']].filter(x=>x[1]).map(([label,value])=>'<div><small>'+esc(label)+'</small><b>'+esc(value)+'</b></div>').join('');
-  return '<article class="asset-search-result"><div class="asset-search-result-head"><b>'+(key==='dt'?'DT / RMU':'FP / SP')+' · '+esc(r.name||r.eq||'Asset')+'</b><span class="page-tag">'+(r.done?'INSPECTED':'PENDING')+'</span></div><div class="asset-search-match">Matched: '+hit.map(([label])=>esc(label)).join(', ')+'</div><div class="asset-search-identifiers">'+data+'</div><div class="asset-search-details">'+extra+'</div><div class="asset-search-defs">'+(defs||'<span class="chip g">No recorded deficiency</span>')+'</div>'+(r.remark?'<p class="asset-search-remark"><b>Team remark:</b> '+esc(r.remark)+'</p>':'')+'</article>';
+  return '<article class="asset-search-result"><div class="asset-search-result-head"><b>'+(key==='dt'?'DT / RMU':'FP / SP')+' · '+esc(r.name||r.eq||'Asset')+'</b><span class="page-tag">'+(r.done?'INSPECTED':'PENDING')+'</span></div><div class="asset-search-match">Matched: '+hit.map(([label])=>esc(label)).join(', ')+'</div><div class="asset-search-identifiers">'+data+'</div><div class="asset-search-details">'+extra+'</div><div class="asset-search-defs">'+(defs||'<span class="chip g">No recorded deficiency</span>')+'</div>'+photoHtml+(r.remark?'<p class="asset-search-remark"><b>Team remark:</b> '+esc(r.remark)+'</p>':'')+'</article>';
  }).join(''):'<div class="empty">No matching records. Check the identifier and try a shorter part.</div>';
 }
 
@@ -3220,7 +3262,16 @@ main{padding-top:12px!important}
  .asset-search-head{padding:13px 12px 10px}
  .asset-search-input-wrap{padding:11px 12px 4px}
  #assetSearchMeta{padding:0 12px 8px}
- .asset-search-results{padding:0 12px 12px;max-height:60vh}
+ .asset-search-results{padding:0 12px 12px;max-height:60vh} 
+.asset-search-photos{margin-top:10px;padding-top:9px;border-top:1px solid var(--line)}
+.asset-search-photos>b{display:block;font-size:11px;margin-bottom:7px}
+.asset-search-photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:8px}
+.asset-search-photo{display:block;min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--pri);text-decoration:none}
+.asset-search-photo img{display:block;width:100%;height:112px;object-fit:cover;background:var(--line)}
+.asset-search-photo span{display:block;padding:6px 8px;font-size:10px;font-weight:700;overflow-wrap:anywhere}
+.asset-search-no-photos{margin-top:9px;font-size:10px;color:var(--mut)}
+@media(max-width:520px){.asset-search-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.asset-search-photo img{height:105px}}
+
  .asset-search-identifiers,.asset-search-details{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
 }
 </style>
