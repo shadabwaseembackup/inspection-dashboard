@@ -1346,7 +1346,7 @@ function extractPhotoLinks(row,headers){
   const cell=String(row[i]||'');
   const candidates=cell.match(/https?:\/\/[^\s"'<>),]+/gi)||[];
   candidates.forEach(raw=>{
-   const url=raw.replace(/[.\])]+$/,'');
+   const url=raw.replace(/[),.;]+$/g,'');
    try{
     const u=new URL(url);
     if(!/^https?:$/.test(u.protocol)||seen.has(u.href))return;
