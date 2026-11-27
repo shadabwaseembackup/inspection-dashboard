@@ -3125,6 +3125,19 @@ main{padding-top:12px!important}
  #view .def-kpi-grid>.stat b{font-size:clamp(11px,3vw,15px)!important}
  #view .def-kpi-grid>.stat span{font-size:clamp(6px,1.55vw,8px)!important;line-height:1.1!important;text-align:right!important}
 }
+
+/* Mobile: keep page title and section tag together; prevent a tall wrapped header gap. */
+@media(max-width:700px){
+ #view .page-intro{
+  display:flex!important;flex-flow:row nowrap!important;align-items:flex-start!important;
+  justify-content:space-between!important;gap:8px!important;
+  height:auto!important;min-height:0!important;margin:0 0 8px!important;
+  padding:0 0 7px!important;
+ }
+ #view .page-intro>div{flex:1 1 auto!important;min-width:0!important;width:auto!important}
+ #view .page-intro .page-tag{flex:0 0 auto!important;align-self:flex-start!important;max-width:38%!important;margin:2px 0 0!important}
+ #view .page-intro h2,#view .page-intro p{margin-top:0!important}
+}
 </style>
 </body>
 </html>
