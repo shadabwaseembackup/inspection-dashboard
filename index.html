@@ -2304,9 +2304,8 @@ function renderAssetSearchResults(query){
   const fields=assetSearchFields(r,key),defs=(r.defs||[]).map(d=>'<span class="chip '+(d.t==='remark'?'w':'r')+'">'+esc(d.label)+'</span>').join('');
   const data=fields.map(([label,value])=>'<div><small>'+esc(label)+'</small><b>'+esc(value||'—')+'</b></div>').join('');
    const photos=mergePhotoLinks([],r.photos).filter(p=>p.url&&(p.url.startsWith('https://')||p.url.startsWith('http://')));
-   const photoGroups=[...photos.reduce((groups,p)=>{const name=p.label||'Inspection photo';if(!groups.has(name))groups.set(name,[]);groups.get(name).push(p);return groups;},new Map()).entries()];
-   const photoHtml=photos.length?'<div class="asset-search-photos"><b>Pictures · '+photos.length+'</b>'+photoGroups.map(([category,items])=>'<section class="asset-search-photo-category"><h4>'+esc(category)+'</h4><div class="asset-search-photo-grid">'+items.map((p,index)=>'<a class="asset-search-photo" href="'+esc(p.url)+'" target="_blank" rel="noopener noreferrer" title="Open original photo"><img src="'+esc(photoPreviewUrl(p.url))+'" alt="'+esc(category)+'" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true"><span>Picture '+(index+1)+' · Open original ↗</span></a>').join('')+'</div></section>').join('')+'</div>':'<div class="asset-search-no-photos">No photo link found in the loaded inspection record.</div>';
-   const photoHtml=photos.length?'<div class="asset-search-photos"><b>Inspection photos · '+photos.length+'</b><div class="asset-search-photo-grid">'+photos.map((p,index)=>'<a class="asset-search-photo" href="'+esc(p.url)+'" target="_blank" rel="noopener noreferrer" title="Open original photo"><img src="'+esc(photoPreviewUrl(p.url))+'" alt="'+esc(p.label||'Inspection photo')+'" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.textContent=\'Preview unavailable · Open original ↗\'"><span>'+esc(p.label||('Photo '+(index+1)))+' · Open original ↗</span></a>').join('')+'</div></div>':'<div class="asset-search-no-photos">No photo link found in the loaded inspection record.</div>';
+   const photoHtml=photos.length?'<div class="asset-search-photos"><b>Inspection photos · '+photos.length+'</b><div class="asset-search-photo-rows">'+photos.map((p,index)=>'<div class="asset-search-photo-row"><span class="asset-search-photo-category">'+esc(p.label||('Photo '+(index+1)))+'</span><a class="asset-search-photo-link" href="'+esc(p.url)+'" target="_blank" rel="noopener noreferrer" title="Open original photo"><img src="'+esc(photoPreviewUrl(p.url))+'" alt="'+esc(p.label||'Inspection photo')+'" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>Preview unavailable · Open original ↗</span><span>Open original ↗</span></a></div>').join('')+'</div></div>':'<div class="asset-search-no-photos">No photo link found in the loaded inspection record.</div>';
+
   const extra=[['Substation',r.sub],['Asset type',r.typ||r.cat||r.grp],['Feeder',r.fdr],['kVA',r.kva],['Lineman',r.lm],['Date of Visit',r.dl],['Inspection status',r.done?'Inspected':'Pending / not checked'],['Rectification',r.defs&&r.defs.length?(r.fix==='rect'?'Rectified':r.fix==='unclear'?'Unclear':'Not yet rectified'):'No deficiency']].filter(x=>x[1]).map(([label,value])=>'<div><small>'+esc(label)+'</small><b>'+esc(value)+'</b></div>').join('');
   return '<article class="asset-search-result"><div class="asset-search-result-head"><b>'+(key==='dt'?'DT / RMU':'FP / SP')+' · '+esc(r.name||r.eq||'Asset')+'</b><span class="page-tag">'+(r.done?'INSPECTED':'PENDING')+'</span></div><div class="asset-search-match">Matched: '+hit.map(([label])=>esc(label)).join(', ')+'</div><div class="asset-search-identifiers">'+data+'</div><div class="asset-search-details">'+extra+'</div><div class="asset-search-defs">'+(defs||'<span class="chip g">No recorded deficiency</span>')+'</div>'+photoHtml+(r.remark?'<p class="asset-search-remark"><b>Team remark:</b> '+esc(r.remark)+'</p>':'')+'</article>';
  }).join(''):'<div class="empty">No matching records. Check the identifier and try a shorter part.</div>';
@@ -3270,7 +3269,14 @@ main{padding-top:12px!important}
  .asset-search-results{padding:0 12px 12px;max-height:60vh} 
 .asset-search-photos{margin-top:10px;padding-top:9px;border-top:1px solid var(--line)}
 .asset-search-photos>b{display:block;font-size:11px;margin-bottom:7px}
-.asset-search-photo-category{margin-top:9px}
+.asset-search-photo-rows{display:flex;flex-direction:column;gap:7px}
+.asset-search-photo-row{display:flex;align-items:center;gap:10px;min-height:34px;padding:6px 8px;border:1px solid var(--line);border-radius:9px}
+.asset-search-photo-row .asset-search-photo-category{flex:0 0 150px;margin:0;font-size:11px;font-weight:700;color:var(--muted)}
+.asset-search-photo-link{display:flex;align-items:center;gap:8px;min-width:0;font-size:12px;text-decoration:none}
+.asset-search-photo-link img{width:42px;height:32px;object-fit:cover;border-radius:5px}
+.asset-search-photo-link span{color:var(--pri);font-weight:650}
+@media(max-width:560px){.asset-search-photo-row{align-items:flex-start;flex-direction:column;gap:5px}.asset-search-photo-row .asset-search-photo-category{flex:auto}}
+
 .asset-search-photo-category h4{margin:0 0 6px;font-size:11px;font-weight:800;color:var(--pri);letter-spacing:.02em}
 
 .asset-search-photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:8px}
