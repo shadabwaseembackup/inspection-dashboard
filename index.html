@@ -1344,9 +1344,9 @@ function extractPhotoLinks(row,headers){
  (headers||[]).forEach((header,i)=>{
   if(!/(photo|image|picture|attachment|फोटो|तस्वीर|चित्र)/i.test(norm(header)))return;
   const cell=String(row[i]||'');
-  const candidates=cell.match(/https?:\\/\\/[^\\s"'<>),]+/gi)||[];
+  const candidates=cell.match(/https?:\/\/[^\s"'<>),]+/gi)||[];
   candidates.forEach(raw=>{
-   const url=raw.replace(/[.\\]]+$/,'');
+   const url=raw.replace(/[.\])]+$/,'');
    try{
     const u=new URL(url);
     if(!/^https?:$/.test(u.protocol)||seen.has(u.href))return;
@@ -1360,7 +1360,7 @@ function photoPreviewUrl(url){
  try{
   const u=new URL(url);
   if(u.hostname==='drive.google.com'||u.hostname==='docs.google.com'){
-   const id=u.searchParams.get('id')||(u.pathname.match(/\\/d\\/([A-Za-z0-9_-]+)/)||[])[1];
+   const id=u.searchParams.get('id')||(u.pathname.match(/\/d\/([A-Za-z0-9_-]+)/)||[])[1];
    if(id)return 'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w1000';
   }
   return u.href;
