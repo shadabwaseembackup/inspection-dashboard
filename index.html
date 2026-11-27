@@ -1338,6 +1338,35 @@ const v=(row,i)=>i<0?'':norm(row[i]);
 const pct=(d,t)=>t?Math.round(d*1000/t)/10:0;
 const hm=d=>d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
 const num=n=>n.toLocaleString('en-IN');
+
+function extractPhotoLinks(row,headers){
+ const out=[],seen=new Set();
+ (headers||[]).forEach((header,i)=>{
+  if(!/(photo|image|picture|attachment|फोटो|तस्वीर|चित्र)/i.test(norm(header)))return;
+  const cell=String(row[i]||'');
+  const candidates=cell.match(/https?:\/\/[^\s"'<>),]+/gi)||[];
+  candidates.forEach(raw=>{
+   const url=raw.replace(/[),.;]+$/g,'');
+   try{
+    const u=new URL(url);
+    if(!/^https?:$/.test(u.protocol)||seen.has(u.href))return;
+    seen.add(u.href);out.push({url:u.href,label:norm(header)||'Inspection photo'});
+   }catch(e){}
+  });
+ });
+ return out;
+}
+function photoPreviewUrl(url){
+ try{
+  const u=new URL(url);
+  if(u.hostname==='drive.google.com'||u.hostname==='docs.google.com'){
+   const id=u.searchParams.get('id')||(u.pathname.match(/\/d\/([A-Za-z0-9_-]+)/)||[])[1];
+   if(id)return 'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w1000';
+  }
+  return u.href;
+ }catch(e){return '';}
+}
+
 // The source question asks whether current leakage was found: affirmative answers are deficiencies.
 function isLeakDetected(value){const x=norm(value).toLowerCase();if(!x)return false;return /^(yes|y|true|1|हाँ|हां|हा|होय|found|leakage found)$/.test(x)||/करंट\s*लीकेज\s*(?:पाया\s*गया|है)/.test(x);}
 
@@ -1448,7 +1477,7 @@ function buildFP(rows){
     const done=!!(d||lm||(st&&!/pending/i.test(st)));
     const f=done?finish(row,ci,evalRules(row,H,rules),done):{defs:[],remark:'',fix:'',fixRaw:''};
     const cat=v(row,ci.cat)||'Pole';
-    const o={rawRow:row,fl:v(row,ci.fl),leak:v(row,ci.leak),name:pole,sub:v(row,ci.sub)||'—',fdr:v(row,ci.fdr),dt:v(row,ci.dt),cat,
+    const o={rawRow:row,photos:extractPhotoLinks(row,H),fl:v(row,ci.fl),leak:v(row,ci.leak),name:pole,sub:v(row,ci.sub)||'—',fdr:v(row,ci.fdr),dt:v(row,ci.dt),cat,
       grp:/pole/i.test(cat)?'Pole':'Pillar',lm,dk:d&&d.key,dl:d&&d.label,done,
       defs:f.defs,remark:f.remark,fix:f.fix,fixRaw:f.fixRaw,fpAnomalies:{}};
     rules.forEach(r=>r.cols.forEach(ci2=>{const val=norm(row[ci2]);if(!val)return;const n=parseFloat(val);let bad=false;
@@ -1489,7 +1518,7 @@ function buildDT(rows){
     if(done&&d) visitEvents.push({grp:/rmu/i.test(v(row,ci.typ))?'RMU':'DT',lm,dk:d.key,dl:d.label,done:true});
     const f=done?finish(row,ci,evalRules(row,H,rules),done):{defs:[],remark:'',fix:'',fixRaw:''};
     const typ=v(row,ci.typ)||'Asset';
-    const o={rawRow:row,name:code||eq,eq,sub:v(row,ci.sub)||'—',fl:v(row,ci.fl),typ,grp:/rmu/i.test(typ)?'RMU':'Transformer',
+    const o={rawRow:row,photos:extractPhotoLinks(row,H),name:code||eq,eq,sub:v(row,ci.sub)||'—',fl:v(row,ci.fl),typ,grp:/rmu/i.test(typ)?'RMU':'Transformer',
       kva:v(row,ci.kva),lm,dk:d&&d.key,dl:d&&d.label,done,defs:f.defs,remark:f.remark,fix:f.fix,fixRaw:f.fixRaw};
     const key=eq||code,old=map.get(key);
     // Keep the latest dated inspection for each equipment ID. A later row
@@ -2260,8 +2289,11 @@ function renderAssetSearchResults(query){
  out.innerHTML=shown.length?shown.map(({key,r,hit})=>{
   const fields=assetSearchFields(r,key),defs=(r.defs||[]).map(d=>'<span class="chip '+(d.t==='remark'?'w':'r')+'">'+esc(d.label)+'</span>').join('');
   const data=fields.map(([label,value])=>'<div><small>'+esc(label)+'</small><b>'+esc(value||'—')+'</b></div>').join('');
+  const photos=(r.photos||[]).filter(p=>p&&p.url&&/^https?:\\/\\//i.test(p.url));
+  const photoHtml=photos.length?'<div class="asset-search-photos"><b>Inspection photos · '+photos.length+'</b><div class="asset-search-photo-grid">'+photos.map((p,index)=>'<a class="asset-search-photo" href="'+esc(p.url)+'" target="_blank" rel="noopener noreferrer" title="Open original photo"><img src="'+esc(photoPreviewUrl(p.url))+'" alt="'+esc(p.label||'Inspection photo')+'" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display=\'none\';this.nextElementSibling.textContent=\'Preview unavailable · Open photo ↗\'"><span>'+esc(p.label||'Photo '+(index+1))+' · Open ↗</span></a>').join('')+'</div></div>':'<div class="asset-search-no-photos">No photo link found in the loaded inspection record.</div>';
+
   const extra=[['Substation',r.sub],['Asset type',r.typ||r.cat||r.grp],['Feeder',r.fdr],['kVA',r.kva],['Lineman',r.lm],['Date of Visit',r.dl],['Inspection status',r.done?'Inspected':'Pending / not checked'],['Rectification',r.defs&&r.defs.length?(r.fix==='rect'?'Rectified':r.fix==='unclear'?'Unclear':'Not yet rectified'):'No deficiency']].filter(x=>x[1]).map(([label,value])=>'<div><small>'+esc(label)+'</small><b>'+esc(value)+'</b></div>').join('');
-  return '<article class="asset-search-result"><div class="asset-search-result-head"><b>'+(key==='dt'?'DT / RMU':'FP / SP')+' · '+esc(r.name||r.eq||'Asset')+'</b><span class="page-tag">'+(r.done?'INSPECTED':'PENDING')+'</span></div><div class="asset-search-match">Matched: '+hit.map(([label])=>esc(label)).join(', ')+'</div><div class="asset-search-identifiers">'+data+'</div><div class="asset-search-details">'+extra+'</div><div class="asset-search-defs">'+(defs||'<span class="chip g">No recorded deficiency</span>')+'</div>'+(r.remark?'<p class="asset-search-remark"><b>Team remark:</b> '+esc(r.remark)+'</p>':'')+'</article>';
+  return '<article class="asset-search-result"><div class="asset-search-result-head"><b>'+(key==='dt'?'DT / RMU':'FP / SP')+' · '+esc(r.name||r.eq||'Asset')+'</b><span class="page-tag">'+(r.done?'INSPECTED':'PENDING')+'</span></div><div class="asset-search-match">Matched: '+hit.map(([label])=>esc(label)).join(', ')+'</div><div class="asset-search-identifiers">'+data+'</div><div class="asset-search-details">'+extra+'</div><div class="asset-search-defs">'+(defs||'<span class="chip g">No recorded deficiency</span>')+'</div>'+photoHtml+(r.remark?'<p class="asset-search-remark"><b>Team remark:</b> '+esc(r.remark)+'</p>':'')+'</article>';
  }).join(''):'<div class="empty">No matching records. Check the identifier and try a shorter part.</div>';
 }
 
@@ -3223,6 +3255,15 @@ main{padding-top:12px!important}
  .asset-search-results{padding:0 12px 12px;max-height:60vh}
  .asset-search-identifiers,.asset-search-details{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
 }
+
+.asset-search-photos{margin-top:10px;padding-top:9px;border-top:1px solid var(--line)}
+.asset-search-photos>b{display:block;font-size:11px;margin-bottom:7px}
+.asset-search-photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:8px}
+.asset-search-photo{display:block;min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--pri);text-decoration:none}
+.asset-search-photo img{display:block;width:100%;height:112px;object-fit:cover;background:var(--line)}
+.asset-search-photo span{display:block;padding:6px 8px;font-size:10px;font-weight:700;overflow-wrap:anywhere}
+.asset-search-no-photos{margin-top:9px;font-size:10px;color:var(--mut)}
+@media(max-width:520px){.asset-search-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.asset-search-photo img{height:105px}}
 </style>
 </body>
 </html>
