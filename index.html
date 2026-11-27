@@ -1343,13 +1343,13 @@ function extractPhotoLinks(row,headers){
   (headers||[]).forEach((header,i)=>{
     const category=norm(header)||'Inspection photo';
     const cell=String(row[i]||'');
-    const urls=cell.match(/https?:\\/\\/[^\\s"'<>]+/gi)||[];
+    const urls=cell.match(/https?:\/\/[^\s"'<>]+/gi)||[];
     urls.forEach(raw=>{
-      const url=raw.replace(/[),.;\\]}]+$/g,'');
+      const url=raw.replace(/[),.;\]}]+$/g,'');
       try{
         const parsed=new URL(url),photoHeader=/(photo|image|picture|attachment|upload|फोटो|तस्वीर|चित्र|छवि)/i.test(category);
-        const imageFile=/\\.(?:jpe?g|png|gif|webp|bmp|heic|avif)(?:$|[?#])/i.test(parsed.href);
-        const driveFile=/^(drive|docs)\\.google\\.com$/i.test(parsed.hostname)&&(/\\/file\\/d\\//i.test(parsed.pathname)||parsed.searchParams.has('id'));
+        const imageFile=/\.(?:jpe?g|png|gif|webp|bmp|heic|avif)(?:$|[?#])/i.test(parsed.href);
+        const driveFile=/^(drive|docs)\.google\.com$/i.test(parsed.hostname)&&(/\/file\/d\//i.test(parsed.pathname)||parsed.searchParams.has('id'));
         if((parsed.protocol!=='https:'&&parsed.protocol!=='http:')||seen.has(parsed.href))return;
         if(!photoHeader&&!imageFile&&!driveFile)return;
         seen.add(parsed.href);out.push({url:parsed.href,label:category});
